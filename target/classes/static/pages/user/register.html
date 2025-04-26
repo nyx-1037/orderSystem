@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册 - 订单管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .register-container {
+            max-width: 500px;
+            margin: 80px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .register-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="register-container">
+            <div class="register-header">
+                <h2>订单管理系统</h2>
+                <p class="text-muted">创建新账号</p>
+            </div>
+            
+            <div class="alert alert-success" id="success-message" style="display: none;"></div>
+            <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+            
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                    <small class="form-text text-danger font-weight-bold">用户名长度为3-20个字符，只能包含字母、数字和下划线</small>
+                    <small class="form-text text-danger font-weight-bold">用户名必须唯一，注册前会实时检查</small>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" class="form-control" id="password" name="password" required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$">
+                    <small class="form-text text-muted">密码长度6-18位，需包含字母和数字</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认密码</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">电子邮箱</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">手机号码</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+            
+            <div class="register-footer">
+                <p>已有账号？<a href="/pages/user/login.html">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 绑定表单提交事件
+            $('#register-form').submit(function(e) {
+                e.preventDefault();
+                register();
+            });
+        });
+        
+        // 注册函数
+        async function register() {
+            // 获取表单数据
+            const username = $('#username').val();
+            const password = $('#password').val();
+            const confirmPassword = $('#confirmPassword').val();
+            const email = $('#email').val();
+            const phone = $('#phone').val();
+            
+            // 验证表单数据
+            if (!username || !password || !confirmPassword || !email || !phone) {
+                showErrorMessage('所有字段都为必填项');
+                return;
+            }
+            
+
+            // 验证用户名格式
+            if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+                showErrorMessage('用户名格式不正确，长度为3-20个字符，只能包含字母、数字和下划线');
+                return;
+            }
+            // 验证密码长度
+            if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$/.test(password)) {
+              showErrorMessage('密码需6-18位且包含字母和数字');
+              return;
+            }
+            // 验证两次密码是否一致
+            if (password !== confirmPassword) {
+                showErrorMessage('两次输入的密码不一致');
+                return;
+            }
+            // 验证邮箱格式
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showErrorMessage('邮箱格式不正确');
+                return;
+            }
+            // 验证手机号格式
+            if (!/^1\d{10}$/.test(phone)) {
+                showErrorMessage('手机号格式不正确');
+                return;
+            }
+            try {
+                // 发送注册请求
+                const response = await fetchAPI('/api/user/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        email: email,
+                        phone: phone
+                    })
+                });
+                showSuccessMessage('注册成功，请登录');
+                // 跳转到登录页
+                setTimeout(() => {
+                    window.location.href = '/pages/user/login.html';
+                }, 2000);
+            } catch (error) {
+                console.error('注册失败:', error);
+                if (error.message && (error.message.includes('已存在') || error.message.includes('exists') || error.message.includes('duplicate'))) {
+                    showErrorMessage('该用户名已被注册，请使用其他用户名');
+                } else if (error.message && error.message.includes('400')) {
+                    if (error.response && error.response.data) {
+                        showErrorMessage(error.response.data.message || '注册失败');
+                    } else if (error.message && error.message.includes('400')) {
+                        const errorMsg = error.message.toLowerCase();
+                        if (errorMsg.includes('username') || errorMsg.includes('已存在') || errorMsg.includes('exists')) {
+                            showErrorMessage('该用户名已被注册，请使用其他用户名');
+                        } else {
+                            showErrorMessage('注册信息不完整或格式不正确');
+                        }
+                    } else {
+                        showErrorMessage('注册失败: ' + (error.message || '服务器错误'));
+                    }
+                } else if (error.message && error.message.includes('401')) {
+                    showErrorMessage('未授权访问，请检查权限设置');
+                } else {
+                    showErrorMessage('注册失败: ' + (error.message || '服务器错误'));
+                }
+            }
+        }
+        // 显示成功消息
+        function showSuccessMessage(message) {
+            $('#success-message').text(message).show();
+            $('#error-message').hide();
+        }
+        // 显示错误消息
+        function showErrorMessage(message) {
+            $('#error-message').text(message).show();
+            $('#success-message').hide();
+        }
+    </script>
+</body>
+</html>

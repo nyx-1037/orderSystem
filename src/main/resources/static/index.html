@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>订单管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">订单管理系统</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item" id="nav-orders">
+                        <a class="nav-link" href="/pages/order/list.html">我的订单</a>
+                    </li>
+                    <li class="nav-item" id="nav-products">
+                        <a class="nav-link" href="/pages/product/list.html">商品列表</a>
+                    </li>
+                    <li class="nav-item" id="nav-create-order">
+                        <a class="nav-link" href="/pages/order/create.html">创建订单</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/syslog/console.html">系统日志</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <img id="nav-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mr-1" style="width: 25px; height: 25px; object-fit: cover;">
+                            <span id="current-username">用户未登录</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="/pages/user/profile.html">个人中心</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-btn">退出登录</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="jumbotron">
+            <h1 class="display-4">欢迎使用订单管理系统</h1>
+            <p class="lead">这是一个简单的订单管理系统，您可以在这里管理您的订单和商品。</p>
+            <hr class="my-4">
+            <p>点击下方按钮开始使用系统。</p>
+            <a class="btn btn-primary btn-lg" href="/pages/order/list.html" role="button">查看我的订单</a>
+            <a class="btn btn-success btn-lg ml-2" href="/pages/product/list.html" role="button">浏览商品</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 检查用户是否已登录
+            checkLoginStatus();
+            
+            // 退出登录
+            $("#logout-btn").click(function(e) {
+                e.preventDefault();
+                logout();
+            });
+        });
+    </script>
+</body>
+</html>

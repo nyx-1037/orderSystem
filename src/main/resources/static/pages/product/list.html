@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>商品列表 - 订单管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .stock-status-0 {
+            color: white;
+            background-color: #ff6b6b;
+            padding: 0 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .stock-status-1 {
+            color: white;
+            background-color: #ffd43b;
+            padding: 0 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .stock-status-2 {
+            color: white;
+            background-color: #51cf66;
+            padding: 0 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">订单管理系统</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/order/list.html">我的订单</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/pages/product/list.html">商品列表</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/order/create.html">创建订单</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/syslog/console.html">系统日志</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <img id="nav-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mr-1" style="width: 25px; height: 25px; object-fit: cover;">
+                            <span id="current-username">用户未登录</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="/pages/user/profile.html">个人中心</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-btn">退出登录</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container product-container">
+        <div class="product-header">
+            <h2>商品列表</h2>
+            <div>
+                <button class="btn btn-success" id="add-product-btn">添加商品</button>
+                <a href="/pages/order/create.html" class="btn btn-primary ml-2">创建新订单</a>
+            </div>
+        </div>
+        
+        <div class="alert alert-success" id="success-message" style="display: none;"></div>
+        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+        
+        <div id="products-container" class="row">
+            <!-- 商品列表将通过JavaScript动态加载 -->
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">加载中...</span>
+                </div>
+                <p>正在加载商品数据...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑商品模态框 -->
+    <div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalLabel">添加商品</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId">
+                        <div class="form-group">
+                            <label for="productName">商品名称</label>
+                            <input type="text" class="form-control" id="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productDesc">商品描述</label>
+                            <textarea class="form-control" id="productDesc" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="price">价格</label>
+                            <input type="number" class="form-control" id="price" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="stock">库存</label>
+                            <input type="number" class="form-control" id="stock" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select class="form-control" id="status" required>
+                                <option value="1">上架</option>
+                                <option value="0">下架</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveProductBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除这个商品吗？此操作不可恢复。</p>
+                    <input type="hidden" id="deleteProductId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 检查用户是否已登录
+            checkLoginStatus().then(function(isLoggedIn) {
+                if (isLoggedIn) {
+                    // 显示当前用户名
+                    getCurrentUser();
+                    
+                    // 加载商品列表
+                    loadProducts();
+                    
+                    // 绑定退出登录事件
+                    $('#logout-btn').click(function(e) {
+                        e.preventDefault();
+                        logout();
+                    });
+
+                    // 绑定添加商品按钮事件
+                    $('#add-product-btn').click(function() {
+                        resetProductForm();
+                        $('#productModalLabel').text('添加商品');
+                        $('#productModal').modal('show');
+                    });
+
+                    // 绑定保存商品按钮事件
+                    $('#saveProductBtn').click(saveProduct);
+
+                    // 绑定确认删除按钮事件
+                    $('#confirmDeleteBtn').click(deleteProduct);
+                }
+            });
+        });
+        
+        // 加载商品列表
+        async function loadProducts() {
+            try {
+                const products = await fetchAPI('/api/product/list');
+                renderProducts(products);
+            } catch (error) {
+                console.error('加载商品列表失败:', error);
+                showErrorMessage('加载商品列表失败: ' + error.message);
+                $('#products-container').html('<div class="alert alert-danger">加载商品列表失败</div>');
+            }
+        }
+        
+        // 渲染商品列表
+        function renderProducts(products) {
+            const container = $('#products-container');
+            container.empty();
+            
+            if (!products || products.length === 0) {
+                container.html('<div class="col-12"><div class="alert alert-info">暂无商品</div></div>');
+                return;
+            }
+            
+            products.forEach(product => {
+                const statusText = product.status === 1 ? '上架' : '下架';
+                const statusClass = product.status === 1 ? 'status-1' : 'status-0';
+                
+                // 库存状态显示
+                let stockStatusText = '';
+                let stockStatusClass = '';
+                if (product.stock === 0) {
+                    stockStatusText = '库存不足';
+                    stockStatusClass = 'stock-status-0';
+                } else if (product.stock < 10) {
+                    stockStatusText = '库存紧张';
+                    stockStatusClass = 'stock-status-1';
+                } else {
+                    stockStatusText = '库存充足';
+                    stockStatusClass = 'stock-status-2';
+                }
+                
+                const productCard = $(`
+                    <div class="col-md-4 mb-4">
+                        <div class="card product-card">
+                            <div class="card-body">
+                                <h5 class="card-title">${product.productName}</h5>
+                                <p class="card-text text-muted">${product.productDesc || ''}</p>
+                                <p class="product-price">${formatCurrency(product.price)}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <span class="product-status ${statusClass}">${statusText}</span>
+                                        <span class="stock-status ${stockStatusClass}">${stockStatusText}</span>
+                                    </span>
+                                    <span class="text-muted">库存: ${product.stock}</span>
+                                </div>
+                                <div class="mt-3 d-flex justify-content-between">
+                                    <div>
+                                        <button class="btn btn-sm btn-info edit-product" data-id="${product.productId}">编辑</button>
+                                        <button class="btn btn-sm btn-danger delete-product" data-id="${product.productId}">删除</button>
+                                    </div>
+                                    ${product.status === 1 && product.stock > 0 ? 
+                                        `<a href="/pages/order/create.html" class="btn btn-sm btn-primary">立即购买</a>` : 
+                                        `<button class="btn btn-sm btn-secondary" disabled>${product.status !== 1 ? '无法购买' : '库存不足'}</button>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                // 绑定编辑按钮事件
+                productCard.find('.edit-product').click(function() {
+                    const productId = $(this).data('id');
+                    editProduct(productId);
+                });
+                
+                // 绑定删除按钮事件
+                productCard.find('.delete-product').click(function() {
+                    const productId = $(this).data('id');
+                    $('#deleteProductId').val(productId);
+                    $('#deleteConfirmModal').modal('show');
+                });
+                
+                container.append(productCard);
+            });
+        }
+
+        // 重置商品表单
+        function resetProductForm() {
+            $('#productId').val('');
+            $('#productName').val('');
+            $('#productDesc').val('');
+            $('#price').val('');
+            $('#stock').val('');
+            $('#status').val('1');
+        }
+
+        // 编辑商品
+        async function editProduct(productId) {
+            try {
+                const product = await fetchAPI(`/api/product/${productId}`);
+                $('#productId').val(product.productId);
+                $('#productName').val(product.productName);
+                $('#productDesc').val(product.productDesc);
+                $('#price').val(product.price);
+                $('#stock').val(product.stock);
+                $('#status').val(product.status);
+                
+                $('#productModalLabel').text('编辑商品');
+                $('#productModal').modal('show');
+            } catch (error) {
+                console.error('获取商品信息失败:', error);
+                showErrorMessage('获取商品信息失败: ' + error.message);
+            }
+        }
+
+        // 保存商品
+        async function saveProduct() {
+            // 表单验证
+            if (!$('#productName').val() || !$('#price').val() || !$('#stock').val()) {
+                showErrorMessage('请填写必填字段');
+                return;
+            }
+
+            const productId = $('#productId').val();
+            const product = {
+                productId: productId ? parseInt(productId) : null,
+                productName: $('#productName').val(),
+                productDesc: $('#productDesc').val(),
+                price: parseFloat($('#price').val()),
+                stock: parseInt($('#stock').val()),
+                status: parseInt($('#status').val())
+            };
+
+            try {
+                let response;
+                if (productId) {
+                    // 更新商品
+                    response = await fetchAPI('/api/product/update', {
+                        method: 'PUT',
+                        body: JSON.stringify(product)
+                    });
+                    showSuccessMessage('商品更新成功');
+                } else {
+                    // 添加商品
+                    response = await fetchAPI('/api/product/add', {
+                        method: 'POST',
+                        body: JSON.stringify(product)
+                    });
+                    showSuccessMessage('商品添加成功');
+                }
+                
+                $('#productModal').modal('hide');
+                loadProducts(); // 重新加载商品列表
+            } catch (error) {
+                console.error('保存商品失败:', error);
+                showErrorMessage('保存商品失败: ' + error.message);
+            }
+        }
+
+        // 删除商品
+        async function deleteProduct() {
+            const productId = $('#deleteProductId').val();
+            if (!productId) return;
+
+            try {
+                await fetchAPI(`/api/product/${productId}`, {
+                    method: 'DELETE'
+                });
+                
+                $('#deleteConfirmModal').modal('hide');
+                showSuccessMessage('商品删除成功');
+                loadProducts(); // 重新加载商品列表
+            } catch (error) {
+                console.error('删除商品失败:', error);
+                let errorMessage = '删除商品失败: ' + error.message;
+                // 检查是否是 409 Conflict 错误
+                if (error.message && error.message.includes('409')) {
+                    errorMessage = '删除失败：该商品可能已被订单引用，无法删除。';
+                }
+                showErrorMessage(errorMessage);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ordersystem.dao.OrderDao">
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.ordersystem.entity.Order">
+        <id column="order_id" property="orderId" />
+        <result column="order_no" property="orderNo" />
+        <result column="order_uuid" property="orderUuid" />
+        <result column="user_id" property="userId" />
+        <result column="total_amount" property="totalAmount" />
+        <result column="status" property="status" />
+        <result column="payment_time" property="paymentTime" />
+        <result column="shipping_time" property="shippingTime" />
+        <result column="complete_time" property="completeTime" />
+        <result column="address" property="address" />
+        <result column="receiver" property="receiver" />
+        <result column="receiver_phone" property="receiverPhone" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    
+    <!-- 订单详情结果映射（包含用户信息和订单明细） -->
+    <resultMap id="OrderDetailResultMap" type="com.ordersystem.entity.Order" extends="BaseResultMap">
+        <!-- 关联用户信息 -->
+        <association property="user" javaType="com.ordersystem.entity.User">
+            <id column="u_user_id" property="userId" />
+            <result column="u_username" property="username" />
+            <result column="u_real_name" property="realName" />
+            <result column="u_phone" property="phone" />
+            <result column="u_email" property="email" />
+            <result column="u_address" property="address" />
+        </association>
+        <!-- 关联订单明细 -->
+        <collection property="orderItems" ofType="com.ordersystem.entity.OrderItem">
+            <id column="oi_item_id" property="itemId" />
+            <result column="oi_order_id" property="orderId" />
+            <result column="oi_product_id" property="productId" />
+            <result column="oi_product_name" property="productName" />
+            <result column="oi_product_price" property="productPrice" />
+            <result column="oi_quantity" property="quantity" />
+            <result column="oi_total_price" property="totalPrice" />
+            <!-- 关联商品信息 -->
+            <association property="product" javaType="com.ordersystem.entity.Product">
+                <id column="p_product_id" property="productId" />
+                <result column="p_product_name" property="productName" />
+                <result column="p_product_desc" property="productDesc" />
+                <result column="p_price" property="price" />
+                <result column="p_stock" property="stock" />
+                <result column="p_status" property="status" />
+            </association>
+        </collection>
+    </resultMap>
+    
+    <!-- 公共列 -->
+    <sql id="Base_Column_List">
+        order_id, order_no, order_uuid, user_id, total_amount, status, payment_time, shipping_time, complete_time, 
+        address, receiver, receiver_phone, remark, create_time, update_time
+    </sql>
+    
+    <!-- 添加订单 -->
+    <insert id="insertOrder" parameterType="com.ordersystem.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
+        INSERT INTO `order` (
+            order_no, order_uuid, user_id, total_amount, status, payment_time, shipping_time, complete_time,
+            address, receiver, receiver_phone, remark
+        ) VALUES (
+            #{orderNo}, #{orderUuid}, #{userId}, #{totalAmount}, #{status}, #{paymentTime}, #{shippingTime}, #{completeTime},
+            #{address}, #{receiver}, #{receiverPhone}, #{remark}
+        )
+    </insert>
+    
+    <!-- 根据ID删除订单 -->
+    <delete id="deleteOrderById" parameterType="java.lang.Integer">
+        DELETE FROM `order` WHERE order_id = #{orderId}
+    </delete>
+    
+    <!-- 更新订单信息 -->
+    <update id="updateOrder" parameterType="com.ordersystem.entity.Order">
+        UPDATE `order`
+        <set>
+            <if test="orderNo != null">order_no = #{orderNo},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="totalAmount != null">total_amount = #{totalAmount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="paymentTime != null">payment_time = #{paymentTime},</if>
+            <if test="shippingTime != null">shipping_time = #{shippingTime},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="receiver != null">receiver = #{receiver},</if>
+            <if test="receiverPhone != null">receiver_phone = #{receiverPhone},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </set>
+        WHERE order_id = #{orderId}
+    </update>
+    
+    <!-- 根据ID查询订单 -->
+    <select id="getOrderById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE order_id = #{orderId}
+    </select>
+    
+    <!-- 根据订单编号查询订单 -->
+    <select id="getOrderByOrderNo" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE order_no = #{orderNo}
+    </select>
+    
+    <!-- 查询所有订单 -->
+    <select id="getAllOrders" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据用户ID查询订单 -->
+    <select id="getOrdersByUserId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE user_id = #{userId}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 根据订单状态查询订单 -->
+    <select id="getOrdersByStatus" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE status = #{status}
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 查询订单详情（包含用户信息和订单明细） -->
+    <select id="getOrderDetail" parameterType="java.lang.Integer" resultMap="OrderDetailResultMap">
+        SELECT 
+            o.order_id, o.order_no, o.order_uuid, o.user_id, o.total_amount, o.status, o.payment_time, o.shipping_time, 
+            o.complete_time, o.address, o.receiver, o.receiver_phone, o.remark, o.create_time, o.update_time,
+            u.user_id as u_user_id, u.username as u_username, u.real_name as u_real_name, 
+            u.phone as u_phone, u.email as u_email, u.address as u_address,
+            oi.item_id as oi_item_id, oi.order_id as oi_order_id, oi.product_id as oi_product_id, 
+            oi.product_name as oi_product_name, oi.product_price as oi_product_price, 
+            oi.quantity as oi_quantity, oi.total_price as oi_total_price,
+            p.product_id as p_product_id, p.product_name as p_product_name, p.product_desc as p_product_desc, 
+            p.price as p_price, p.stock as p_stock, p.status as p_status
+        FROM `order` o
+        LEFT JOIN user u ON o.user_id = u.user_id
+        LEFT JOIN order_item oi ON o.order_id = oi.order_id
+        LEFT JOIN product p ON oi.product_id = p.product_id
+        WHERE o.order_id = #{orderId}
+    </select>
+    
+    <!-- 根据UUID查询订单 -->
+    <select id="getOrderByUuid" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE order_uuid = #{orderUuid}
+    </select>
+    
+    <!-- 根据UUID查询订单详情（包含用户信息和订单明细） -->
+    <select id="getOrderDetailByUuid" parameterType="java.lang.String" resultMap="OrderDetailResultMap">
+        SELECT 
+            o.order_id, o.order_no, o.order_uuid, o.user_id, o.total_amount, o.status, o.payment_time, o.shipping_time, 
+            o.complete_time, o.address, o.receiver, o.receiver_phone, o.remark, o.create_time, o.update_time,
+            u.user_id as u_user_id, u.username as u_username, u.real_name as u_real_name, 
+            u.phone as u_phone, u.email as u_email, u.address as u_address,
+            oi.item_id as oi_item_id, oi.order_id as oi_order_id, oi.product_id as oi_product_id, 
+            oi.product_name as oi_product_name, oi.product_price as oi_product_price, 
+            oi.quantity as oi_quantity, oi.total_price as oi_total_price,
+            p.product_id as p_product_id, p.product_name as p_product_name, p.product_desc as p_product_desc, 
+            p.price as p_price, p.stock as p_stock, p.status as p_status
+        FROM `order` o
+        LEFT JOIN user u ON o.user_id = u.user_id
+        LEFT JOIN order_item oi ON o.order_id = oi.order_id
+        LEFT JOIN product p ON oi.product_id = p.product_id
+        WHERE o.order_uuid = #{orderUuid}
+    </select>
+    
+    <!-- 更新订单状态 -->
+    <update id="updateOrderStatus">
+        UPDATE `order`
+        SET status = #{status}
+        WHERE order_id = #{orderId}
+    </update>
+</mapper>
