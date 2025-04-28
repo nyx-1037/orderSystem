@@ -139,6 +139,14 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
+    public PageInfo<Order> getOrdersByUserIdAndStatusWithPage(Integer userId, Integer status, Integer pageNum, Integer pageSize) {
+        // 使用PageHelper进行分页查询
+        PageHelper.startPage(pageNum, pageSize);
+        List<Order> orders = orderDao.getOrdersByUserIdAndStatus(userId, status);
+        return new PageInfo<>(orders);
+    }
+    
+    @Override
     public Order getOrderDetail(Integer orderId) {
         if (orderId == null) {
             return null;

@@ -9,21 +9,22 @@
         <result column="price" property="price" />
         <result column="stock" property="stock" />
         <result column="status" property="status" />
+        <result column="product_image" property="productImage" jdbcType="BLOB" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
     </resultMap>
     
     <!-- 公共列 -->
     <sql id="Base_Column_List">
-        product_id, product_name, product_desc, price, stock, status, create_time, update_time
+        product_id, product_name, product_desc, price, stock, status, product_image, create_time, update_time
     </sql>
     
     <!-- 添加商品 -->
     <insert id="insertProduct" parameterType="com.ordersystem.entity.Product" useGeneratedKeys="true" keyProperty="productId">
         INSERT INTO product (
-            product_name, product_desc, price, stock, status
+            product_name, product_desc, price, stock, status, product_image
         ) VALUES (
-            #{productName}, #{productDesc}, #{price}, #{stock}, #{status}
+            #{productName}, #{productDesc}, #{price}, #{stock}, #{status}, #{productImage,jdbcType=BLOB}
         )
     </insert>
     
@@ -41,6 +42,7 @@
             <if test="price != null">price = #{price},</if>
             <if test="stock != null">stock = #{stock},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="productImage != null">product_image = #{productImage,jdbcType=BLOB},</if>
         </set>
         WHERE product_id = #{productId}
     </update>
@@ -71,6 +73,13 @@
     <update id="updateProductStock">
         UPDATE product
         SET stock = #{stock}
+        WHERE product_id = #{productId}
+    </update>
+    
+    <!-- 更新商品图片 -->
+    <update id="updateProductImage">
+        UPDATE product
+        SET product_image = #{productImage,jdbcType=BLOB}
         WHERE product_id = #{productId}
     </update>
 </mapper>

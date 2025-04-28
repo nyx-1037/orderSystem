@@ -181,4 +181,12 @@
         SET status = #{status}
         WHERE order_id = #{orderId}
     </update>
+    
+    <!-- 根据用户ID和订单状态查询订单 -->
+    <select id="getOrdersByUserIdAndStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM `order`
+        WHERE user_id = #{userId} AND status = #{status}
+        ORDER BY create_time DESC
+    </select>
 </mapper>

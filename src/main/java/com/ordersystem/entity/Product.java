@@ -13,6 +13,7 @@ public class Product {
     private BigDecimal price;       // 商品价格
     private Integer stock;          // 库存数量
     private Integer status;         // 状态：0-下架，1-上架
+    private byte[] productImage;    // 商品图片（二进制数据）
     private Date createTime;        // 创建时间
     private Date updateTime;        // 更新时间
 
@@ -79,6 +80,14 @@ public class Product {
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
     }
+    
+    public byte[] getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(byte[] productImage) {
+        this.productImage = productImage;
+    }
 
     @Override
     public String toString() {
@@ -89,6 +98,7 @@ public class Product {
                 ", price=" + price +
                 ", stock=" + stock +
                 ", status=" + status +
+                ", productImage=" + (productImage != null ? "[二进制数据]" : "null") +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 '}';

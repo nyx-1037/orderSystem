@@ -56,4 +56,19 @@ public interface ProductService {
      * @return 是否成功
      */
     boolean updateProductStock(Integer productId, Integer stock);
+    
+    /**
+     * 更新商品图片
+     * @param productId 商品ID
+     * @param imageData 图片二进制数据
+     * @return 是否成功
+     */
+    boolean updateProductImage(Integer productId, byte[] imageData);
+    
+    /**
+     * 获取商品图片
+     * @param productId 商品ID
+     * @return 图片二进制数据
+     */
+    byte[] getProductImage(Integer productId);
 }

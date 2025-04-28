@@ -3,6 +3,7 @@ package com.ordersystem.controller;
 import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.SysLog;
 import com.ordersystem.service.SysLogService;
+import com.ordersystem.aspect.LogAspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.HashMap;
 
 /**
  * 系统日志控制器
@@ -23,6 +25,9 @@ public class SysLogController {
 
     @Autowired
     private SysLogService sysLogService;
+    
+    @Autowired
+    private LogAspect logAspect;
 
     /**
      * 获取日志列表（支持分页和多条件筛选）
@@ -144,5 +149,29 @@ public class SysLogController {
         }
         
         return ResponseEntity.ok().body(String.format("成功删除 %d 条日志记录", count));
+    }
+    
+    /**
+     * 手动同步Redis中的日志到MySQL数据库
+     * @return 同步结果
+     */
+    @PostMapping("/sync-logs")
+    public ResponseEntity<?> syncLogs() {
+        log.info("手动触发日志同步操作");
+        
+        try {
+            // 调用LogAspect中的同步方法
+            int processedCount = logAspect.syncLogsToDatabase();
+            
+            HashMap<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", String.format("成功同步 %d 条日志记录", processedCount));
+            result.put("count", processedCount);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("手动同步日志失败: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("同步日志失败: " + e.getMessage());
+        }
     }
 }

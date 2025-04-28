@@ -96,6 +96,16 @@ public interface OrderService {
     Order getOrderByUuid(String orderUuid);
     
     /**
+     * 根据用户ID和订单状态分页查询订单
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 分页订单信息
+     */
+    PageInfo<Order> getOrdersByUserIdAndStatusWithPage(Integer userId, Integer status, Integer pageNum, Integer pageSize);
+    
+    /**
      * 根据UUID查询订单详情（包含用户信息和订单明细）
      * @param orderUuid 订单UUID
      * @return 订单详情

@@ -108,6 +108,11 @@ $(document).ready(function() {
         loadOnlineUsers();
     });
     
+    // 绑定同步日志按钮事件
+    $('#sync-logs-btn').on('click', function() {
+        syncLogsToDatabase();
+    });
+    
     // 绑定在线用户表格中的强制登出按钮事件委托
     $('#online-users-table-body').on('click', '.force-logout-btn', function() {
         const userId = $(this).data('user-id');
@@ -134,6 +139,49 @@ function updateSelectAllCheckbox() {
     const totalCheckboxes = $('.log-checkbox').length;
     const checkedCheckboxes = $('.log-checkbox:checked').length;
     $('#select-all-logs').prop('checked', totalCheckboxes === checkedCheckboxes && totalCheckboxes > 0);
+}
+
+/**
+ * 同步Redis和MySQL中的日志数据
+ */
+function syncLogsToDatabase() {
+    // 显示同步中的按钮状态
+    const $syncBtn = $('#sync-logs-btn');
+    const originalHtml = $syncBtn.html();
+    $syncBtn.html('<i class="fas fa-spinner fa-spin"></i> 同步中...');
+    $syncBtn.prop('disabled', true);
+    
+    // 发送同步请求
+    $.ajax({
+        url: '/api/syslog/sync-logs',
+        type: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        success: function(response) {
+            // 恢复按钮状态
+            $syncBtn.html(originalHtml);
+            $syncBtn.prop('disabled', false);
+            
+            // 显示成功消息
+            if (response && response.count > 0) {
+                showSuccessMessage(`日志同步成功，共同步 ${response.count} 条日志记录`);
+            } else {
+                showSuccessMessage('没有需要同步的日志记录');
+            }
+            
+            // 重新加载日志数据
+            loadLogs(currentPage, pageSize);
+        },
+        error: function(xhr) {
+            // 恢复按钮状态
+            $syncBtn.html(originalHtml);
+            $syncBtn.prop('disabled', false);
+            
+            // 显示错误消息
+            showErrorMessage('同步日志失败: ' + (xhr.responseText || '未知错误'));
+        }
+    });
 }
 
 

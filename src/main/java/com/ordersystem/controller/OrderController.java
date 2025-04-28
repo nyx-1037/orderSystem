@@ -59,7 +59,8 @@ public class OrderController {
         
         return ResponseEntity.ok(pageInfo);
     }
-    
+
+
     /**
      * 获取订单详情（通过UUID访问，更安全）
      */
@@ -100,6 +101,40 @@ public class OrderController {
             // 订单不存在，返回错误信息
             return ResponseEntity.badRequest().body("订单不存在或已被删除");
         }
+    }
+    
+    /**
+     * 管理员获取订单详情（通过UUID访问，更安全）
+     */
+    @GetMapping("/admin/detail/{uuid}")
+    public ResponseEntity<?> adminDetailByUuid(@PathVariable("uuid") String uuid) {
+        // 获取订单详情（包含订单项信息）
+        Order order = orderService.getOrderDetailByUuid(uuid);
+        
+        if (order != null) {
+            return ResponseEntity.ok(order);
+        } else {
+            // 订单不存在，返回错误信息
+            return ResponseEntity.badRequest().body("订单不存在或已被删除");
+        }
+    }
+    
+    /**
+     * 管理员获取所有订单列表（支持分页）
+     * @param pageNum 页码，默认为1
+     * @param pageSize 每页数量，默认为10
+     * @return 分页订单数据
+     */
+    @GetMapping("/admin/list")
+    public ResponseEntity<?> adminList(
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        
+        // 获取所有订单（管理员视图）
+        PageInfo<Order> pageInfo = orderService.getAllOrdersByPage(pageNum, pageSize);
+        
+        return ResponseEntity.ok(pageInfo);
     }
     
     /**
@@ -250,5 +285,23 @@ public class OrderController {
             // 订单不存在，返回错误信息
             return ResponseEntity.badRequest().body("订单不存在或已被删除");
         }
+    }
+    
+    /**
+     * 管理员取消订单
+     */
+    @PostMapping("/admin/cancel/{id}")
+    public ResponseEntity<?> adminCancelOrder(@PathVariable("id") Integer id) {
+        boolean success = orderService.cancelOrder(id);
+        return success ? ResponseEntity.ok().body("订单取消成功") : ResponseEntity.badRequest().body("订单取消失败");
+    }
+    
+    /**
+     * 管理员发货
+     */
+    @PostMapping("/admin/ship/{id}")
+    public ResponseEntity<?> adminShipOrder(@PathVariable("id") Integer id) {
+        boolean success = orderService.shipOrder(id);
+        return success ? ResponseEntity.ok().body("订单发货成功") : ResponseEntity.badRequest().body("订单发货失败");
     }
 }

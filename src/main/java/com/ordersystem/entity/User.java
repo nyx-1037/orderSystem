@@ -15,6 +15,7 @@ public class User {
     private String address;     // 地址
     // private String avatar;      // 用户头像 (Deprecated, use avatarData)
     private byte[] avatarData;  // 用户头像二进制数据
+    private Integer role;       // 用户角色：0-普通用户，1-商家/管理员
     private Date createTime;    // 创建时间
     private Date updateTime;    // 更新时间
     private Date lastLoginTime; // 最后登录时间
@@ -115,6 +116,14 @@ public class User {
 
     public void setLastLoginTime(Date lastLoginTime) {
         this.lastLoginTime = lastLoginTime;
+    }
+    
+    public Integer getRole() {
+        return role;
+    }
+
+    public void setRole(Integer role) {
+        this.role = role;
     }
 
     @Override

@@ -241,7 +241,7 @@ function submitOrder() {
     }
 
     if (orderData.items.length === 0) {
-        alert('请至少选择一件商品');
+        showErrorMessage('请至少选择一件商品');
         return;
     }
 

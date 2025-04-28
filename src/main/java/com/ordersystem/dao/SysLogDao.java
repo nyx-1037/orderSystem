@@ -20,6 +20,13 @@ public interface SysLogDao {
     int save(SysLog sysLog);
     
     /**
+     * 批量保存日志
+     * @param logs 日志列表
+     * @return 影响行数
+     */
+    int batchSave(List<SysLog> logs);
+    
+    /**
      * 查询所有日志（分页）
      * @return 日志列表
      */

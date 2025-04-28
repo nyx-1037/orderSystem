@@ -56,4 +56,12 @@ public interface ProductDao {
      * @return 影响行数
      */
     int updateProductStock(Integer productId, Integer stock);
+    
+    /**
+     * 更新商品图片
+     * @param productId 商品ID
+     * @param productImage 商品图片二进制数据
+     * @return 影响行数
+     */
+    int updateProductImage(Integer productId, byte[] productImage);
 }

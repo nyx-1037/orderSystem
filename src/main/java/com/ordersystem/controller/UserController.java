@@ -77,6 +77,7 @@ public class UserController {
             Map<String, Object> result = new HashMap<>();
             result.put("token", token);
             result.put("user", user);
+            result.put("role", user.getRole());
             
             return ResponseEntity.ok().body(result);
         } catch (RuntimeException e) {

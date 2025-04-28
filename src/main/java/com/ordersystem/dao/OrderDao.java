@@ -137,4 +137,12 @@ public interface OrderDao {
      * @return 订单总数
      */
     int getOrderCountByStatus(Integer status);
+    
+    /**
+     * 根据用户ID和订单状态查询订单
+     * @param userId 用户ID
+     * @param status 订单状态
+     * @return 订单列表
+     */
+    List<Order> getOrdersByUserIdAndStatus(Integer userId, Integer status);
 }

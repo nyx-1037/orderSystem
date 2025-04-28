@@ -3,6 +3,8 @@ package com.ordersystem.service;
 import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.SysLog;
 
+import java.util.List;
+
 /**
  * 系统日志服务接口
  */
@@ -14,6 +16,13 @@ public interface SysLogService {
      * @return 是否成功
      */
     boolean saveLog(SysLog sysLog);
+    
+    /**
+     * 批量保存日志
+     * @param logs 日志列表
+     * @return 是否成功
+     */
+    boolean batchSaveLog(List<SysLog> logs);
     
     /**
      * 获取所有日志（分页）

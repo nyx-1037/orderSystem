@@ -30,6 +30,18 @@
             font-weight: bold;
             margin-left: 5px;
         }
+        
+        .product-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 10px;
+        }
+        
+        .image-upload-container {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +141,14 @@
                                 <option value="1">上架</option>
                                 <option value="0">下架</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="productImage">商品图片</label>
+                            <input type="file" class="form-control-file" id="productImage" accept="image/*">
+                            <small class="form-text text-muted">选择一张图片作为商品展示图</small>
+                            <div id="imagePreviewContainer" class="mt-2" style="display: none;">
+                                <img id="imagePreview" src="#" alt="图片预览" style="max-width: 100%; max-height: 200px;">
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -243,8 +263,11 @@
                 const productCard = $(`
                     <div class="col-md-4 mb-4">
                         <div class="card product-card">
+                            <img src="/api/product/${product.productId}/image" class="product-image" alt="${product.productName}" onerror="this.onerror=null; this.src='/images/default-product.jpg';">
                             <div class="card-body">
-                                <h5 class="card-title">${product.productName}</h5>
+                                <h5 class="card-title">
+                                    <a href="/pages/product/detail.html?id=${product.productId}" class="text-dark">${product.productName}</a>
+                                </h5>
                                 <p class="card-text text-muted">${product.productDesc || ''}</p>
                                 <p class="product-price">${formatCurrency(product.price)}</p>
                                 <div class="d-flex justify-content-between align-items-center">
@@ -260,7 +283,7 @@
                                         <button class="btn btn-sm btn-danger delete-product" data-id="${product.productId}">删除</button>
                                     </div>
                                     ${product.status === 1 && product.stock > 0 ? 
-                                        `<a href="/pages/order/create.html" class="btn btn-sm btn-primary">立即购买</a>` : 
+                                        `<a href="/pages/product/detail.html?id=${product.productId}" class="btn btn-sm btn-primary">查看详情</a>` : 
                                         `<button class="btn btn-sm btn-secondary" disabled>${product.status !== 1 ? '无法购买' : '库存不足'}</button>`
                                     }
                                 </div>
@@ -294,7 +317,26 @@
             $('#price').val('');
             $('#stock').val('');
             $('#status').val('1');
+            $('#productImage').val('');
+            $('#imagePreviewContainer').hide();
         }
+        
+        // 图片预览
+        $(document).ready(function() {
+            $('#productImage').change(function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#imagePreview').attr('src', e.target.result);
+                        $('#imagePreviewContainer').show();
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#imagePreviewContainer').hide();
+                }
+            });
+        });
 
         // 编辑商品
         async function editProduct(productId) {
@@ -351,11 +393,41 @@
                     showSuccessMessage('商品添加成功');
                 }
                 
+                // 上传图片（如果有选择图片）
+                const imageFile = $('#productImage')[0].files[0];
+                if (imageFile) {
+                    const savedProductId = productId || response.productId;
+                    if (savedProductId) {
+                        await uploadProductImage(savedProductId, imageFile);
+                    }
+                }
+                
                 $('#productModal').modal('hide');
                 loadProducts(); // 重新加载商品列表
             } catch (error) {
                 console.error('保存商品失败:', error);
                 showErrorMessage('保存商品失败: ' + error.message);
+            }
+        }
+        
+        // 上传商品图片
+        async function uploadProductImage(productId, file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                await fetch(`/api/product/${productId}/image`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                console.log('图片上传成功');
+            } catch (error) {
+                console.error('上传商品图片失败:', error);
+                showErrorMessage('上传商品图片失败: ' + error.message);
             }
         }
 

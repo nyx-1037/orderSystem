@@ -79,4 +79,21 @@ public class ProductServiceImpl implements ProductService {
         }
         return false;
     }
+    
+    @Override
+    public boolean updateProductImage(Integer productId, byte[] imageData) {
+        if (productId == null || imageData == null || imageData.length == 0) {
+            return false;
+        }
+        return productDao.updateProductImage(productId, imageData) > 0;
+    }
+    
+    @Override
+    public byte[] getProductImage(Integer productId) {
+        if (productId == null) {
+            return null;
+        }
+        Product product = productDao.getProductById(productId);
+        return product != null ? product.getProductImage() : null;
+    }
 }

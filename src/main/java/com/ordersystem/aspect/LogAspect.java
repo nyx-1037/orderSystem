@@ -1,7 +1,10 @@
 package com.ordersystem.aspect;
 
 import com.ordersystem.entity.SysLog;
+import com.ordersystem.service.RedisService;
 import com.ordersystem.service.SysLogService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -12,14 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * 日志切面，用于记录系统操作日志
@@ -32,6 +40,21 @@ public class LogAspect {
 
     @Autowired
     private SysLogService sysLogService;
+    
+    @Autowired
+    private RedisService redisService;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    @Autowired
+    private org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
+    
+    // Redis中日志的key前缀
+    private static final String LOG_KEY_PREFIX = "system:log:";
+    
+    // Redis中存储日志ID列表的key
+    private static final String LOG_IDS_KEY = "system:log:ids";
 
     /**
      * 定义切点 - 所有controller包下的方法
@@ -238,8 +261,31 @@ public class LogAspect {
             // 设置创建时间
             sysLog.setCreateTime(new Date());
             
-            // 保存日志
-            sysLogService.saveLog(sysLog);
+            // 生成唯一ID
+            String logId = UUID.randomUUID().toString();
+            
+            try {
+                // 将日志对象序列化为JSON字符串
+                String logJson = objectMapper.writeValueAsString(sysLog);
+                
+                // 将日志存入Redis，设置过期时间为1天
+                String logKey = LOG_KEY_PREFIX + logId;
+                redisService.set(logKey, logJson, 24 * 60 * 60);
+                
+                // 将日志ID添加到Redis列表中
+                redisTemplate.opsForList().rightPush(LOG_IDS_KEY, logId);
+                
+                logger.debug("日志已存入Redis，ID: {}, 操作: {}", logId, sysLog.getOperation());
+            } catch (Exception ee) {
+                logger.error("日志存入Redis失败: {}", ee.getMessage());
+                // 如果Redis操作失败，直接保存到数据库
+                try {
+                    sysLogService.saveLog(sysLog);
+                    logger.info("日志已直接保存到数据库");
+                } catch (Exception ex) {
+                    logger.error("保存日志到数据库也失败: {}", ex.getMessage());
+                }
+            }
         } catch (Exception ex) {
             logger.error("记录操作日志失败", ex);
         }
@@ -274,6 +320,96 @@ public class LogAspect {
      * @param methodName 方法名
      * @return 方法描述
      */
+    /**
+     * 定时任务，每10分钟将Redis中的日志同步到MySQL数据库
+     */
+    @Scheduled(fixedRate = 10 * 60 * 1000) // 每10分钟执行一次
+    public int syncLogsToDatabase() {
+        logger.info("开始同步Redis中的日志到MySQL数据库");
+        int finalProcessedCount = 0;
+        try {
+            // 获取日志ID列表
+            List<Object> logIds = redisTemplate.opsForList().range(LOG_IDS_KEY, 0, -1);
+            
+            if (logIds != null && !logIds.isEmpty()) {
+                int totalCount = logIds.size();
+                int batchSize = 50; // 每批处理的日志数量
+                int processedCount = 0;
+                
+                logger.info("共有{}条日志需要同步", totalCount);
+                
+                // 批量处理日志
+                List<SysLog> logBatch = new ArrayList<>(batchSize);
+                List<String> processedLogIds = new ArrayList<>(batchSize);
+                
+                for (Object idObj : logIds) {
+                    String logId = idObj.toString();
+                    String logKey = LOG_KEY_PREFIX + logId;
+                    
+                    try {
+                        // 从Redis获取日志JSON
+                        String logJson = redisService.get(logKey, String.class);
+                        
+                        if (logJson != null) {
+                            // 反序列化为SysLog对象
+                            SysLog sysLog = objectMapper.readValue(logJson, SysLog.class);
+                            logBatch.add(sysLog);
+                            processedLogIds.add(logId);
+                        } else {
+                            // 日志内容为空，直接从列表中删除
+                            redisTemplate.opsForList().remove(LOG_IDS_KEY, 1, logId);
+                            logger.warn("日志内容为空，ID: {}", logId);
+                        }
+                    } catch (Exception e) {
+                        logger.error("处理日志ID: {} 失败: {}", logId, e.getMessage());
+                    }
+                    
+                    processedCount++;
+                    
+                    // 当达到批处理大小或处理完所有日志时，执行批量保存
+                    if (logBatch.size() >= batchSize || processedCount == totalCount) {
+                        if (!logBatch.isEmpty()) {
+                            try {
+                                // 批量保存日志到数据库
+                                boolean success = sysLogService.batchSaveLog(logBatch);
+                                
+                                if (success) {
+                                    logger.info("成功批量保存{}条日志到数据库", logBatch.size());
+                                    finalProcessedCount += logBatch.size();
+                                    
+                                    // 从Redis中删除已保存的日志
+                                    for (String id : processedLogIds) {
+                                        String key = LOG_KEY_PREFIX + id;
+                                        redisTemplate.delete(key);
+                                        redisTemplate.opsForList().remove(LOG_IDS_KEY, 1, id);
+                                    }
+                                } else {
+                                    logger.warn("批量保存日志失败，本批次共{}条", logBatch.size());
+                                }
+                            } catch (Exception e) {
+                                logger.error("批量保存日志异常: {}", e.getMessage());
+                            }
+                            
+                            // 清空批处理列表，准备下一批
+                            logBatch.clear();
+                            processedLogIds.clear();
+                        }
+                        
+                        // 输出进度
+                        logger.info("已处理: {}/{} 条日志", processedCount, totalCount);
+                    }
+                }
+                
+                logger.info("日志同步完成，共处理: {}条", finalProcessedCount);
+            } else {
+                logger.info("没有需要同步的日志");
+            }
+        } catch (Exception e) {
+            logger.error("同步日志到数据库失败: {}", e.getMessage());
+        }
+        return finalProcessedCount;
+    }
+    
     private String getMethodDescription(String className, String methodName) {
         // 用户控制器
         if ("UserController".equals(className)) {

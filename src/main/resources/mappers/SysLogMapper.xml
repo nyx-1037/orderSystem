@@ -91,4 +91,17 @@
     <delete id="deleteById">
         DELETE FROM sys_log WHERE log_id = #{logId}
     </delete>
+    
+    <!-- 批量保存日志 -->
+    <insert id="batchSave" parameterType="java.util.List">
+        INSERT INTO sys_log (
+            username, user_id, operation, method, params, ip, status_code, error_msg, create_time
+        ) VALUES 
+        <foreach collection="list" item="log" separator=",">
+            (
+                #{log.username}, #{log.userId}, #{log.operation}, #{log.method}, #{log.params}, 
+                #{log.ip}, #{log.statusCode}, #{log.errorMsg}, #{log.createTime}
+            )
+        </foreach>
+    </insert>
 </mapper>

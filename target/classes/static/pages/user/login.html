@@ -92,11 +92,19 @@
                 localStorage.setItem('token', response.token);
                 
                 showSuccessMessage('登录成功，正在跳转...');
-                
-                // 跳转到订单列表页
-                setTimeout(() => {
-                    window.location.href = '/pages/order/list.html';
-                }, 1500);
+                console.log('登录role:', response.role);
+                // 根据用户角色跳转到不同页面
+                if (response.role == 1) {
+                    // 管理员跳转到后台
+                    setTimeout(() => {
+                        window.location.href = '/pages/order/list.html';
+                    }, 1500);
+                } else {
+                    // 普通用户跳转到前台
+                    setTimeout(() => {
+                        window.location.href = '/pages/client/index.html';
+                    }, 1500);
+                }
             } catch (error) {
                 console.error('登录失败:', error);
                 
