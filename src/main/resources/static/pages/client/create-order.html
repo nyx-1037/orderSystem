@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>创建订单 - 在线商城</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/client.css">
+    <style>
+        .order-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .product-summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .product-image-small {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+        }
+        
+        .product-price {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .total-price {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/pages/client/index.html">在线商城</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/client/index.html">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/client/products.html">全部商品</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/client/orders.html">我的订单</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <img id="nav-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mr-1" style="width: 25px; height: 25px; object-fit: cover;">
+                            <span id="current-username">用户未登录</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="/pages/user/profile.html">个人中心</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-btn">退出登录</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="alert alert-success" id="success-message" style="display: none;"></div>
+        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+        
+        <h2 class="mb-4">创建订单</h2>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="order-form">
+                    <h4 class="mb-3">收货信息</h4>
+                    <form id="order-form">
+                        <div class="form-group">
+                            <label for="receiver">收货人</label>
+                            <input type="text" class="form-control" id="receiver" name="receiver" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="receiver-phone">联系电话</label>
+                            <input type="text" class="form-control" id="receiver-phone" name="receiverPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">收货地址</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="remark">订单备注</label>
+                            <textarea class="form-control" id="remark" name="remark" rows="2"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-order-btn">提交订单</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="product-summary" id="product-summary">
+                    <!-- 商品信息将通过JavaScript动态加载 -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p>正在加载商品信息...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>关于我们</h5>
+                    <p>在线商城提供优质的商品和服务，致力于为用户创造最佳的购物体验。</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>快速链接</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/pages/client/index.html" class="text-white">首页</a></li>
+                        <li><a href="/pages/client/products.html" class="text-white">全部商品</a></li>
+                        <li><a href="/pages/client/orders.html" class="text-white">我的订单</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>联系我们</h5>
+                    <ul class="list-unstyled">
+                        <li>电话：400-123-4567</li>
+                        <li>邮箱：support@example.com</li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>© 2025 在线商城. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/image-loader.js"></script>
+    <script src="/js/client/create-order.js"></script>
+</body>
+</html>

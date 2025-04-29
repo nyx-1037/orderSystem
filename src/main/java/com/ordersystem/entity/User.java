@@ -13,7 +13,6 @@ public class User {
     private String phone;       // 电话号码
     private String email;       // 邮箱
     private String address;     // 地址
-    // private String avatar;      // 用户头像 (Deprecated, use avatarData)
     private byte[] avatarData;  // 用户头像二进制数据
     private Integer role;       // 用户角色：0-普通用户，1-商家/管理员
     private Date createTime;    // 创建时间
@@ -76,15 +75,7 @@ public class User {
         this.address = address;
     }
 
-    /* Deprecated getter/setter for avatar String
-    public String getAvatar() {
-        return avatar;
-    }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
-    */
 
     public byte[] getAvatarData() {
         return avatarData;

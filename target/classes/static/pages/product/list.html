@@ -186,6 +186,7 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
     <script src="/js/main.js"></script>
+    <script src="/js/image-loader.js"></script>
     <script>
         // 页面加载完成后执行
         $(document).ready(function() {
@@ -219,7 +220,7 @@
                 }
             });
         });
-        
+
         // 加载商品列表
         async function loadProducts() {
             try {
@@ -231,21 +232,21 @@
                 $('#products-container').html('<div class="alert alert-danger">加载商品列表失败</div>');
             }
         }
-        
+
         // 渲染商品列表
         function renderProducts(products) {
             const container = $('#products-container');
             container.empty();
-            
+
             if (!products || products.length === 0) {
                 container.html('<div class="col-12"><div class="alert alert-info">暂无商品</div></div>');
                 return;
             }
-            
+
             products.forEach(product => {
                 const statusText = product.status === 1 ? '上架' : '下架';
                 const statusClass = product.status === 1 ? 'status-1' : 'status-0';
-                
+
                 // 库存状态显示
                 let stockStatusText = '';
                 let stockStatusClass = '';
@@ -259,11 +260,11 @@
                     stockStatusText = '库存充足';
                     stockStatusClass = 'stock-status-2';
                 }
-                
+
                 const productCard = $(`
                     <div class="col-md-4 mb-4">
                         <div class="card product-card">
-                            <img src="/api/product/${product.productId}/image" class="product-image" alt="${product.productName}" onerror="this.onerror=null; this.src='/images/default-product.jpg';">
+                            <img data-src="/api/product/${product.productId}/image" class="product-image" alt="${product.productName}" onerror="this.onerror=null; this.src='/images/default-product.jpg';">
                             <div class="card-body">
                                 <h5 class="card-title">
                                     <a href="/pages/product/detail.html?id=${product.productId}" class="text-dark">${product.productName}</a>

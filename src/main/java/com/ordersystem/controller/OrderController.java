@@ -304,4 +304,24 @@ public class OrderController {
         boolean success = orderService.shipOrder(id);
         return success ? ResponseEntity.ok().body("订单发货成功") : ResponseEntity.badRequest().body("订单发货失败");
     }
+    
+    /**
+     * 管理员删除订单
+     */
+    @DeleteMapping("/admin/delete/{id}")
+    public ResponseEntity<?> adminDeleteOrder(@PathVariable("id") Integer id) {
+        try {
+            boolean success = orderService.deleteOrder(id);
+            if (success) {
+                log.info("管理员成功删除订单 ID: {}", id);
+                return ResponseEntity.ok().body("订单删除成功");
+            } else {
+                log.warn("管理员删除订单 ID: {} 失败，订单可能不存在或无法删除", id);
+                return ResponseEntity.badRequest().body("订单删除失败，可能订单不存在或有关联数据无法删除");
+            }
+        } catch (Exception e) {
+            log.error("管理员删除订单 ID: {} 时发生异常", id, e);
+            return ResponseEntity.status(500).body("删除订单时发生服务器内部错误: " + e.getMessage());
+        }
+    }
 }

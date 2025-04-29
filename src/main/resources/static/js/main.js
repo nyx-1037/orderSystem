@@ -23,8 +23,31 @@ async function fetchAPI(endpoint, options = {}) {
         
         // 处理401未授权错误（未登录）
         if (response.status === 401) {
+            // 获取响应内容，检查是否是token问题
+            const errorData = await response.json().catch(() => ({}));
+            console.log('401错误详情:', errorData);
+            
             // 如果是创建订单的请求，不要立即重定向，让错误处理逻辑处理
             if (endpoint.includes('/api/order/create')) {
+                // 尝试刷新token
+                try {
+                    const refreshResult = await fetch('/api/user/refresh-token', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    
+                    if (refreshResult.ok) {
+                        const newTokenData = await refreshResult.json();
+                        if (newTokenData.token) {
+                            localStorage.setItem('token', newTokenData.token);
+                            console.log('Token已刷新，请重试');
+                            return await fetchAPI(endpoint, options); // 使用新token重试
+                        }
+                    }
+                } catch (refreshError) {
+                    console.error('刷新token失败:', refreshError);
+                }
+                
                 throw new Error('登录已过期，请重新登录');
             }
             
