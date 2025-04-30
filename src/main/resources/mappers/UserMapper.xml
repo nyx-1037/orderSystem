@@ -14,7 +14,7 @@
         <result column="role" property="role" /> <!-- 添加 role 映射 -->
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
-        <result column="update_time" property="lastLoginTime" /> <!-- 添加 lastLoginTime 映射到 update_time -->
+        <!-- 移除了不存在的last_login_time字段映射 -->
     </resultMap>
     
     <!-- 公共列 -->
@@ -48,6 +48,7 @@
             <if test="address != null">address = #{address},</if>
             <if test="avatarData != null">avatar_data = #{avatarData, jdbcType=BLOB},</if> <!-- 添加 avatarData 更新 -->
             <if test="role != null">role = #{role},</if> <!-- 添加 role 更新 -->
+            <!-- 移除了不存在的last_login_time字段更新 -->
             update_time = NOW()
         </set>
         WHERE user_id = #{userId}

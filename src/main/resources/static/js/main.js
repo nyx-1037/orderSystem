@@ -54,7 +54,12 @@ async function fetchAPI(endpoint, options = {}) {
             localStorage.removeItem('token');
             showErrorMessage('登录已过期，请重新登录');
             setTimeout(() => {
-                window.location.href = '/pages/user/login.html';
+                // 根据当前路径判断重定向到管理员登录还是客户端登录
+                if (window.location.pathname.includes('/admin/')) {
+                    window.location.href = '/pages/admin/login.html';
+                } else {
+                    window.location.href = '/pages/client/login.html';
+                }
             }, 1500);
             return null;
         }
@@ -81,11 +86,16 @@ async function fetchAPI(endpoint, options = {}) {
 // 检查用户登录状态
 async function checkLoginStatus() {
     try {
-        const user = await fetchAPI('/api/user/current');
+        const user = await fetchAPI('/api/users/current');
         if (!user) {
-            // 如果不是登录页面，则重定向到登录页
+            // 如果不是登录页面，则重定向到对应的登录页
             if (!window.location.pathname.includes('/login.html')) {
-                window.location.href = '/pages/user/login.html';
+                // 根据当前路径判断重定向到管理员登录还是客户端登录
+                if (window.location.pathname.includes('/admin/')) {
+                    window.location.href = '/pages/admin/login.html';
+                } else {
+                    window.location.href = '/pages/client/login.html';
+                }
             }
             return false;
         }
@@ -117,10 +127,16 @@ async function logout() {
     // 使用Bootstrap模态框替代原生confirm
     showConfirmModal("确定要退出登录吗？", async () => {
         try {
-            await fetchAPI('/api/user/logout', { method: 'POST' });
+            await fetchAPI('/api/users/logout', { method: 'POST' });
             showSuccessMessage("退出登录成功");
+            
+            // 根据当前路径判断重定向到管理员登录还是客户端登录
             setTimeout(() => {
-                window.location.href = '/pages/user/login.html';
+                if (window.location.pathname.includes('/admin/')) {
+                    window.location.href = '/pages/admin/login.html';
+                } else {
+                    window.location.href = '/pages/client/login.html';
+                }
             }, 1500);
         } catch (error) {
             console.error('退出登录失败:', error);
@@ -177,7 +193,7 @@ function formatCurrency(amount) {
 // 获取当前用户信息并显示
 async function getCurrentUser() {
     try {
-        const user = await fetchAPI('/api/user/current');
+        const user = await fetchAPI('/api/users/current');
         // 更新顶栏用户名显示
         $('#current-username').text(user.username);
         $('.username-display').text("当前登录用户：" + user.username);
@@ -196,7 +212,7 @@ function redirectBasedOnRole(user) {
     // 根据用户角色决定跳转到哪个页面
     if (user.role === 1) {
         // 商家/管理员角色，跳转到后台管理页面
-        window.location.href = '/index.html';
+        window.location.href = '/pages/admin/user-list.html';
     } else {
         // 普通用户角色，跳转到客户端首页
         window.location.href = '/pages/client/index.html';
@@ -208,7 +224,7 @@ function checkPagePermission(user) {
     const currentPath = window.location.pathname;
     
     // 如果是普通用户访问后台页面，重定向到客户端
-    if (user.role === 0 && !currentPath.includes('/client/') && !currentPath.includes('/user/') && currentPath !== '/') {
+    if (user.role === 0 && currentPath.includes('/admin/')) {
         showErrorMessage('您没有权限访问该页面');
         setTimeout(() => {
             window.location.href = '/pages/client/index.html';

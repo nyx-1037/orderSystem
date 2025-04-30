@@ -1,214 +1,225 @@
-下面是为你的订单管理系统项目撰写的详细、规范的README.md文档，涵盖了项目简介、功能、技术栈、部署、接口说明、测试和常见问题等内容，便于开发者和测试人员快速了解和上手项目。
+# 企业级后端接口文档
 
-```markdown:e:\Java code\test20250413\README.md
-# 订单管理系统
-
-## 项目简介
-
-本项目为一个基于Spring Boot的订单管理系统，支持用户注册、登录、商品浏览、下单、订单管理等核心业务流程。前端采用HTML+Bootstrap+JQuery实现，后端采用Spring Boot框架，数据持久层使用MyBatis，数据库为MySQL。系统适合中小型电商平台或企业内部订单管理使用。
+本项目为订单管理系统，后端采用RESTful风格，所有接口均以`/api`开头，支持标准HTTP方法。接口分为用户、订单、商品、日志、在线用户等模块，详细说明如下：
 
 ---
 
-## 目录
+## 1. 用户模块（UserController）
 
-- [项目结构](#项目结构)
-- [主要功能](#主要功能)
-- [技术栈](#技术栈)
-- [快速开始](#快速开始)
-- [接口说明](#接口说明)
-- [前端页面说明](#前端页面说明)
-- [单元测试](#单元测试)
-- [常见问题](#常见问题)
-- [联系方式](#联系方式)
+### 1.1 获取所有用户
+- **接口地址**：`GET /api/users`
+- **功能**：获取所有用户列表
+- **参数**：无
+- **返回值**：用户列表（不含密码）
 
----
+### 1.2 根据UUID获取用户
+- **接口地址**：`GET /api/users/{uuid}`
+- **功能**：根据UUID获取用户信息
+- **参数**：
+  - `uuid`：用户UUID（路径参数）
+- **返回值**：用户信息（不含密码）
 
-## 项目结构
+### 1.3 用户登录
+- **接口地址**：`POST /api/users/login`
+- **功能**：用户登录，返回Token
+- **参数**：
+  - `username`：用户名（JSON体）
+  - `password`：密码（JSON体）
+- **返回值**：登录结果、Token、用户信息
 
-```
-e:\Java code\test20250413\
-├── src
-│   ├── main
-│   │   ├── java/com/ordersystem/       # 后端Java代码
-│   │   ├── resources
-│   │   │   ├── static/                 # 前端静态资源
-│   │   │   │   ├── css/
-│   │   │   │   ├── js/
-│   │   │   │   └── pages/
-│   │   │   └── application.yml         # Spring Boot配置
-│   └── test/java/com/ordersystem/      # 单元测试代码
-└── README.md
-```
+### 1.4 检查用户名是否存在
+- **接口地址**：`GET /api/users/check-username?username=xxx`
+- **功能**：检查用户名是否已存在
+- **参数**：
+  - `username`：用户名（查询参数）
+- **返回值**：`exists`布尔值
 
----
+### 1.5 用户注册
+- **接口地址**：`POST /api/users/register`
+- **功能**：用户注册
+- **参数**：用户信息（JSON体）
+- **返回值**：注册结果、UUID
 
-## 主要功能
-
-- **用户管理**
-  - 用户注册、登录、登出
-  - 用户信息展示
-
-- **商品管理**
-  - 商品列表浏览
-  - 商品库存管理
-
-- **订单管理**
-  - 创建订单（支持多商品下单）
-  - 订单列表查询
-  - 订单详情查看
-  - 订单状态管理（如待付款、已付款、已发货等）
-
-- **安全认证**
-  - 基于JWT的Token认证
-  - 登录态校验，未登录自动跳转登录页
+### 1.6 用户退出登录
+- **接口地址**：`POST /api/users/logout`
+- **功能**：用户退出登录
+- **参数**：无
+- **返回值**：退出结果
 
 ---
 
-## 技术栈
+## 2. 订单模块（OrderController, ClientOrderController）
 
-- **后端**
-  - Spring Boot
-  - MyBatis
-  - MySQL
-  - JUnit 5（单元测试）
+### 2.1 获取订单列表（管理员/用户）
+- **接口地址**：`GET /api/orders`
+- **功能**：获取订单列表（分页）
+- **参数**：
+  - `page`：页码（默认1）
+  - `size`：每页数量（默认10）
+  - `keyword`：搜索关键词（可选）
+- **返回值**：分页订单数据
 
-- **前端**
-  - HTML5
-  - Bootstrap 4
-  - JQuery
+### 2.2 根据UUID获取订单详情
+- **接口地址**：`GET /api/orders/{uuid}`
+- **功能**：获取订单详情
+- **参数**：
+  - `uuid`：订单UUID（路径参数）
+- **返回值**：订单详情
 
-- **其他**
-  - JWT（用户认证）
-  - Maven（项目管理）
+### 2.3 创建订单
+- **接口地址**：`POST /api/orders`
+- **功能**：创建新订单
+- **参数**：订单信息（JSON体）
+- **返回值**：创建结果、UUID
 
----
+### 2.4 客户端订单相关
+- **接口地址**：`GET /api/client/orders`
+- **功能**：获取当前用户订单列表（分页、状态筛选）
+- **参数**：
+  - `page`：页码（默认1）
+  - `size`：每页数量（默认5）
+  - `status`：订单状态（可选）
+  - `keyword`：搜索关键词（可选）
+- **返回值**：分页订单数据
 
-## 快速开始
+- **接口地址**：`GET /api/client/orders/{uuid}`
+- **功能**：获取订单详情（当前用户）
+- **参数**：
+  - `uuid`：订单UUID（路径参数）
+- **返回值**：订单详情
 
-### 1. 环境准备
+- **接口地址**：`POST /api/client/orders/{uuid}/cancel`
+- **功能**：取消订单
+- **参数**：
+  - `uuid`：订单UUID（路径参数）
+- **返回值**：取消结果
 
-- JDK 8 或以上
-- Maven 3.6+
-- MySQL 5.7/8.0
-- Node.js（如需前端构建）
+- **接口地址**：`POST /api/client/orders/{uuid}/confirm`
+- **功能**：确认收货
+- **参数**：
+  - `uuid`：订单UUID（路径参数）
+- **返回值**：确认结果
 
-### 2. 数据库初始化
-
-1. 创建数据库（如：ordersystem）
-2. 执行`src/main/resources/db/schema.sql`和`data.sql`初始化表结构和基础数据
-
-### 3. 配置数据库连接
-
-编辑`src/main/resources/application.yml`，配置数据库连接信息：
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/ordersystem?useUnicode=true&characterEncoding=utf-8
-    username: root
-    password: yourpassword
-```
-
-### 4. 启动项目
-
-```bash
-mvn spring-boot:run
-```
-
-### 5. 访问系统
-
-- 前端入口：http://localhost:8080/pages/user/login.html
-- 后端API入口：http://localhost:8080/api/
-
----
-
-## 接口说明
-
-### 用户相关
-
-- `POST /api/user/login` 用户登录，返回JWT Token
-- `POST /api/user/register` 用户注册
-- `GET /api/user/current` 获取当前登录用户信息
-- `POST /api/user/logout` 用户登出
-
-### 商品相关
-
-- `GET /api/product/list` 获取商品列表
-
-### 订单相关
-
-- `POST /api/order/create` 创建订单
-  - 请求头需携带`Authorization: Bearer <token>`
-  - 请求体示例：
-    ```json
-    {
-      "receiver": "张三",
-      "receiverPhone": "13800138000",
-      "address": "北京市朝阳区建国路88号",
-      "remark": "请尽快发货",
-      "orderItems": [
-        {
-          "productId": 1,
-          "quantity": 2,
-          "price": 100.00
-        }
-      ]
-    }
-    ```
-- `GET /api/order/list` 查询当前用户订单列表
-- `GET /api/order/detail/{orderId}` 查询订单详情
+- **接口地址**：`POST /api/client/orders/{uuid}/pay`
+- **功能**：支付订单
+- **参数**：
+  - `uuid`：订单UUID（路径参数）
+- **返回值**：支付结果
 
 ---
 
-## 前端页面说明
+## 3. 商品模块（ProductController）
 
-- `/pages/user/login.html` 用户登录页
-- `/pages/user/register.html` 用户注册页
-- `/pages/order/list.html` 订单列表页
-- `/pages/order/create.html` 创建订单页
-- `/pages/product/list.html` 商品列表页
+### 3.1 获取所有商品
+- **接口地址**：`GET /api/products`
+- **功能**：获取所有商品列表
+- **参数**：无
+- **返回值**：商品列表
 
-前端页面通过AJAX与后端API交互，所有API请求需携带JWT Token（存储于localStorage）。
+### 3.2 根据UUID获取商品
+- **接口地址**：`GET /api/products/{uuid}`
+- **功能**：根据UUID获取商品信息
+- **参数**：
+  - `uuid`：商品UUID（路径参数）
+- **返回值**：商品信息
 
----
+### 3.3 添加商品
+- **接口地址**：`POST /api/products`
+- **功能**：添加新商品
+- **参数**：商品信息（JSON体）
+- **返回值**：添加结果、UUID
 
-## 单元测试
+### 3.4 更新商品
+- **接口地址**：`PUT /api/products/{uuid}`
+- **功能**：更新商品信息
+- **参数**：
+  - `uuid`：商品UUID（路径参数）
+  - 商品信息（JSON体）
+- **返回值**：更新结果
 
-- 测试代码位于`src/test/java/com/ordersystem/`
-- 主要测试用例包括DAO层、Service层的核心业务逻辑
-- 运行测试：
-  ```bash
-  mvn test
-  ```
-- 例如：`OrderDaoGetOrderDetailTest`用于测试订单详情查询功能
-
----
-
-## 常见问题
-
-1. **接口返回“未提供有效的Token”**
-   - 需在请求头中添加`Authorization: Bearer <token>`，token可通过登录接口获取
-
-2. **接口返回“JSON parse error”**
-   - 检查请求体格式是否为JSON，且`Content-Type`为`application/json`
-
-3. **页面跳转到登录页**
-   - 说明未登录或token已失效，请重新登录
-
-4. **数据库连接失败**
-   - 检查`application.yml`中的数据库配置是否正确，数据库服务是否已启动
+### 3.5 删除商品
+- **接口地址**：`DELETE /api/products/{uuid}`
+- **功能**：删除商品
+- **参数**：
+  - `uuid`：商品UUID（路径参数）
+- **返回值**：删除结果
 
 ---
 
-## 联系方式
+## 4. 日志模块（SysLogController）
 
-如有问题或建议，请联系项目维护者：
+### 4.1 获取日志列表
+- **接口地址**：`GET /api/system-logs`
+- **功能**：获取系统日志（分页、多条件筛选）
+- **参数**：
+  - `pageNum`：页码（默认1）
+  - `pageSize`：每页数量（默认10）
+  - `username`：用户名（可选）
+  - `operation`：操作类型（可选）
+  - `statusCode`：状态码（可选）
+  - `ip`：IP地址（可选）
+  - `startTime`：开始时间（可选）
+  - `endTime`：结束时间（可选）
+- **返回值**：分页日志数据
 
-- 邮箱：support@example.com
-- QQ群：123456789
+### 4.2 根据用户ID/用户名/操作类型获取日志
+- **接口地址**：`GET /api/system-logs/by-user-id/{userId}`
+- **接口地址**：`GET /api/system-logs/by-username/{username}`
+- **接口地址**：`GET /api/system-logs/by-operation/{operation}`
+- **功能**：根据条件获取日志（分页）
+- **参数**：同上
+- **返回值**：分页日志数据
+
+### 4.3 删除日志
+- **接口地址**：`DELETE /api/system-logs/{logId}`
+- **功能**：删除指定日志
+- **参数**：
+  - `logId`：日志ID（路径参数）
+- **返回值**：操作结果
+
+### 4.4 批量删除日志
+- **接口地址**：`DELETE /api/system-logs/batch`
+- **功能**：批量删除日志
+- **参数**：日志ID列表（JSON体）
+- **返回值**：操作结果
+
+### 4.5 强制用户登出
+- **接口地址**：`POST /api/system-logs/users/{userId}/force-logout`
+- **功能**：强制指定用户登出
+- **参数**：
+  - `userId`：用户ID（路径参数）
+- **返回值**：操作结果
+
+### 4.6 手动同步Redis日志到数据库
+- **接口地址**：`POST /api/system-logs/synchronize`
+- **功能**：手动同步Redis中的日志到MySQL
+- **参数**：无
+- **返回值**：同步结果
 
 ---
 
-感谢使用订单管理系统！
-```
-如需进一步定制或补充内容，请告知。
+## 5. 在线用户模块（OnlineUserController）
+
+### 5.1 获取所有在线用户
+- **接口地址**：`GET /api/online-users`
+- **功能**：获取所有在线用户信息
+- **参数**：无
+- **返回值**：在线用户列表
+
+---
+
+## 6. 首页模块（HomeController）
+
+### 6.1 访问首页
+- **接口地址**：`GET /`
+- **功能**：重定向到静态首页
+- **参数**：无
+- **返回值**：HTML页面
+
+---
+
+### 说明
+- 所有接口均为RESTful风格，参数类型、返回值结构详见各接口注释。
+- 需要登录的接口需携带有效Token。
+- 返回值均为JSON格式，包含`success`、`message`等字段。
+- 详细参数和示例可参考各Controller源码及注释。

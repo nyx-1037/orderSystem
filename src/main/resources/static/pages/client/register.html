@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>用户注册 - 订单管理系统</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .register-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .register-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container">
+        <div class="register-container">
+            <div class="register-header">
+                <h2>订单管理系统</h2>
+                <p class="text-muted">创建新账号</p>
+            </div>
+            
+            <div class="alert alert-success" id="success-message" style="display: none;"></div>
+            <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+            
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="username">用户名 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                    <small class="form-text text-muted">用户名长度为3-20个字符，只能包含字母、数字和下划线</small>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码 <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                    <small class="form-text text-muted">密码长度至少为6个字符</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirm-password">确认密码 <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirm-password" name="confirm-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="nickname">昵称</label>
+                    <input type="text" class="form-control" id="nickname" name="nickname">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">注册</button>
+            </form>
+            
+            <div class="register-footer">
+                <p>已有账号？<a href="/pages/client/login.html">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/client/register.js"></script>
+</body>
+</html>

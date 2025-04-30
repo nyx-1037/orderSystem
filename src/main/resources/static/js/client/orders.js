@@ -57,8 +57,8 @@ async function loadOrders(page) {
     `);
     
     try {
-        // 构建API请求参数
-        let apiUrl = `/api/order/list?pageNum=${page}&pageSize=${pageSize}`;
+        // 构建API请求参数 - 根据RESTful接口规范调整
+        let apiUrl = `/api/client/orders?page=${page}&size=${pageSize}`;
         
         // 添加状态过滤 - 直接在API请求中添加状态过滤参数
         if (statusFilter !== undefined && statusFilter !== null && statusFilter !== 'all') {
@@ -67,7 +67,7 @@ async function loadOrders(page) {
         
         // 添加搜索查询
         if (searchQuery) {
-            apiUrl += `&search=${encodeURIComponent(searchQuery)}`;
+            apiUrl += `&keyword=${encodeURIComponent(searchQuery)}`;
         }
         
         console.log('请求订单列表URL:', apiUrl);

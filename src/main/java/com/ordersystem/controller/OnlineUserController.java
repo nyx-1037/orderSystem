@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 /**
  * 在线用户控制器
+ * 提供在线用户相关的RESTful API
  */
 @RestController
 @RequestMapping("/api/online-users")
@@ -26,9 +27,11 @@ public class OnlineUserController {
     
     /**
      * 获取所有在线用户
+     * 
+     * @param request HTTP请求
      * @return 在线用户列表
      */
-    @GetMapping("/list")
+    @GetMapping
     public ResponseEntity<?> getOnlineUsers(HttpServletRequest request) {
         // 从Redis中获取所有在线用户的Token
         Map<Integer, String> userTokens = redisService.getAllUserTokens();
@@ -51,7 +54,6 @@ public class OnlineUserController {
                 userInfo.put("userId", user.getUserId());
                 userInfo.put("username", user.getUsername());
                 userInfo.put("realName", user.getRealName());
-                userInfo.put("lastLoginTime", user.getLastLoginTime());
                 userInfo.put("isCurrentUser", Objects.equals(userId, currentUserId));
                 
                 onlineUsers.add(userInfo);

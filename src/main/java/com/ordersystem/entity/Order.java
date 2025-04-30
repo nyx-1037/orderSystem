@@ -15,7 +15,7 @@ import javax.validation.Valid;
 public class Order {
     private Integer orderId;        // 订单ID
     private String orderNo;         // 订单编号
-    private String orderUuid;       // 订单UUID，用于安全访问
+    private String orderUuid;       // 订单UUID，用于安全访问，对应数据库中的order_uuid字段
     private Integer userId;         // 用户ID
     private BigDecimal totalAmount; // 订单总金额
     private Integer status;         // 订单状态：0-待付款，1-已付款，2-已发货，3-已完成，4-已取消

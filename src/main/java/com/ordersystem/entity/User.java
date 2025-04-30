@@ -7,6 +7,7 @@ import java.util.Date;
  */
 public class User {
     private Integer userId;     // 用户ID
+    // 移除了不存在的userUuid字段
     private String username;    // 用户名
     private String password;    // 密码
     private String realName;    // 真实姓名
@@ -17,7 +18,7 @@ public class User {
     private Integer role;       // 用户角色：0-普通用户，1-商家/管理员
     private Date createTime;    // 创建时间
     private Date updateTime;    // 更新时间
-    private Date lastLoginTime; // 最后登录时间
+    // 移除了不存在的lastLoginTime字段
 
     public Integer getUserId() {
         return userId;
@@ -26,6 +27,8 @@ public class User {
     public void setUserId(Integer userId) {
         this.userId = userId;
     }
+    
+    // 移除了不存在的userUuid字段的getter和setter方法
 
     public String getUsername() {
         return username;
@@ -101,13 +104,7 @@ public class User {
         this.updateTime = updateTime;
     }
 
-    public Date getLastLoginTime() {
-        return lastLoginTime;
-    }
-
-    public void setLastLoginTime(Date lastLoginTime) {
-        this.lastLoginTime = lastLoginTime;
-    }
+    // 移除了不存在的lastLoginTime字段的getter和setter方法
     
     public Integer getRole() {
         return role;
@@ -122,6 +119,7 @@ public class User {
         // Note: Avoid printing large byte arrays in toString
         return "User{" +
                 "userId=" + userId +
+                // 移除了不存在的userUuid字段
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", realName='" + realName + '\'' +
@@ -131,7 +129,7 @@ public class User {
                 ", avatarData=[length=" + (avatarData != null ? avatarData.length : 0) + "]" + // Show length instead of data
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
-                ", lastLoginTime=" + lastLoginTime +
+                // 移除了不存在的lastLoginTime字段
                 '}';
     }
 }

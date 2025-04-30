@@ -90,11 +90,11 @@ async function loadUsers() {
         if (role) params.append('role', role);
         if (status) params.append('status', status);
         
-        // 发送API请求
-        const apiUrl = `/api/user/admin/list?${params.toString()}`;
+        // 发送API请求 - 使用RESTful风格
+        const apiUrl = `/api/admin/users?${params.toString()}`;
         console.log('请求用户列表URL:', apiUrl);
         
-        const response = await fetchAPI(apiUrl);
+        const response = await fetchAPI(apiUrl, { method: 'GET' });
         
         // 更新分页信息
         totalPages = response.pages || 1;
@@ -352,14 +352,12 @@ async function saveUser() {
     }
     
     try {
-        let apiUrl = '/api/user/admin/';
+        let apiUrl = '/api/admin/users';
         let method = 'POST';
         
         if (isEditMode) {
-            apiUrl += 'update';
+            apiUrl += `/${userData.id}`;
             method = 'PUT';
-        } else {
-            apiUrl += 'add';
         }
         
         // 发送API请求
@@ -385,8 +383,8 @@ async function saveUser() {
 // 编辑用户
 async function editUser(userId) {
     try {
-        // 获取用户详情
-        const user = await fetchAPI(`/api/user/admin/detail/${userId}`);
+        // 获取用户详情 - 使用RESTful风格
+        const user = await fetchAPI(`/api/admin/users/${userId}`, { method: 'GET' });
         
         // 显示用户表单
         showUserModal(user);
@@ -400,8 +398,8 @@ async function editUser(userId) {
 async function resetPassword(userId) {
     showConfirmModal('确定要重置该用户的密码吗？', async () => {
         try {
-            // 发送重置密码请求
-            const result = await fetchAPI(`/api/user/admin/reset-password/${userId}`, { method: 'POST' });
+            // 发送重置密码请求 - 使用RESTful风格
+            const result = await fetchAPI(`/api/admin/users/${userId}/reset-password`, { method: 'POST' });
             
             // 显示成功消息
             showSuccessMessage(`密码重置成功，新密码: ${result.newPassword}`);
@@ -416,7 +414,7 @@ async function resetPassword(userId) {
 async function deleteUser(userId) {
     showConfirmModal('确定要删除该用户吗？此操作不可恢复！', async () => {
         try {
-            await fetchAPI(`/api/user/admin/delete/${userId}`, { method: 'DELETE' });
+            await fetchAPI(`/api/admin/users/${userId}`, { method: 'DELETE' });
             showSuccessMessage('用户已删除');
             loadUsers(); // 重新加载用户列表
         } catch (error) {
@@ -430,8 +428,8 @@ async function deleteUser(userId) {
 async function batchDeleteUsers(userIds) {
     showConfirmModal(`确定要删除选中的 ${userIds.length} 个用户吗？此操作不可恢复！`, async () => {
         try {
-            await fetchAPI('/api/user/admin/batch-delete', { 
-                method: 'POST',
+            await fetchAPI('/api/admin/users/batch', { 
+                method: 'DELETE',
                 body: JSON.stringify({ userIds: userIds })
             });
             showSuccessMessage(`已成功删除 ${userIds.length} 个用户`);

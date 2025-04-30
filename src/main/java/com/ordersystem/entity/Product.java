@@ -8,6 +8,7 @@ import java.util.Date;
  */
 public class Product {
     private Integer productId;      // 商品ID
+    // 移除了不存在的productUuid字段
     private String productName;     // 商品名称
     private String productDesc;     // 商品描述
     private BigDecimal price;       // 商品价格
@@ -24,6 +25,8 @@ public class Product {
     public void setProductId(Integer productId) {
         this.productId = productId;
     }
+    
+    // 移除了不存在的productUuid字段的getter和setter方法
 
     public String getProductName() {
         return productName;

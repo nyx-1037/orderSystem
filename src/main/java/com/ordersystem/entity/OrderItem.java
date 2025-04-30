@@ -35,9 +35,7 @@ public class OrderItem {
     private Date createTime;         // 创建时间
     private Date updateTime;         // 更新时间
 
-    // 前端传递的价格字段（非数据库字段） - 这个字段理论上不再需要，因为前端已改为传 productPrice
-    // 如果保留，确保它不参与持久化和核心逻辑
-    private BigDecimal price;
+    // 移除了不存在的price字段，前端应该使用productPrice字段
 
     // 关联商品信息（用于多表联查）
     private Product product;
@@ -122,15 +120,7 @@ public class OrderItem {
         this.product = product;
     }
 
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-        // 同步设置productPrice，确保前端传递的price能正确映射到productPrice
-        this.productPrice = price;
-    }
+    // 移除了不存在的price字段的getter和setter方法
 
     @Override
     public String toString() {
@@ -142,7 +132,7 @@ public class OrderItem {
                 ", productPrice=" + productPrice +
                 ", quantity=" + quantity +
                 ", totalPrice=" + totalPrice +
-                ", price=" + price +
+                // 移除了不存在的price字段
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 '}';

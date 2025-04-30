@@ -16,9 +16,10 @@ import java.util.HashMap;
 
 /**
  * 系统日志控制器
+ * 提供系统日志相关的RESTful API
  */
 @RestController
-@RequestMapping("/api/syslog")
+@RequestMapping("/api/system-logs")
 public class SysLogController {
 
     private static final Logger log = LoggerFactory.getLogger(SysLogController.class);
@@ -31,6 +32,7 @@ public class SysLogController {
 
     /**
      * 获取日志列表（支持分页和多条件筛选）
+     * 
      * @param pageNum 页码，默认为1
      * @param pageSize 每页数量，默认为10
      * @param username 用户名（可选）
@@ -41,8 +43,8 @@ public class SysLogController {
      * @param endTime 结束时间（可选）
      * @return 分页日志数据
      */
-    @GetMapping("/list")
-    public ResponseEntity<?> list(
+    @GetMapping
+    public ResponseEntity<?> getSystemLogs(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(value = "username", required = false) String username,
@@ -68,8 +70,13 @@ public class SysLogController {
 
     /**
      * 根据用户ID获取日志
+     * 
+     * @param userId 用户ID
+     * @param pageNum 页码，默认为1
+     * @param pageSize 每页数量，默认为10
+     * @return 分页日志数据
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/by-user-id/{userId}")
     public ResponseEntity<?> getLogsByUserId(
             @PathVariable("userId") Integer userId,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -80,8 +87,13 @@ public class SysLogController {
 
     /**
      * 根据用户名获取日志
+     * 
+     * @param username 用户名
+     * @param pageNum 页码，默认为1
+     * @param pageSize 每页数量，默认为10
+     * @return 分页日志数据
      */
-    @GetMapping("/username/{username}")
+    @GetMapping("/by-username/{username}")
     public ResponseEntity<?> getLogsByUsername(
             @PathVariable("username") String username,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -92,8 +104,13 @@ public class SysLogController {
 
     /**
      * 根据操作类型获取日志
+     * 
+     * @param operation 操作类型
+     * @param pageNum 页码，默认为1
+     * @param pageSize 每页数量，默认为10
+     * @return 分页日志数据
      */
-    @GetMapping("/operation/{operation}")
+    @GetMapping("/by-operation/{operation}")
     public ResponseEntity<?> getLogsByOperation(
             @PathVariable("operation") String operation,
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -113,8 +130,12 @@ public class SysLogController {
 
     /**
      * 强制用户登出
+     * 
+     * @param userId 用户ID
+     * @param request HTTP请求
+     * @return 操作结果
      */
-    @PostMapping("/force-logout/{userId}")
+    @PostMapping("/users/{userId}/force-logout")
     public ResponseEntity<?> forceLogout(@PathVariable("userId") Integer userId, HttpServletRequest request) {
         // 记录操作者信息
         Integer operatorId = (Integer) request.getAttribute("userId");
@@ -130,10 +151,11 @@ public class SysLogController {
     
     /**
      * 批量删除日志
+     * 
      * @param logIds 日志ID列表
      * @return 操作结果
      */
-    @DeleteMapping("/batch-delete")
+    @DeleteMapping("/batch")
     public ResponseEntity<?> batchDelete(@RequestBody List<Integer> logIds) {
         log.info("批量删除日志，ID列表: {}", logIds);
         
@@ -153,9 +175,10 @@ public class SysLogController {
     
     /**
      * 手动同步Redis中的日志到MySQL数据库
+     * 
      * @return 同步结果
      */
-    @PostMapping("/sync-logs")
+    @PostMapping("/synchronize")
     public ResponseEntity<?> syncLogs() {
         log.info("手动触发日志同步操作");
         

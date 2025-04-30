@@ -40,8 +40,8 @@ async function getCurrentUserInfo() {
 // 加载订单详情
 async function loadOrderDetail(uuid) {
     try {
-        // 使用普通用户API路径
-        const apiPath = `/api/order/detail/${uuid}`;
+        // 使用RESTful API路径
+        const apiPath = `/api/client/orders/${uuid}`;
         console.log('请求订单详情URL:', apiPath);
         const order = await fetchAPI(apiPath);
         
@@ -267,7 +267,7 @@ async function payOrder(orderId) {
     showConfirmModal('确定要支付此订单吗？', async () => {
         try {
             // 使用订单ID进行支付操作
-            await fetchAPI(`/api/order/pay/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderId}/pay`, { method: 'POST' });
             showSuccessMessage('订单支付成功');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情
@@ -285,7 +285,7 @@ async function cancelOrder(orderId) {
     showConfirmModal('确定要取消此订单吗？', async () => {
         try {
             // 使用订单ID进行取消操作
-            await fetchAPI(`/api/order/cancel/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderId}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情
@@ -303,7 +303,7 @@ async function confirmReceipt(orderId) {
     showConfirmModal('确认已收到商品吗？', async () => {
         try {
             // 使用订单ID进行确认收货操作
-            await fetchAPI(`/api/order/confirm/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderId}/confirm`, { method: 'POST' });
             showSuccessMessage('已确认收货');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情

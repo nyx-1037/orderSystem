@@ -53,8 +53,8 @@ async function loadOrders() {
     try {
         // 构建查询参数
         const params = new URLSearchParams();
-        params.append('pageNum', currentPage);
-        params.append('pageSize', pageSize);
+        params.append('page', currentPage);
+        params.append('size', pageSize);
         
         // 添加筛选条件
         const orderNo = $('#orderNo').val();
@@ -62,16 +62,24 @@ async function loadOrders() {
         const startDate = $('#startDate').val();
         const endDate = $('#endDate').val();
         
-        if (orderNo) params.append('orderNo', orderNo);
+        if (orderNo) params.append('keyword', orderNo);
         if (status) params.append('status', status);
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         
-        // 发送API请求
-        const apiUrl = `/api/order/admin/list?${params.toString()}`;
+        // 发送API请求 - 使用管理员专用API路径获取所有用户的订单
+        const apiUrl = `/api/orders/admin?${params.toString()}`;
         console.log('请求订单列表URL:', apiUrl);
         
-        const response = await fetchAPI(apiUrl);
+        let response;
+        try {
+            response = await fetchAPI(apiUrl);
+        } catch (adminError) {
+            console.warn('管理员API路径请求失败，尝试使用普通API路径:', adminError);
+            // 尝试使用普通API路径作为备用
+            const backupUrl = `/api/orders?${params.toString()}`;
+            response = await fetchAPI(backupUrl);
+        }
         
         // 更新分页信息
         totalPages = response.pages || 1;
@@ -128,6 +136,16 @@ function renderOrderList(orders) {
         const orderId = order.orderId || order.id;
         const orderUuid = order.orderUuid || order.uuid;
         
+        // 确保显示用户名而不是用户ID
+        let customerDisplay = '未知';
+        if (order.username) {
+            customerDisplay = order.username;
+        } else if (order.user && order.user.username) {
+            customerDisplay = order.user.username;
+        } else if (order.userId) {
+            customerDisplay = `用户ID: ${order.userId}`;
+        }
+        
         html += `
             <tr data-id="${orderId}" data-uuid="${orderUuid}">
                 <td>
@@ -138,7 +156,7 @@ function renderOrderList(orders) {
                 </td>
                 <td>${order.orderNo || '未知'}</td>
                 <td>${formatDate(order.createTime)}</td>
-                <td>${order.username || order.userId || '未知'}</td>
+                <td>${customerDisplay}</td>
                 <td>${formatCurrency(order.totalAmount)}</td>
                 <td><span class="badge ${statusInfo.badgeClass}">${statusInfo.text}</span></td>
                 <td>

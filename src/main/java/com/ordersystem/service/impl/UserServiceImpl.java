@@ -62,8 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("密码错误");
         }
         
-        // 更新最后登录时间
-        user.setLastLoginTime(new java.util.Date());
+        // 更新更新时间
         user.setUpdateTime(new java.util.Date());
         userDao.updateUser(user);
         

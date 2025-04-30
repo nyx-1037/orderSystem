@@ -37,7 +37,7 @@ $(document).ready(function() {
 // 获取当前用户信息
 async function getCurrentUserInfo() {
     try {
-        return await fetchAPI('/api/user/current');
+        return await fetchAPI('/api/users/current');
     } catch (error) {
         console.error('获取用户信息失败:', error);
         showErrorMessage('获取用户信息失败: ' + error.message);
@@ -48,8 +48,8 @@ async function getCurrentUserInfo() {
 // 加载订单详情
 async function loadOrderDetail(uuid) {
     try {
-        // 使用管理员专用API路径，使用orderId参数而不是uuid，避免路径冲突
-        let apiPath = `/api/order/admin/detail?uuid=${uuid}`;
+        // 使用管理员专用API路径，使用uuid参数
+        let apiPath = `/api/orders/admin/${uuid}`;
         console.log('管理员请求订单详情URL:', apiPath);
         let order;
         
@@ -57,8 +57,14 @@ async function loadOrderDetail(uuid) {
             order = await fetchAPI(apiPath);
         } catch (primaryError) {
             console.warn('主API路径请求失败:', primaryError);
-            // 如果主API路径失败，不再尝试使用普通用户API路径，因为管理员应该使用专用API
-            throw primaryError;
+            // 尝试使用备用API路径
+            try {
+                apiPath = `/api/orders/${uuid}`;
+                console.log('尝试备用API路径:', apiPath);
+                order = await fetchAPI(apiPath);
+            } catch (backupError) {
+                throw primaryError;
+            }
         }
         
         renderOrderDetail(order);
