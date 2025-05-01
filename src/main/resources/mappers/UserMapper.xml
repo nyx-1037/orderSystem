@@ -74,4 +74,22 @@
         FROM user
         ORDER BY user_id
     </select>
+    
+    <!-- 根据条件筛选查询用户 -->
+    <select id="getUsersByFilter" parameterType="com.ordersystem.entity.User" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM user
+        <where>
+            <if test="username != null and username != ''">
+                AND username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="role != null">
+                AND role = #{role}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY user_id DESC
+    </select>
 </mapper>

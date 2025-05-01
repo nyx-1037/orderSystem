@@ -38,11 +38,11 @@ $(document).ready(function() {
 // 加载热门商品
 async function loadFeaturedProducts() {
     try {
-        // 请求商品列表数据
-        const products = await fetchAPI('/api/product/list');
+        // 请求商品列表数据 - 修正API路径，使用后端控制器中定义的路径
+        const products = await fetchAPI('/api/products');
         
         // 只显示上架的商品，最多显示6个
-        const featuredProducts = products
+        const featuredProducts = products.list
             .filter(product => product.status === 1)
             .slice(0, 6);
         
@@ -67,7 +67,8 @@ function renderFeaturedProducts(products) {
 
     products.forEach(product => {
         // 使用原始图片路径，认证通过全局fetchAPI配置处理
-        const imageUrl = `/api/product/${product.productId}/image`;
+        // 修正API路径，使用后端控制器中定义的路径
+        const imageUrl = `/api/products/${product.productId}/image`;
         
         const productCard = $(`
             <div class="col-md-3 mb-4">
@@ -97,5 +98,5 @@ function renderFeaturedProducts(products) {
 
 // 格式化货币
 function formatCurrency(price) {
-    return '¥' + parseFloat(price).toFixed(2);
+    return parseFloat(price).toFixed(2);
 }

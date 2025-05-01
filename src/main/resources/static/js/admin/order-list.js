@@ -67,19 +67,18 @@ async function loadOrders() {
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         
-        // 发送API请求 - 使用管理员专用API路径获取所有用户的订单
-        const apiUrl = `/api/orders/admin?${params.toString()}`;
+        // 发送API请求 - 直接使用OrderController中定义的API路径
+        const apiUrl = `/api/orders?${params.toString()}`;
         console.log('请求订单列表URL:', apiUrl);
         
         let response;
         try {
             response = await fetchAPI(apiUrl);
-        } catch (adminError) {
-            console.warn('管理员API路径请求失败，尝试使用普通API路径:', adminError);
-            // 尝试使用普通API路径作为备用
-            const backupUrl = `/api/orders?${params.toString()}`;
-            response = await fetchAPI(backupUrl);
+        } catch (error) {
+            console.error('订单API请求失败:', error);
+            throw error;
         }
+        
         
         // 更新分页信息
         totalPages = response.pages || 1;
@@ -232,10 +231,8 @@ function bindActionButtons() {
     // 批量删除
     $('#batch-delete-btn').click(function() {
         const selectedIds = getSelectedOrderIds();
-        if (selectedIds.length > 0) {
+        if (selectedIds && selectedIds.length > 0) {
             batchDeleteOrders(selectedIds);
-        } else {
-            showErrorMessage('请至少选择一个订单进行删除');
         }
     });
 }
@@ -276,7 +273,7 @@ function updateBatchDeleteButton() {
 async function deleteOrder(orderId) {
     showConfirmModal('确定要删除该订单吗？此操作不可恢复！', async () => {
         try {
-            await fetchAPI(`/api/order/admin/delete/${orderId}`, { method: 'DELETE' });
+            await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
             showSuccessMessage('订单已删除');
             loadOrders(); // 重新加载订单列表
         } catch (error) {
@@ -290,11 +287,23 @@ async function deleteOrder(orderId) {
 async function batchDeleteOrders(orderIds) {
     showConfirmModal(`确定要删除选中的 ${orderIds.length} 个订单吗？此操作不可恢复！`, async () => {
         try {
-            await fetchAPI('/api/order/admin/batch-delete', { 
-                method: 'POST',
-                body: JSON.stringify({ orderIds: orderIds })
-            });
-            showSuccessMessage(`已成功删除 ${orderIds.length} 个订单`);
+            // 由于后端没有批量删除接口，改为循环调用单个删除接口
+            let successCount = 0;
+            for (const orderId of orderIds) {
+                try {
+                    await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
+                    successCount++;
+                } catch (err) {
+                    console.error(`删除订单 ${orderId} 失败:`, err);
+                }
+            }
+            
+            if (successCount === orderIds.length) {
+                showSuccessMessage(`已成功删除 ${successCount} 个订单`);
+            } else {
+                showWarningMessage(`成功删除 ${successCount}/${orderIds.length} 个订单`);
+            }
+            
             loadOrders(); // 重新加载订单列表
         } catch (error) {
             console.error('批量删除订单失败:', error);
@@ -307,7 +316,7 @@ async function batchDeleteOrders(orderIds) {
 async function cancelOrder(orderId) {
     showConfirmModal('确定要取消该订单吗？', async () => {
         try {
-            await fetchAPI(`/api/order/admin/cancel/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/orders/${orderId}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             loadOrders();
         } catch (error) {
@@ -321,7 +330,7 @@ async function cancelOrder(orderId) {
 async function shipOrder(orderId) {
     showConfirmModal('确定要发货吗？', async () => {
         try {
-            await fetchAPI(`/api/order/admin/ship/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/orders/${orderId}/ship`, { method: 'POST' });
             showSuccessMessage('发货成功');
             loadOrders();
         } catch (error) {
@@ -389,5 +398,16 @@ function getSelectedOrderIds() {
         return;
     }
     
-    batchDeleteOrders(selectedIds);
+    return selectedIds;
+}
+
+// 显示警告消息
+function showWarningMessage(message) {
+    Swal.fire({
+        icon: 'warning',
+        title: '警告',
+        text: message,
+        timer: 3000,
+        showConfirmButton: false
+    });
 }

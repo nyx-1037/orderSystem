@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务实现类
@@ -67,5 +68,43 @@ public class UserServiceImpl implements UserService {
         userDao.updateUser(user);
         
         return user;
+    }
+    
+    @Override
+    public Map<String, Object> getUsersByPage(Integer pageNum, Integer pageSize, String username, Integer role, Integer status) {
+        // 使用PageHelper进行分页查询
+        com.github.pagehelper.PageHelper.startPage(pageNum, pageSize);
+        
+        // 构建查询条件
+        User filter = new User();
+        if (username != null && !username.trim().isEmpty()) {
+            filter.setUsername(username);
+        }
+        if (role != null) {
+            filter.setRole(role);
+        }
+        if (status != null) {
+            filter.setStatus(status);
+        }
+        
+        // 执行查询
+        List<User> users = userDao.getUsersByFilter(filter);
+        
+        // 处理查询结果
+        com.github.pagehelper.PageInfo<User> pageInfo = new com.github.pagehelper.PageInfo<>(users);
+        
+        // 构建返回结果
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("total", pageInfo.getTotal());
+        result.put("pages", pageInfo.getPages());
+        result.put("pageNum", pageInfo.getPageNum());
+        result.put("pageSize", pageInfo.getPageSize());
+        
+        // 处理用户数据，移除敏感信息
+        List<User> userList = pageInfo.getList();
+        userList.forEach(user -> user.setPassword(null));
+        result.put("list", userList);
+        
+        return result;
     }
 }

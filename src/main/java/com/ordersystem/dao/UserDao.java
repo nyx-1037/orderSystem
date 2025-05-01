@@ -48,4 +48,11 @@ public interface UserDao {
      * @return 用户列表
      */
     List<User> getAllUsers();
+    
+    /**
+     * 根据条件筛选查询用户
+     * @param filter 筛选条件
+     * @return 用户列表
+     */
+    List<User> getUsersByFilter(User filter);
 }

@@ -122,6 +122,53 @@ public class OrderController {
     }
     
     /**
+     * 根据UUID获取订单详情
+     * 新增方法，解决前端使用UUID请求订单详情的问题
+     * 
+     * @param uuid 订单UUID
+     * @param request HTTP请求
+     * @return 订单详情
+     */
+    @GetMapping("/by-uuid")
+    public ResponseEntity<?> getOrderByUuid(
+            @RequestParam("uuid") String uuid,
+            HttpServletRequest request) {
+        // 从请求属性中获取用户ID和用户信息（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        User user = (User) request.getAttribute("user");
+        
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录，无法查看订单");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        // 通过UUID获取订单详情
+        Order order = orderService.getOrderByUuid(uuid);
+        
+        if (order == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "订单不存在或已被删除");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        // 验证当前用户是否有权限查看该订单
+        boolean isAdmin = (user != null && user.getRole() == 1);
+        if (isAdmin || userId.equals(order.getUserId())) {
+            return ResponseEntity.ok(order);
+        } else {
+            // 用户无权限查看该订单
+            log.warn("用户 {} 尝试访问不属于他的订单 UUID: {}", userId, uuid);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "您无权查看此订单");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+    }
+    
+    /**
      * 创建订单
      * 
      * @param order 订单信息

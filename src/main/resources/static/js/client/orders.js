@@ -134,7 +134,7 @@ function renderOrders(orders) {
                 const productName = product.name || item.productName || '未知商品';
                 const productPrice = item.price || product.price || 0;
                 // 处理商品图片URL，确保添加认证Token
-                let productImage = product.imageUrl || `/api/product/${product.productId}/image` || '/images/default-product.jpg';
+                let productImage = product.imageUrl || `/api/products/${product.productId}/image` || '/images/default-product.jpg';
                 // 如果是API请求图片，确保添加Token
                 if (productImage.startsWith('/api/')) {
                     const token = localStorage.getItem('token');

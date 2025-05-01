@@ -64,11 +64,12 @@ async function loadProducts(page, size, sort, keyword) {
         // 显示加载中
         $('#products-container').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">加载中...</span></div></div>');
         
-        // 构建API URL
-        let apiUrl = '/api/product/list';
+        // 构建API URL - 修正API路径，使用后端控制器中定义的路径
+        let apiUrl = '/api/products';
         
         // 请求商品列表数据
-        const products = await fetchAPI(apiUrl);
+        const response = await fetchAPI(apiUrl);
+        const products = response.list || [];
         
         // 过滤上架商品
         let filteredProducts = products.filter(product => product.status === 1);
@@ -129,8 +130,12 @@ function renderProducts(products) {
     }
 
     products.forEach(product => {
-        // 使用原始图片路径
-        let imageUrl = `/api/product/${product.productId}/image`;
+        // 使用正确的图片路径 - 修正API路径，使用后端控制器中定义的路径
+        let imageUrl = `/api/products/${product.productId}/image`;
+        
+        // 设置库存状态文本和样式
+        let stockStatusText = product.stock > 0 ? `库存: ${product.stock}` : '缺货';
+        let stockStatusClass = product.stock > 0 ? 'text-success' : 'text-danger';
         
         const productCard = $(`
             <div class="col-md-4 mb-4">
@@ -146,7 +151,7 @@ function renderProducts(products) {
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary btn-sm w-100" onclick="window.location.href='/pages/client/product-detail.html?id=${product.productId}'" ${product.stock <= 0 ? 'disabled' : ''}>
-                            ${product.stock <= 0 ? '暂时缺货' : '查看详情'}`}
+                            ${product.stock <= 0 ? '暂时缺货' : '查看详情'}
                         </button>
                     </div>
                 </div>

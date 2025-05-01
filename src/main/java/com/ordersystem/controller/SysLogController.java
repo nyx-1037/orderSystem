@@ -84,6 +84,22 @@ public class SysLogController {
         PageInfo<SysLog> pageInfo = sysLogService.getLogsByUserIdWithPage(userId, pageNum, pageSize);
         return ResponseEntity.ok(pageInfo);
     }
+    
+    /**
+     * 根据日志ID获取日志详情
+     * 
+     * @param logId 日志ID
+     * @return 日志详情
+     */
+    @GetMapping("/by-id/{logId}")
+    public ResponseEntity<?> getLogById(@PathVariable("logId") Integer logId) {
+        log.info("查询日志详情，ID: {}", logId);
+        SysLog sysLog = sysLogService.getLogById(logId);
+        if (sysLog != null) {
+            return ResponseEntity.ok(sysLog);
+        }
+        return ResponseEntity.notFound().build();
+    }
 
     /**
      * 根据用户名获取日志

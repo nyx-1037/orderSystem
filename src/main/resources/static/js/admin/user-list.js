@@ -78,8 +78,6 @@ async function loadUsers() {
     try {
         // 构建查询参数
         const params = new URLSearchParams();
-        params.append('pageNum', currentPage);
-        params.append('pageSize', pageSize);
         
         // 添加筛选条件
         const username = $('#username').val();
@@ -91,13 +89,20 @@ async function loadUsers() {
         if (status) params.append('status', status);
         
         // 发送API请求 - 使用RESTful风格
-        const apiUrl = `/api/admin/users?${params.toString()}`;
+        // 修正API路径，使用后端控制器中定义的路径
+        const apiUrl = `/api/users?pageNum=${currentPage}&pageSize=${pageSize}&${params.toString()}`;
         console.log('请求用户列表URL:', apiUrl);
         
         const response = await fetchAPI(apiUrl, { method: 'GET' });
         
         // 更新分页信息
         totalPages = response.pages || 1;
+        currentPage = response.pageNum || 1;
+        const totalCount = response.total || 0;
+        
+        // 更新页面显示的分页信息
+        $('#total-count').text(totalCount);
+        $('#total-pages').text(totalPages);
         
         // 获取用户列表
         const users = response.list || [];
@@ -146,29 +151,36 @@ function renderUserList(users) {
     let html = '';
     
     users.forEach(user => {
+        // 确保用户ID存在
+        const userId = user.id || 0;
+        
         // 获取用户角色和状态文本
         const roleText = user.role === 1 ? '管理员' : '普通用户';
+        // 根据实体类备注正确显示状态
         const statusText = user.status === 1 ? '正常' : '禁用';
         const statusBadge = user.status === 1 ? 'badge-success' : 'badge-danger';
         
         html += `
-            <tr data-id="${user.id}">
+            <tr data-id="${userId}">
                 <td>
                     <div class="custom-control custom-checkbox">
-                        <input type="checkbox" class="custom-control-input user-checkbox" id="user-${user.id}" data-id="${user.id}">
-                        <label class="custom-control-label" for="user-${user.id}"></label>
+                        <input type="checkbox" class="custom-control-input user-checkbox" id="user-${userId}" data-id="${userId}">
+                        <label class="custom-control-label" for="user-${userId}"></label>
                     </div>
                 </td>
-                <td>${user.id}</td>
+                <td>${userId}</td>
                 <td>${user.username}</td>
                 <td>${user.nickname || '-'}</td>
                 <td><span class="badge ${user.role === 1 ? 'badge-primary' : 'badge-secondary'}">${roleText}</span></td>
                 <td><span class="badge ${statusBadge}">${statusText}</span></td>
                 <td>${formatDate(user.createTime)}</td>
                 <td>
-                    <button class="btn btn-sm btn-info edit-btn" data-id="${user.id}">编辑</button>
-                    <button class="btn btn-sm btn-warning reset-pwd-btn" data-id="${user.id}">重置密码</button>
-                    <button class="btn btn-sm btn-danger delete-btn" data-id="${user.id}">删除</button>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-info view-btn" data-id="${userId}">查看</button>
+                        <button class="btn btn-sm btn-primary edit-btn" data-id="${userId}">编辑</button>
+                        <button class="btn btn-sm btn-warning reset-pwd-btn" data-id="${userId}">重置密码</button>
+                        <button class="btn btn-sm btn-danger delete-btn" data-id="${userId}">删除</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -195,20 +207,27 @@ function renderPagination() {
     // 上一页按钮
     html += `
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-            <a class="page-link" href="#" data-page="${currentPage - 1}" aria-label="上一页">
+            <a class="page-link" href="javascript:void(0)" data-page="${currentPage - 1}" aria-label="上一页">
                 <span aria-hidden="true">&laquo;</span>
             </a>
         </li>
     `;
     
-    // 页码按钮
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, startPage + 4);
+    // 计算显示的页码范围
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
     
+    // 调整起始页码，确保显示足够的页码
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // 添加页码按钮
     for (let i = startPage; i <= endPage; i++) {
         html += `
             <li class="page-item ${i === currentPage ? 'active' : ''}">
-                <a class="page-link" href="#" data-page="${i}">${i}</a>
+                <a class="page-link" href="javascript:void(0)" data-page="${i}">${i}</a>
             </li>
         `;
     }
@@ -216,7 +235,7 @@ function renderPagination() {
     // 下一页按钮
     html += `
         <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-            <a class="page-link" href="#" data-page="${currentPage + 1}" aria-label="下一页">
+            <a class="page-link" href="javascript:void(0)" data-page="${currentPage + 1}" aria-label="下一页">
                 <span aria-hidden="true">&raquo;</span>
             </a>
         </li>
@@ -225,10 +244,9 @@ function renderPagination() {
     $('#pagination').html(html);
     
     // 绑定页码点击事件
-    $('.page-link').click(function(e) {
-        e.preventDefault();
-        const page = parseInt($(this).data('page'));
-        if (page >= 1 && page <= totalPages && page !== currentPage) {
+    $('.page-link').click(function() {
+        const page = $(this).data('page');
+        if (page && page !== currentPage && page >= 1 && page <= totalPages) {
             currentPage = page;
             loadUsers();
         }
@@ -237,21 +255,43 @@ function renderPagination() {
 
 // 绑定操作按钮事件
 function bindActionButtons() {
+    // 查看用户详情
+    $('.view-btn').click(function() {
+        const userId = $(this).data('id');
+        if (!userId || userId === 'undefined') {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
+        viewUser(userId);
+    });
+    
     // 编辑用户
     $('.edit-btn').click(function() {
         const userId = $(this).data('id');
+        if (!userId || userId === 'undefined') {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
         editUser(userId);
     });
     
     // 重置密码
     $('.reset-pwd-btn').click(function() {
         const userId = $(this).data('id');
+        if (!userId || userId === 'undefined') {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
         resetPassword(userId);
     });
     
     // 删除用户
     $('.delete-btn').click(function() {
         const userId = $(this).data('id');
+        if (!userId || userId === 'undefined') {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
         deleteUser(userId);
     });
 }
@@ -294,6 +334,10 @@ function showUserModal(user = null) {
     $('#user-form')[0].reset();
     $('#user-id').val('');
     
+    // 移除之前的事件监听
+    $('#save-user-btn').off('click');
+    $('.close, .btn-secondary').off('click');
+    
     if (user) {
         // 编辑模式
         isEditMode = true;
@@ -312,6 +356,23 @@ function showUserModal(user = null) {
         $('#userModalLabel').text('添加用户');
         $('#form-username').prop('readonly', false);
     }
+    
+    // 绑定保存按钮事件
+    $('#save-user-btn').on('click', function() {
+        saveUser();
+    });
+    
+    // 添加关闭按钮事件
+    $('.close, .btn-secondary').on('click', function() {
+        $('#userModal').modal('hide');
+    });
+    
+    // 模态框隐藏后的事件
+    $('#userModal').on('hidden.bs.modal', function() {
+        // 移除焦点，避免ARIA警告
+        $('#save-user-btn').blur();
+        $(document.activeElement).blur();
+    });
     
     // 显示模态框
     $('#userModal').modal('show');
@@ -346,16 +407,13 @@ async function saveUser() {
         userData.password = password;
     }
     
-    // 如果是编辑模式，添加用户ID
-    if (isEditMode) {
-        userData.id = parseInt(userId);
-    }
-    
     try {
-        let apiUrl = '/api/admin/users';
+        let apiUrl = '/api/users';
         let method = 'POST';
         
-        if (isEditMode) {
+        // 如果是编辑模式，添加用户ID并确保ID有效
+        if (isEditMode && userId && userId !== 'undefined') {
+            userData.id = parseInt(userId);
             apiUrl += `/${userData.id}`;
             method = 'PUT';
         }
@@ -380,11 +438,40 @@ async function saveUser() {
     }
 }
 
+// 查看用户详情
+async function viewUser(userId) {
+    try {
+        // 获取用户详情 - 使用RESTful风格
+        const user = await fetchAPI(`/api/users/${userId}`, { method: 'GET' });
+        
+        if (!user) {
+            showErrorMessage('获取用户详情失败');
+            return;
+        }
+        
+        // 显示用户详情模态框
+        showUserDetailModal(user);
+    } catch (error) {
+        console.error('获取用户详情失败:', error);
+        showErrorMessage('获取用户详情失败: ' + error.message);
+    }
+}
+
 // 编辑用户
 async function editUser(userId) {
     try {
+        if (!userId || userId === 'undefined') {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
+        
         // 获取用户详情 - 使用RESTful风格
-        const user = await fetchAPI(`/api/admin/users/${userId}`, { method: 'GET' });
+        const user = await fetchAPI(`/api/users/${userId}`, { method: 'GET' });
+        
+        if (!user) {
+            showErrorMessage('获取用户详情失败');
+            return;
+        }
         
         // 显示用户表单
         showUserModal(user);
@@ -396,10 +483,20 @@ async function editUser(userId) {
 
 // 重置密码
 async function resetPassword(userId) {
+    if (!userId || userId === 'undefined') {
+        showErrorMessage('无效的用户ID');
+        return;
+    }
+    
     showConfirmModal('确定要重置该用户的密码吗？', async () => {
         try {
             // 发送重置密码请求 - 使用RESTful风格
-            const result = await fetchAPI(`/api/admin/users/${userId}/reset-password`, { method: 'POST' });
+            const result = await fetchAPI(`/api/users/${userId}/reset-password`, { method: 'POST' });
+            
+            if (!result || !result.newPassword) {
+                showErrorMessage('重置密码失败，未返回新密码');
+                return;
+            }
             
             // 显示成功消息
             showSuccessMessage(`密码重置成功，新密码: ${result.newPassword}`);
@@ -412,9 +509,14 @@ async function resetPassword(userId) {
 
 // 删除用户
 async function deleteUser(userId) {
+    if (!userId || userId === 'undefined') {
+        showErrorMessage('无效的用户ID');
+        return;
+    }
+    
     showConfirmModal('确定要删除该用户吗？此操作不可恢复！', async () => {
         try {
-            await fetchAPI(`/api/admin/users/${userId}`, { method: 'DELETE' });
+            await fetchAPI(`/api/users/${userId}`, { method: 'DELETE' });
             showSuccessMessage('用户已删除');
             loadUsers(); // 重新加载用户列表
         } catch (error) {
@@ -426,13 +528,23 @@ async function deleteUser(userId) {
 
 // 批量删除用户
 async function batchDeleteUsers(userIds) {
-    showConfirmModal(`确定要删除选中的 ${userIds.length} 个用户吗？此操作不可恢复！`, async () => {
+    // 过滤掉无效的用户ID
+    const validUserIds = userIds.filter(id => id && id !== 'undefined');
+    
+    if (validUserIds.length === 0) {
+        showErrorMessage('没有有效的用户ID可删除');
+        return;
+    }
+    
+    showConfirmModal(`确定要删除选中的 ${validUserIds.length} 个用户吗？此操作不可恢复！`, async () => {
         try {
-            await fetchAPI('/api/admin/users/batch', { 
+            // 发送批量删除请求
+            await fetchAPI('/api/users/batch', {
                 method: 'DELETE',
-                body: JSON.stringify({ userIds: userIds })
+                body: JSON.stringify(validUserIds)
             });
-            showSuccessMessage(`已成功删除 ${userIds.length} 个用户`);
+            
+            showSuccessMessage('选中的用户已删除');
             loadUsers(); // 重新加载用户列表
         } catch (error) {
             console.error('批量删除用户失败:', error);
@@ -441,28 +553,90 @@ async function batchDeleteUsers(userIds) {
     });
 }
 
-// 格式化日期
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleString('zh-CN', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+// 显示用户详情模态框
+function showUserDetailModal(user) {
+    // 创建模态框HTML
+    const modalHtml = `
+        <div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="userDetailModalLabel">用户详情</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th>ID</th>
+                                        <td>${user.id}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>用户名</th>
+                                        <td>${user.username}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>昵称</th>
+                                        <td>${user.nickname || '-'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>角色</th>
+                                        <td>${user.role === 1 ? '管理员' : '普通用户'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>状态</th>
+                                        <td>${user.status === 1 ? '正常' : '禁用'}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>注册时间</th>
+                                        <td>${formatDate(user.createTime)}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>最后更新</th>
+                                        <td>${formatDate(user.updateTime)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 移除之前的模态框（如果存在）
+    $('#userDetailModal').remove();
+    
+    // 添加模态框到页面
+    $('body').append(modalHtml);
+    
+    // 显示模态框
+    $('#userDetailModal').modal('show');
 }
 
-// 显示确认对话框
-function showConfirmModal(message, callback) {
+// 显示确认操作模态框
+function showConfirmModal(message, confirmCallback) {
+    // 设置确认消息
     $('#confirmMessage').text(message);
-    $('#confirmActionBtn').off('click').on('click', function() {
+    
+    // 移除之前的事件监听
+    $('#confirmActionBtn').off('click');
+    
+    // 绑定确认按钮事件
+    $('#confirmActionBtn').on('click', function() {
         $('#confirmModal').modal('hide');
-        if (typeof callback === 'function') {
-            callback();
+        if (typeof confirmCallback === 'function') {
+            confirmCallback();
         }
     });
+    
+    // 显示模态框
     $('#confirmModal').modal('show');
 }
 
@@ -480,4 +654,21 @@ function showErrorMessage(message) {
     setTimeout(() => {
         $('#error-message').fadeOut();
     }, 3000);
+}
+
+// 格式化日期
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 }

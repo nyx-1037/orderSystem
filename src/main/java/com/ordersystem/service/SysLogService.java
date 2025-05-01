@@ -48,6 +48,13 @@ public interface SysLogService {
      * @param pageSize 每页数量
      * @return 分页日志数据
      */
+    
+    /**
+     * 根据日志ID获取日志详情
+     * @param logId 日志ID
+     * @return 日志详情
+     */
+    SysLog getLogById(Integer logId);
     PageInfo<SysLog> getLogsByUsernameWithPage(String username, int pageNum, int pageSize);
     
     /**

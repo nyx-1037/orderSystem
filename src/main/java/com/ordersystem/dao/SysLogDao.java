@@ -70,4 +70,11 @@ public interface SysLogDao {
      * @return 影响行数
      */
     int deleteById(@Param("logId") Integer logId);
+    
+    /**
+     * 根据ID查询日志
+     * @param logId 日志ID
+     * @return 日志信息
+     */
+    SysLog findById(@Param("logId") Integer logId);
 }

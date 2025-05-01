@@ -47,7 +47,7 @@ $(document).ready(function() {
 async function loadProductInfo(productId, quantity) {
     try {
         // 请求商品详情数据
-        product = await fetchAPI(`/api/product/${productId}`);
+        product = await fetchAPI(`/api/products/${productId}`);
         
         if (!product) {
             showErrorMessage('商品不存在或已被删除');
@@ -90,7 +90,7 @@ function renderProductSummary(product, quantity) {
     const totalPrice = product.price * quantity;
     
     // 商品图片URL
-    let imageUrl = `/api/product/${product.productId}/image`;
+    let imageUrl = `/api/products/${product.productId}/image`;
     // 不在URL中添加token参数，而是在img标签中使用headers属性
     // 图片将通过Authorization头部进行认证
     

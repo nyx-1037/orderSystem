@@ -57,7 +57,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="avatar-container">
-                    <img src="/images/default-avatar.png" alt="用户头像" class="avatar-img" id="avatar-preview">
+                    <img src="/images/default-avatar.jpg" alt="用户头像" class="avatar-img" id="avatar-preview">
                     <div class="avatar-upload mt-3">
                         <form id="avatar-form" enctype="multipart/form-data">
                             <div class="custom-file">
@@ -162,7 +162,7 @@
         
         // 加载用户头像
         function loadUserProfile() {
-            fetchAPI('/api/user/current')
+            fetchAPI('/api/users/current')
                 .then(user => {
                     // 填充表单数据
                     $('#username').val(user.username);
@@ -176,7 +176,8 @@
                     $('#avatar-preview').attr('src', defaultAvatarPath);
 
                     // 显示用户头像 - 从 BLOB 端点加载
-                    const avatarUrl = `/api/user/avatar/${user.userId}`;
+                    // 确保API路径与后端一致
+                    const avatarUrl = `/api/users/avatar/${user.userId}`;
                     const token = localStorage.getItem('token'); // 获取Token
                     fetch(avatarUrl, {
                         headers: {
@@ -227,7 +228,7 @@
             };
             
             try {
-                await fetchAPI('/api/user/profile/update', {
+                await fetchAPI('/api/users/profile/update', {
                     method: 'PUT',
                     body: JSON.stringify(userData)
                 });
@@ -259,7 +260,7 @@
             }
 
             try {
-                await fetchAPI('/api/user/change-password', {
+                await fetchAPI('/api/users/change-password', {
                     method: 'PUT',
                     body: JSON.stringify({
                         currentPassword: currentPassword,
@@ -307,7 +308,8 @@
             
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('/api/user/avatar/upload', { // 修改路径
+                // 确保API路径与后端一致
+                const response = await fetch('/api/users/avatar/upload', {
                     method: 'POST',
                     body: formData,
                     headers: {

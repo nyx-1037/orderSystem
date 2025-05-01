@@ -16,6 +16,7 @@ public class User {
     private String address;     // 地址
     private byte[] avatarData;  // 用户头像二进制数据
     private Integer role;       // 用户角色：0-普通用户，1-商家/管理员
+    private Integer status;     // 用户状态：0-禁用，1-正常
     private Date createTime;    // 创建时间
     private Date updateTime;    // 更新时间
     // 移除了不存在的lastLoginTime字段
@@ -113,6 +114,14 @@ public class User {
     public void setRole(Integer role) {
         this.role = role;
     }
+    
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
 
     @Override
     public String toString() {
@@ -127,6 +136,8 @@ public class User {
                 ", email='" + email + '\'' +
                 ", address='" + address + '\'' +
                 ", avatarData=[length=" + (avatarData != null ? avatarData.length : 0) + "]" + // Show length instead of data
+                ", role=" + role +
+                ", status=" + status +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 // 移除了不存在的lastLoginTime字段

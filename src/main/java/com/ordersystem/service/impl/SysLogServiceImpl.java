@@ -101,4 +101,12 @@ public class SysLogServiceImpl implements SysLogService {
         List<SysLog> logs = sysLogDao.findByFilter(filter, startTime, endTime);
         return new PageInfo<>(logs);
     }
+    
+    @Override
+    public SysLog getLogById(Integer logId) {
+        if (logId == null) {
+            return null;
+        }
+        return sysLogDao.findById(logId);
+    }
 }

@@ -129,7 +129,7 @@ function renderOrderDetail(order) {
             // 商品图片URL
 
             const productId = item.productId || (item.product ? item.product.productId : null);
-            let imageUrl = productId ? `/api/product/${productId}/image` : '/images/default-product.jpg';
+            let imageUrl = productId ? `/api/products/${productId}/image` : '/images/default-product.jpg';
             // 添加Token到图片URL
             if (productId) {
                 const token = localStorage.getItem('token');
@@ -166,7 +166,7 @@ function renderOrderDetail(order) {
             
             // 商品图片URL
             const productId = item.productId || (product ? product.productId : null);
-            let imageUrl = productId ? `/api/product/${productId}/image` : '/images/default-product.jpg';
+            let imageUrl = productId ? `/api/products/${productId}/image` : '/images/default-product.jpg';
             // 添加Token到图片URL
             if (productId) {
                 const token = localStorage.getItem('token');

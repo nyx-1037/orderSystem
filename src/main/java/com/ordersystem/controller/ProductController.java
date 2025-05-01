@@ -36,9 +36,18 @@ public class ProductController {
      * @return 商品列表数据
      */
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<?> getAllProducts() {
         List<Product> products = productService.getAllProducts();
-        return ResponseEntity.ok(products);
+        
+        // 创建符合前端期望的分页格式响应
+        Map<String, Object> response = new HashMap<>();
+        response.put("list", products);
+        response.put("total", products.size());
+        response.put("pages", 1); // 由于返回所有数据，所以只有1页
+        response.put("pageNum", 1);
+        response.put("pageSize", products.size());
+        
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -194,12 +203,18 @@ public class ProductController {
      * @return 商品列表
      */
     @GetMapping("/search")
-    public ResponseEntity<List<Product>> searchProducts(@RequestParam("name") String productName) {
+    public ResponseEntity<?> searchProducts(@RequestParam("name") String productName) {
         List<Product> products = productService.getProductsByName(productName);
         
-        // 返回查询到的商品列表
+        // 创建符合前端期望的分页格式响应
+        Map<String, Object> response = new HashMap<>();
+        response.put("list", products);
+        response.put("total", products.size());
+        response.put("pages", 1); // 由于返回所有数据，所以只有1页
+        response.put("pageNum", 1);
+        response.put("pageSize", products.size());
         
-        return ResponseEntity.ok(products);
+        return ResponseEntity.ok(response);
     }
     
     /**

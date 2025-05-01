@@ -47,7 +47,7 @@ async function loadSyslogs() {
     // 显示加载中状态
     $('#log-list').html(`
         <tr>
-            <td colspan="6" class="text-center py-3">
+            <td colspan="7" class="text-center py-3">
                 <div class="spinner-border text-primary" role="status">
                     <span class="sr-only">加载中...</span>
                 </div>
@@ -64,15 +64,50 @@ async function loadSyslogs() {
         
         // 添加筛选条件
         const logType = $('#logType').val();
-        const module = $('#module').val();
+        const operation = $('#module').val();
         const dateRange = $('#dateRange').val();
+        const username = $('#username').val();
+        const statusCode = $('#statusCode').val();
         
-        if (logType) params.append('logType', logType);
-        if (module) params.append('module', module);
-        if (dateRange) params.append('days', dateRange);
+        // 根据日志类型筛选状态码
+        if (logType && !statusCode) {
+            let code;
+            if (logType === 'INFO') code = 200;
+            else if (logType === 'WARNING') code = 400;
+            else if (logType === 'ERROR') code = 500;
+            
+            if (code) params.append('statusCode', code);
+        }
+        
+        // 直接使用状态码筛选
+        if (statusCode) {
+            params.append('statusCode', statusCode);
+        }
+        
+        // 根据操作类型筛选
+        if (operation) {
+            params.append('operation', operation);
+        }
+        
+        // 添加时间范围
+        if (dateRange) {
+            const now = new Date();
+            const endDate = now.toISOString().split('T')[0];
+            
+            now.setDate(now.getDate() - parseInt(dateRange));
+            const startDate = now.toISOString().split('T')[0];
+            
+            params.append('startTime', startDate);
+            params.append('endTime', endDate);
+        }
+        
+        // 添加用户名筛选
+        if (username) {
+            params.append('username', username);
+        }
         
         // 发送API请求 - 使用RESTful风格
-        const apiUrl = `/api/admin/syslog?${params.toString()}`;
+        const apiUrl = `/api/system-logs?${params.toString()}`;
         console.log('请求系统日志URL:', apiUrl);
         
         const response = await fetchAPI(apiUrl, { method: 'GET' });
@@ -91,7 +126,7 @@ async function loadSyslogs() {
         showErrorMessage('加载系统日志失败: ' + error.message);
         $('#log-list').html(`
             <tr>
-                <td colspan="6" class="text-center py-3">
+                <td colspan="7" class="text-center py-3">
                     <div class="alert alert-danger mb-0">
                         加载系统日志失败: ${error.message}
                         <button class="btn btn-sm btn-outline-danger ml-2" onclick="loadSyslogs()">
@@ -112,7 +147,7 @@ function renderLogList(logs) {
     if (!logs || logs.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="6" class="text-center py-3">
+                <td colspan="7" class="text-center py-3">
                     <p class="text-muted mb-0">暂无系统日志数据</p>
                 </td>
             </tr>
@@ -123,18 +158,24 @@ function renderLogList(logs) {
     logs.forEach(log => {
         // 根据日志类型设置不同的样式
         let typeBadgeClass = 'badge-info';
-        if (log.logType === 'WARNING') {
+        let logTypeText = 'INFO';
+        
+        // 根据状态码判断日志类型
+        if (log.statusCode >= 400 && log.statusCode < 500) {
             typeBadgeClass = 'badge-warning';
-        } else if (log.logType === 'ERROR') {
+            logTypeText = 'WARNING';
+        } else if (log.statusCode >= 500) {
             typeBadgeClass = 'badge-danger';
+            logTypeText = 'ERROR';
         }
         
         const row = $(`
             <tr>
                 <td>${log.logId}</td>
-                <td><span class="badge ${typeBadgeClass}">${log.logType}</span></td>
-                <td>${log.module}</td>
-                <td>${truncateText(log.content, 100)}</td>
+                <td>${log.username || '系统'}</td>
+                <td>${log.operation || '系统'}</td>
+                <td>${log.statusCode || '-'}</td>
+                <td>${truncateText(log.method || '', 100)}</td>
                 <td>${formatDate(log.createTime)}</td>
                 <td>
                     <button class="btn btn-sm btn-info" onclick="viewLogDetail(${log.logId})">
@@ -223,21 +264,75 @@ function renderPagination() {
 // 查看日志详情
 async function viewLogDetail(logId) {
     try {
-        const log = await fetchAPI(`/api/admin/syslog/${logId}`);
-        
-        // 填充模态框数据
-        $('#detail-id').text(log.logId);
-        $('#detail-type').text(log.logType);
-        $('#detail-module').text(log.module);
-        $('#detail-user').text(log.username || '系统');
-        $('#detail-ip').text(log.ipAddress || '-');
-        $('#detail-time').text(formatDate(log.createTime));
-        $('#detail-content').text(log.content);
+        // 显示加载中状态
+        $('#detail-content').html(`
+            <div class="text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">加载中...</span>
+                </div>
+                <p class="mt-2">正在加载日志详情...</p>
+            </div>
+        `);
         
         // 显示模态框
         $('#logDetailModal').modal('show');
+        
+        // 获取日志详情
+        const log = await fetchAPI(`/api/system-logs/by-id/${logId}`);
+        console.log('日志详情数据:', log);
+        
+        if (!log) {
+            $('#detail-content').html('<div class="alert alert-warning">未找到日志详情</div>');
+            return;
+        }
+        
+        // 根据状态码判断日志类型
+        let logTypeText = 'INFO';
+        let typeBadgeClass = 'badge-info';
+        
+        if (log.statusCode >= 400 && log.statusCode < 500) {
+            logTypeText = 'WARNING';
+            typeBadgeClass = 'badge-warning';
+        } else if (log.statusCode >= 500) {
+            logTypeText = 'ERROR';
+            typeBadgeClass = 'badge-danger';
+        }
+        
+        // 填充模态框数据
+        $('#detail-id').text(log.logId || '-');
+        $('#detail-type').html(`<span class="badge ${typeBadgeClass}">${logTypeText}</span>`);
+        $('#detail-module').text(log.operation || '系统');
+        $('#detail-user').text(log.username || '系统');
+        $('#detail-ip').text(log.ip || '-');
+        $('#detail-time').text(formatDate(log.createTime) || '-');
+        
+        // 设置详细内容
+        let detailContent = '';
+        
+        if (log.statusCode) {
+            detailContent += `<p><strong>状态码:</strong> ${log.statusCode}</p>`;
+        }
+        
+        if (log.method) {
+            detailContent += `<p><strong>请求方法:</strong> ${log.method}</p>`;
+        }
+        
+        if (log.params) {
+            detailContent += `<p><strong>请求参数:</strong> <pre class="bg-light p-2 mt-1">${log.params}</pre></p>`;
+        }
+        
+        if (log.errorMsg) {
+            detailContent += `<p><strong>返回信息:</strong> <pre class="bg-light p-2 mt-1">${log.errorMsg}</pre></p>`;
+        }
+        
+        if (!detailContent) {
+            detailContent = '<p class="text-muted">无详细内容</p>';
+        }
+        
+        $('#detail-content').html(detailContent);
     } catch (error) {
         console.error('加载日志详情失败:', error);
         showErrorMessage('加载日志详情失败: ' + error.message);
+        $('#detail-content').html(`<div class="alert alert-danger">加载日志详情失败: ${error.message}</div>`);
     }
 }

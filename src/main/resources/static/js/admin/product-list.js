@@ -104,48 +104,14 @@ function updateBatchDeleteButton() {
     $('#batch-delete-btn').toggle(hasChecked);
 }
 
-// 加载商品分类
+// 商品实体类中不存在分类字段，移除分类相关代码
 async function loadCategories() {
-    try {
-        // 尝试使用新的API路径
-        let categories;
-        try {
-            categories = await fetchAPI('/api/categories');
-        } catch (primaryError) {
-            console.warn('主API路径请求失败，尝试备用路径:', primaryError);
-            try {
-                // 尝试备用API路径
-                categories = await fetchAPI('/api/category/list');
-            } catch (backupError) {
-                // 如果两个API都失败，使用默认分类
-                console.warn('备用API路径也失败，使用默认分类:', backupError);
-                categories = [
-                    { id: 1, name: '电子产品' },
-                    { id: 2, name: '服装' },
-                    { id: 3, name: '食品' },
-                    { id: 4, name: '图书' },
-                    { id: 5, name: '家居' }
-                ];
-            }
-        }
-        
-        // 填充筛选表单的分类下拉框
-        const categorySelect = $('#category');
-        categorySelect.empty();
-        categorySelect.append('<option value="">全部</option>');
-        
-        // 填充编辑表单的分类下拉框
-        const categoryInput = $('#categoryInput');
-        categoryInput.empty();
-        
-        categories.forEach(category => {
-            categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
-            categoryInput.append(`<option value="${category.id}">${category.name}</option>`);
-        });
-    } catch (error) {
-        console.error('加载商品分类失败:', error);
-        showErrorMessage('加载商品分类失败: ' + error.message);
-    }
+    // 由于商品实体类中不存在分类字段，此函数不再需要加载分类数据
+    console.log('商品实体类中不存在分类字段，跳过加载分类');
+    
+    // 隐藏分类相关UI元素
+    $('#category').parent().hide();
+    $('#categoryInput').parent().hide();
 }
 
 // 加载商品数据
@@ -170,26 +136,23 @@ async function loadProducts() {
         
         // 添加筛选条件
         const productName = $('#productName').val();
-        const category = $('#category').val();
+        // 移除分类筛选，因为商品实体类中不存在分类字段
         const status = $('#status').val();
         
         if (productName) params.append('name', productName);
-        if (category) params.append('categoryId', category);
+        // 移除分类参数
         if (status) params.append('status', status);
         
-        // 发送API请求 - 使用RESTful风格
+        // 发送API请求 - 使用RESTful风格，与ProductController中定义的路径一致
         let apiUrl = `/api/products?${params.toString()}`;
         console.log('请求商品列表URL:', apiUrl);
         
         let response;
         try {
             response = await fetchAPI(apiUrl, { method: 'GET' });
-        } catch (primaryError) {
-            console.warn('主API路径请求失败，尝试备用路径:', primaryError);
-            // 尝试备用API路径
-            apiUrl = `/api/admin/products?${params.toString()}`;
-            console.log('尝试备用API路径:', apiUrl);
-            response = await fetchAPI(apiUrl, { method: 'GET' });
+        } catch (error) {
+            console.error('商品API请求失败:', error);
+            throw error;
         }
         
         // 更新分页信息
@@ -251,12 +214,12 @@ function renderProductList(products) {
                 </td>
                 <td>${product.productId}</td>
                 <td>
-                    <img src="/api/product/${product.productId}/image" class="img-thumbnail" 
+                    <img src="/api/products/${product.productId}/image" class="img-thumbnail" 
                          style="width: 50px; height: 50px; object-fit: cover;"
                          onerror="this.onerror=null; this.src='/images/default-product.jpg';">
                 </td>
                 <td>${product.productName}</td>
-                <td>${product.categoryName || '未分类'}</td>
+                <td>不适用</td>
                 <td>${formatCurrency(product.price)}</td>
                 <td>${product.stock}</td>
                 <td>${statusBadge}</td>
@@ -366,20 +329,26 @@ function showProductModal(productId = null) {
 // 加载商品详情
 async function loadProductDetail(productId) {
     try {
-        const product = await fetchAPI(`/api/product/${productId}`);
+        const product = await fetchAPI(`/api/products/${productId}`);
         
         // 填充表单数据
         $('#productId').val(product.productId);
         $('#productNameInput').val(product.productName);
-        $('#categoryInput').val(product.categoryId);
+        // 移除分类字段，因为商品实体类中不存在
         $('#priceInput').val(product.price);
         $('#stockInput').val(product.stock);
         $('#statusInput').val(product.status);
-        $('#descriptionInput').val(product.description);
+        $('#descriptionInput').val(product.productDesc); // 使用正确的字段名
         
-        // 显示商品图片
-        const imageUrl = `/api/product/${product.productId}/image`;
+        // 显示商品图片，修正API路径并添加token
+        const token = localStorage.getItem('token');
+        const imageUrl = `/api/products/${product.productId}/image`;
         $('#preview-img').attr('src', imageUrl);
+        // 设置Authorization头
+        $('#preview-img').on('error', function() {
+            this.onerror = null;
+            this.src = '/images/default-product.jpg';
+        });
         $('#image-preview').show();
     } catch (error) {
         console.error('加载商品详情失败:', error);
@@ -392,14 +361,14 @@ async function saveProduct() {
     // 获取表单数据
     const productId = $('#productId').val();
     const productName = $('#productNameInput').val();
-    const categoryId = $('#categoryInput').val();
+    // 移除分类字段，因为商品实体类中不存在
     const price = $('#priceInput').val();
     const stock = $('#stockInput').val();
     const status = $('#statusInput').val();
-    const description = $('#descriptionInput').val();
+    const productDesc = $('#descriptionInput').val(); // 使用正确的字段名
     
     // 验证表单数据
-    if (!productName || !categoryId || !price || stock === '') {
+    if (!productName || !price || stock === '') {
         showErrorMessage('请填写必填字段');
         return;
     }
@@ -408,17 +377,17 @@ async function saveProduct() {
         // 准备商品数据
         const productData = {
             productName,
-            categoryId,
+            // 移除分类字段
             price,
             stock,
             status,
-            description
+            productDesc // 使用正确的字段名
         };
         
         if (isEditMode && productId) {
             // 更新商品
             productData.productId = productId;
-            await fetchAPI(`/api/admin/product/${productId}`, {
+            await fetchAPI(`/api/products/${productId}`, {
                 method: 'PUT',
                 body: JSON.stringify(productData)
             });
@@ -431,7 +400,7 @@ async function saveProduct() {
             showSuccessMessage('商品更新成功');
         } else {
             // 创建商品
-            const newProduct = await fetchAPI('/api/admin/product', {
+            const newProduct = await fetchAPI('/api/products', {
                 method: 'POST',
                 body: JSON.stringify(productData)
             });
@@ -456,14 +425,15 @@ async function saveProduct() {
 // 上传商品图片
 async function uploadProductImage(productId, file) {
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('file', file); // 使用正确的参数名
     
     try {
-        await fetch(`/api/admin/product/${productId}/image`, {
+        const token = localStorage.getItem('token');
+        await fetch(`/api/products/${productId}/image`, {
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Authorization': `Bearer ${token}`
             }
         });
         console.log('商品图片上传成功');
@@ -482,7 +452,7 @@ function editProduct(productId) {
 function deleteProduct(productId) {
     showConfirmModal(`确定要删除ID为 ${productId} 的商品吗？`, async () => {
         try {
-            await fetchAPI(`/api/admin/product/${productId}`, {
+            await fetchAPI(`/api/products/${productId}`, {
                 method: 'DELETE'
             });
             
@@ -499,10 +469,12 @@ function deleteProduct(productId) {
 async function batchDeleteProducts(productIds) {
     showConfirmModal(`确定要删除选中的 ${productIds.length} 个商品吗？`, async () => {
         try {
-            await fetchAPI('/api/admin/product/batch', {
-                method: 'DELETE',
-                body: JSON.stringify({ ids: productIds })
-            });
+            // 由于后端可能没有批量删除API，改为逐个删除
+            for (const productId of productIds) {
+                await fetchAPI(`/api/products/${productId}`, {
+                    method: 'DELETE'
+                });
+            }
             
             showSuccessMessage(`成功删除 ${productIds.length} 个商品`);
             $('#select-all').prop('checked', false);

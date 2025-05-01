@@ -54,7 +54,7 @@ async function register() {
         };
         
         // 发送注册请求 - 使用RESTful风格的API
-        await fetchAPI('/api/client/users', {
+        await fetchAPI('/api/users/register', {
             method: 'POST',
             body: JSON.stringify(registerData)
         });

@@ -50,6 +50,29 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
     
+
+    
+    /**
+     * 分页获取用户列表
+     * 
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param username 用户名（可选）
+     * @param role 角色（可选）
+     * @param status 状态（可选）
+     * @return 分页用户列表数据
+     */
+    @GetMapping("/page/{pageNum}/{pageSize}")
+    public ResponseEntity<?> getUsersByPage(
+            @PathVariable Integer pageNum,
+            @PathVariable Integer pageSize,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Integer role,
+            @RequestParam(required = false) Integer status) {
+        Map<String, Object> result = userService.getUsersByPage(pageNum, pageSize, username, role, status);
+        return ResponseEntity.ok(result);
+    }
+    
     /**
      * 根据ID获取用户
      * 
@@ -66,6 +89,8 @@ public class UserController {
         }
         return ResponseEntity.notFound().build();
     }
+    
+
     
     /**
      * 用户登录
@@ -102,14 +127,20 @@ public class UserController {
             result.put("user", user);
             
             return ResponseEntity.ok().body(result);
-        } catch (RuntimeException e) {
+        }
+    
+ catch (RuntimeException e) {
             // 登录失败，返回具体错误信息
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
+    
+
     }
+    
+
     
     /**
      * 检查用户名是否存在
@@ -124,6 +155,8 @@ public class UserController {
         response.put("exists", existingUser != null);
         return ResponseEntity.ok().body(response);
     }
+    
+
     
     /**
      * 用户注册
@@ -142,6 +175,8 @@ public class UserController {
             errorResponse.put("message", "用户名已存在");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
+    
+
         
         // 初始化用户信息
         
@@ -161,14 +196,20 @@ public class UserController {
             response.put("message", "注册成功");
             response.put("userId", user.getUserId());
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else {
+        }
+    
+ else {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("error_code", "registration_failed");
             errorResponse.put("message", "注册失败，请稍后再试");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    
+
     }
+    
+
     
     /**
      * 用户退出登录
@@ -188,12 +229,16 @@ public class UserController {
             response.put("message", "退出成功");
             return ResponseEntity.ok().body(response);
         }
+    
+
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "未登录状态");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+    
+
     
     /**
      * 获取当前登录用户信息
@@ -212,13 +257,19 @@ public class UserController {
                 user.setPassword(null);
                 return ResponseEntity.ok(user);
             }
+    
+
         }
+    
+
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", false);
         response.put("message", "未登录或用户不存在");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+    
+
     
     /**
      * 更新用户信息
@@ -241,6 +292,8 @@ public class UserController {
             response.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+    
+
         
         // 查找用户
         User existingUser = userService.getUserById(userId);
@@ -251,6 +304,8 @@ public class UserController {
             response.put("message", "用户不存在");
             return ResponseEntity.notFound().build();
         }
+    
+
         
         // 验证当前用户是否有权限更新此用户信息
         if (!currentUserId.equals(existingUser.getUserId()) && existingUser.getRole() != 1) {
@@ -259,6 +314,8 @@ public class UserController {
             response.put("message", "无权限修改其他用户信息");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    
+
         
         // 保留原始ID和密码
         user.setUserId(existingUser.getUserId());
@@ -276,16 +333,103 @@ public class UserController {
             response.put("user", user);
             
             return ResponseEntity.ok(response);
-        } else {
+        }
+    
+ else {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "用户信息更新失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    
+
     }
     
+
+    
     /**
-     * 修改密码
+     * 修改密码（个人中心使用）
+     * 
+     * @param request 修改密码请求
+     * @param httpRequest HTTP请求
+     * @return 修改结果
+     */
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePasswordForProfile(
+            @RequestBody Map<String, String> request,
+            HttpServletRequest httpRequest) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) httpRequest.getAttribute("userId");
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    
+
+        
+        // 查找用户
+        User user = userService.getUserById(userId);
+        
+        if (user == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "用户不存在");
+            return ResponseEntity.notFound().build();
+        }
+    
+
+        
+        // 验证旧密码
+        String currentPassword = request.get("currentPassword");
+        String newPassword = request.get("newPassword");
+        
+        if (currentPassword == null || newPassword == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "密码参数不完整");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    
+
+        
+        String oldPasswordEncrypted = MD5Util.encode(currentPassword);
+        if (!oldPasswordEncrypted.equals(user.getPassword())) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "旧密码不正确");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    
+
+        
+        // 更新密码
+        user.setPassword(MD5Util.encode(newPassword));
+        user.setUpdateTime(new Date());
+        
+        boolean result = userService.updateUser(user);
+        if (result) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "密码修改成功");
+            return ResponseEntity.ok(response);
+        }
+    
+ else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "密码修改失败");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    
+
+    }
+    
+
+    
+    /**
+     * 修改密码（管理员使用）
      * 
      * @param uuid 用户UUID
      * @param request 修改密码请求
@@ -305,6 +449,8 @@ public class UserController {
             response.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+    
+
         
         // 查找用户
         User user = userService.getUserById(userId);
@@ -315,6 +461,8 @@ public class UserController {
             response.put("message", "用户不存在");
             return ResponseEntity.notFound().build();
         }
+    
+
         
         // 验证当前用户是否有权限修改此用户密码
         if (!currentUserId.equals(user.getUserId())) {
@@ -323,6 +471,8 @@ public class UserController {
             response.put("message", "无权限修改其他用户密码");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    
+
         
         // 验证旧密码
         String oldPasswordEncrypted = MD5Util.encode(request.getCurrentPassword());
@@ -332,6 +482,8 @@ public class UserController {
             response.put("message", "旧密码不正确");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    
+
         
         // 更新密码
         user.setPassword(MD5Util.encode(request.getNewPassword()));
@@ -343,27 +495,33 @@ public class UserController {
             response.put("success", true);
             response.put("message", "密码修改成功");
             return ResponseEntity.ok(response);
-        } else {
+        }
+    
+ else {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "密码修改失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    
+
     }
+    
+
     
     /**
      * 上传用户头像
      * 
-     * @param uuid 用户UUID
      * @param file 头像文件
      * @param request HTTP请求
      * @return 上传结果
      */
-    @PostMapping("/{userId}/avatar")
+    @PostMapping("/avatar/upload")
     public ResponseEntity<?> uploadAvatar(
-            @PathVariable Integer userId,
-            @RequestParam("file") MultipartFile file,
+            @RequestParam("avatar") MultipartFile file,
             HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
         // 从请求属性中获取用户ID（由拦截器设置）
         Integer currentUserId = (Integer) request.getAttribute("userId");
         if (currentUserId == null) {
@@ -372,6 +530,8 @@ public class UserController {
             response.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+    
+
         
         // 查找用户
         User user = userService.getUserById(userId);
@@ -382,6 +542,8 @@ public class UserController {
             response.put("message", "用户不存在");
             return ResponseEntity.notFound().build();
         }
+    
+
         
         // 验证当前用户是否有权限更新此用户头像
         if (!currentUserId.equals(user.getUserId())) {
@@ -390,6 +552,8 @@ public class UserController {
             response.put("message", "无权限修改其他用户头像");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    
+
         
         if (file.isEmpty()) {
             Map<String, Object> response = new HashMap<>();
@@ -397,6 +561,8 @@ public class UserController {
             response.put("message", "上传文件不能为空");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    
+
 
         try {
             // 读取文件内容为字节数组
@@ -412,19 +578,29 @@ public class UserController {
                 response.put("success", true);
                 response.put("message", "头像上传成功");
                 return ResponseEntity.ok().body(response);
-            } else {
+            }
+    
+ else {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "头像上传失败");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
-        } catch (IOException e) {
+    
+
+        }
+    
+ catch (IOException e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "上传失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    
+
     }
+    
+
     
     /**
      * 获取用户头像
@@ -432,7 +608,7 @@ public class UserController {
      * @param uuid 用户UUID
      * @return 头像数据
      */
-    @GetMapping("/{userId}/avatar")
+    @GetMapping("/avatar/{userId}")
     public ResponseEntity<?> getUserAvatar(@PathVariable Integer userId) {
         try {
             // 查找用户
@@ -441,6 +617,8 @@ public class UserController {
             if (user == null) {
                 return ResponseEntity.notFound().build();
             }
+    
+
             
             byte[] avatarData = user.getAvatarData();
             
@@ -449,26 +627,104 @@ public class UserController {
                 try {
                     // 读取默认头像
                     avatarData = Files.readAllBytes(Paths.get("src/main/resources/static/images/default-avatar.jpg"));
-                } catch (IOException e) {
+                }
+    
+ catch (IOException e) {
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", false);
                     response.put("message", "获取默认头像失败");
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
                 }
+    
+
             }
+    
+
             
             // 设置响应头
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.IMAGE_JPEG);
             
             return new ResponseEntity<>(avatarData, headers, HttpStatus.OK);
-        } catch (Exception e) {
+        }
+    
+ catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "获取头像失败：" + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    
+
     }
+    
+
+    
+    /**
+     * 更新用户个人资料
+     * 
+     * @param request HTTP请求
+     * @param userProfile 用户个人资料
+     * @return 更新结果
+     */
+    @PutMapping("/profile/update")
+    public ResponseEntity<?> updateProfile(
+            HttpServletRequest request,
+            @RequestBody User userProfile) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    
+
+        
+        // 查找用户
+        User existingUser = userService.getUserById(userId);
+        
+        if (existingUser == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "用户不存在");
+            return ResponseEntity.notFound().build();
+        }
+    
+
+        
+        // 只更新允许的字段
+        existingUser.setRealName(userProfile.getRealName());
+        existingUser.setEmail(userProfile.getEmail());
+        existingUser.setPhone(userProfile.getPhone());
+        existingUser.setAddress(userProfile.getAddress());
+        existingUser.setUpdateTime(new Date());
+        
+        boolean result = userService.updateUser(existingUser);
+        if (result) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "个人信息更新成功");
+            
+            // 不返回密码等敏感信息
+            existingUser.setPassword(null);
+            response.put("user", existingUser);
+            
+            return ResponseEntity.ok(response);
+        }
+    
+ else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "个人信息更新失败");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    
+
+    }
+    
+
     
     /**
      * 删除用户
@@ -491,6 +747,8 @@ public class UserController {
             response.put("message", "无权限删除用户");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    
+
         
         // 查找要删除的用户
         User userToDelete = userService.getUserById(userId);
@@ -501,6 +759,8 @@ public class UserController {
             response.put("message", "用户不存在");
             return ResponseEntity.notFound().build();
         }
+    
+
         
         // 不允许删除自己
         if (userToDelete.getUserId().equals(currentUserId)) {
@@ -509,6 +769,8 @@ public class UserController {
             response.put("message", "不能删除当前登录的用户");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+    
+
         
         boolean result = userService.deleteUser(userToDelete.getUserId());
         if (result) {
@@ -519,11 +781,17 @@ public class UserController {
             response.put("success", true);
             response.put("message", "用户删除成功");
             return ResponseEntity.ok(response);
-        } else {
+        }
+    
+ else {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "用户删除失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    
+
     }
+    
+
 }

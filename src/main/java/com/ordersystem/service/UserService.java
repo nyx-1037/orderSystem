@@ -2,6 +2,7 @@ package com.ordersystem.service;
 
 import com.ordersystem.entity.User;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务接口
@@ -56,4 +57,15 @@ public interface UserService {
      * @return 用户信息，登录失败返回null
      */
     User login(String username, String password);
+    
+    /**
+     * 分页获取用户列表
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param username 用户名（可选）
+     * @param role 角色（可选）
+     * @param status 状态（可选）
+     * @return 分页用户列表数据
+     */
+    Map<String, Object> getUsersByPage(Integer pageNum, Integer pageSize, String username, Integer role, Integer status);
 }

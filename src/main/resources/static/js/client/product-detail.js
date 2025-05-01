@@ -51,22 +51,16 @@ $(document).ready(function() {
 });
 
 // 加载商品详情
-async function loadProductDetail(productId) {
+async function loadProductDetail(id) {
     try {
-        // 请求商品详情数据
-        const product = await fetchAPI(`/api/product/${productId}`);
+        // 显示加载中
+        $('#product-container').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">加载中...</span></div><p class="mt-3">正在加载商品详情...</p></div>');
+        
+        // 请求商品详情数据 - 修正API路径，使用后端控制器中定义的路径
+        const product = await fetchAPI(`/api/products/${id}`);
         
         if (!product) {
-            showErrorMessage('商品不存在或已被删除');
-            setTimeout(() => {
-                window.location.href = '/pages/client/products.html';
-            }, 2000);
-            return;
-        }
-        
-        // 如果商品已下架，显示提示信息
-        if (product.status === 0) {
-            showErrorMessage('该商品已下架');
+            showErrorMessage('商品不存在或已下架');
             setTimeout(() => {
                 window.location.href = '/pages/client/products.html';
             }, 2000);
@@ -76,119 +70,151 @@ async function loadProductDetail(productId) {
         // 渲染商品详情
         renderProductDetail(product);
         
-        // 设置页面标题
-        document.title = `${product.productName} - 在线商城`;
+        // 绑定数量调整按钮事件
+        bindQuantityButtons();
+        
+        // 绑定添加到购物车按钮事件
+        $('#add-to-cart-btn').click(function() {
+            addToCart(product.productId, quantity);
+        });
+        
+        // 绑定立即购买按钮事件
+        $('#buy-now-btn').click(function() {
+            buyNow(product.productId, quantity);
+        });
     } catch (error) {
         console.error('加载商品详情失败:', error);
         showErrorMessage('加载商品详情失败: ' + error.message);
-        $('#product-detail-container').html('<div class="alert alert-danger">加载商品详情失败</div>');
+        $('#product-container').html('<div class="alert alert-danger">加载商品详情失败</div>');
     }
 }
 
 // 渲染商品详情
 function renderProductDetail(product) {
-    // 清空容器
-    $('#product-detail-container').empty();
+    document.title = `${product.productName} - 在线商城`;
     
-    // 商品图片列
-    const imageCol = $('<div class="col-md-6"></div>');
-    // 商品图片URL
-    const imageUrl = `/api/product/${product.productId}/image`;
-    // 使用data-src属性存储原始URL，让image-loader.js处理认证
-    imageCol.html(`
-        <img data-src="${imageUrl}" alt="${product.productName}" class="product-image" 
-             src="/images/loading.gif"
-             onerror="this.onerror=null; this.src='/images/default-product.jpg'; console.log('商品图片加载失败，使用默认图片');">
-    `);
+    // 设置库存状态文本和样式
+    const stockStatusText = product.stock > 0 ? `库存: ${product.stock}` : '缺货';
+    const stockStatusClass = product.stock > 0 ? 'badge-success' : 'badge-danger';
     
-    // 商品信息列
-    const infoCol = $('<div class="col-md-6"></div>');
+    // 设置商品状态文本和样式
+    const statusText = product.status === 1 ? '在售' : '已下架';
+    const statusClass = product.status === 1 ? 'badge-primary' : 'badge-secondary';
     
-    // 库存状态显示
-    let stockStatusText = '';
-    let stockStatusClass = '';
-    if (product.stock === 0) {
-        stockStatusText = '库存不足';
-        stockStatusClass = 'stock-status-0';
-    } else if (product.stock < 10) {
-        stockStatusText = '库存紧张';
-        stockStatusClass = 'stock-status-1';
-    } else {
-        stockStatusText = '库存充足';
-        stockStatusClass = 'stock-status-2';
-    }
+    // 使用正确的图片路径 - 修正API路径，使用后端控制器中定义的路径
+    const imageUrl = `/api/products/${product.productId}/image`;
     
-    infoCol.html(`
-        <div class="product-info">
-            <h3>${product.productName}</h3>
-            <div class="product-price">${formatCurrency(product.price)}</div>
-            <div class="mb-3">
-                <span class="stock-status ${stockStatusClass}">${stockStatusText}</span>
-                <span>库存: ${product.stock}</span>
+    // 构建商品详情HTML
+    const html = `
+        <div class="row">
+            <div class="col-md-6">
+                <img src="${imageUrl}" class="product-image" alt="${product.productName}" onerror="this.onerror=null; this.src='/images/default-product.jpg';">
             </div>
-            <div class="mb-3">
-                <h5>商品描述</h5>
-                <p>${product.productDesc || '暂无描述'}</p>
-            </div>
-            <div class="quantity-control">
-                <button class="btn btn-outline-secondary" id="decrease-quantity">-</button>
-                <input type="number" id="quantity" value="1" min="1" max="${product.stock}" ${product.stock <= 0 ? 'disabled' : ''}>
-                <button class="btn btn-outline-secondary" id="increase-quantity">+</button>
-            </div>
-            <div class="d-grid gap-2">
-                <button class="btn btn-primary btn-lg" id="buy-now-btn" ${product.stock <= 0 ? 'disabled' : ''}>
-                    ${product.stock <= 0 ? '暂时缺货' : '立即购买'}
-                </button>
+            <div class="col-md-6">
+                <h2 class="mb-3">${product.productName}</h2>
+                <div class="mb-3">
+                    <span class="badge ${statusClass} mr-2">${statusText}</span>
+                    <span class="badge ${stockStatusClass}">${stockStatusText}</span>
+                </div>
+                <div class="product-price mb-4">¥${formatCurrency(product.price)}</div>
+                <div class="product-info mb-4">
+                    <p>${product.productDesc || '暂无商品描述'}</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">数量:</label>
+                    <div class="input-group" style="width: 150px;">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-secondary" type="button" id="decrease-btn">-</button>
+                        </div>
+                        <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="${product.stock}" ${product.stock <= 0 ? 'disabled' : ''}>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="increase-btn">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg mr-2" id="add-to-cart-btn" ${product.stock <= 0 || product.status !== 1 ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> 加入购物车
+                    </button>
+                    <button class="btn btn-danger btn-lg" id="buy-now-btn" ${product.stock <= 0 || product.status !== 1 ? 'disabled' : ''}>
+                        <i class="fas fa-bolt"></i> 立即购买
+                    </button>
+                </div>
             </div>
         </div>
-    `);
+    `;
     
-    // 添加到容器
-    $('#product-detail-container').append(imageCol).append(infoCol);
+    $('#product-container').html(html);
+}
+
+// 绑定数量调整按钮事件
+function bindQuantityButtons() {
+    const quantityInput = $('#quantity');
+    const maxStock = parseInt(quantityInput.attr('max'));
     
-    // 绑定数量控制事件
-    $('#decrease-quantity').click(function() {
-        const currentVal = parseInt($('#quantity').val());
-        if (currentVal > 1) {
-            $('#quantity').val(currentVal - 1);
-            quantity = currentVal - 1;
+    // 减少数量按钮
+    $('#decrease-btn').click(function() {
+        let currentValue = parseInt(quantityInput.val());
+        if (currentValue > 1) {
+            quantityInput.val(currentValue - 1);
+            quantity = currentValue - 1;
         }
     });
     
-    $('#increase-quantity').click(function() {
-        const currentVal = parseInt($('#quantity').val());
-        if (currentVal < product.stock) {
-            $('#quantity').val(currentVal + 1);
-            quantity = currentVal + 1;
+    // 增加数量按钮
+    $('#increase-btn').click(function() {
+        let currentValue = parseInt(quantityInput.val());
+        if (currentValue < maxStock) {
+            quantityInput.val(currentValue + 1);
+            quantity = currentValue + 1;
         }
     });
     
-    $('#quantity').change(function() {
-        let val = parseInt($(this).val());
-        if (isNaN(val) || val < 1) {
-            val = 1;
-        } else if (val > product.stock) {
-            val = product.stock;
+    // 直接输入数量
+    quantityInput.change(function() {
+        let currentValue = parseInt($(this).val());
+        if (isNaN(currentValue) || currentValue < 1) {
+            $(this).val(1);
+            quantity = 1;
+        } else if (currentValue > maxStock) {
+            $(this).val(maxStock);
+            quantity = maxStock;
+        } else {
+            quantity = currentValue;
         }
-        $(this).val(val);
-        quantity = val;
     });
-    
-    // 绑定立即购买按钮事件
-    $('#buy-now-btn').click(function() {
-        if (product.stock <= 0) {
-            showErrorMessage('该商品库存不足，无法购买');
-            return;
-        }
+}
+
+// 添加到购物车
+async function addToCart(productId, quantity) {
+    try {
+        // 发送添加到购物车请求 - 修正API路径，使用后端控制器中定义的路径
+        const result = await fetchAPI('/api/cart/add', {
+            method: 'POST',
+            body: JSON.stringify({
+                productId: productId,
+                quantity: quantity
+            })
+        });
         
-        // 跳转到创建订单页面，带上商品ID和数量参数
-        window.location.href = `/pages/client/create-order.html?productId=${product.productId}&quantity=${quantity}`;
-    });
+        showSuccessMessage('已成功添加到购物车');
+    } catch (error) {
+        console.error('添加到购物车失败:', error);
+        showErrorMessage('添加到购物车失败: ' + error.message);
+    }
+}
+
+// 立即购买
+function buyNow(productId, quantity) {
+    // 跳转到确认订单页面
+    window.location.href = `/pages/client/checkout.html?productId=${productId}&quantity=${quantity}`;
 }
 
 // 格式化货币
 function formatCurrency(price) {
-    return '¥' + parseFloat(price).toFixed(2);
+    return parseFloat(price).toFixed(2);
 }
 
 // 从URL获取参数

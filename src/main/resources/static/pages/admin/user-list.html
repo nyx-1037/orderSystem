@@ -139,12 +139,17 @@
                         <!-- 分页将通过JavaScript动态加载 -->
                     </ul>
                 </nav>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted">
+                        <span id="total-count">0</span> 条记录，共 <span id="total-pages">0</span> 页
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 用户表单Modal -->
-    <div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel" aria-hidden="true">
+    <div class="modal fade" id="userModal" tabindex="-1" role="dialog" aria-labelledby="userModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -194,7 +199,7 @@
     </div>
 
     <!-- 确认操作Modal -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">

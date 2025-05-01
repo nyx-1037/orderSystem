@@ -48,23 +48,17 @@ async function getCurrentUserInfo() {
 // 加载订单详情
 async function loadOrderDetail(uuid) {
     try {
-        // 使用管理员专用API路径，使用uuid参数
-        let apiPath = `/api/orders/admin/${uuid}`;
-        console.log('管理员请求订单详情URL:', apiPath);
+        // 先通过UUID查询订单ID，然后使用ID获取详情
+        // 使用查询参数方式请求，避免将UUID直接放在路径中
+        let apiPath = `/api/orders/by-uuid?uuid=${uuid}`;
+        console.log('请求订单详情URL:', apiPath);
         let order;
         
         try {
             order = await fetchAPI(apiPath);
-        } catch (primaryError) {
-            console.warn('主API路径请求失败:', primaryError);
-            // 尝试使用备用API路径
-            try {
-                apiPath = `/api/orders/${uuid}`;
-                console.log('尝试备用API路径:', apiPath);
-                order = await fetchAPI(apiPath);
-            } catch (backupError) {
-                throw primaryError;
-            }
+        } catch (error) {
+            console.error('API请求失败:', error);
+            throw error;
         }
         
         renderOrderDetail(order);
@@ -257,7 +251,7 @@ function bindActionButtons(orderId) {
 async function cancelOrder(orderId) {
     showConfirmModal('确定要取消该订单吗？', async () => {
         try {
-            await fetchAPI(`/api/order/admin/cancel/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/orders/${orderId}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             // 刷新页面或重新加载数据
             loadOrderDetail(orderUuid);
@@ -272,7 +266,7 @@ async function cancelOrder(orderId) {
 async function shipOrder(orderId) {
     showConfirmModal('确定要标记为已发货吗？', async () => {
         try {
-            await fetchAPI(`/api/order/admin/ship/${orderId}`, { method: 'POST' });
+            await fetchAPI(`/api/orders/${orderId}/ship`, { method: 'POST' });
             showSuccessMessage('订单已标记为已发货');
             // 刷新页面或重新加载数据
             loadOrderDetail(orderUuid);
@@ -287,7 +281,7 @@ async function shipOrder(orderId) {
 async function deleteOrder(orderId) {
     showConfirmModal(`确定要删除此订单吗？此操作不可恢复。`, async () => {
         try {
-            const response = await fetchAPI(`/api/order/admin/delete/${orderId}`, { method: 'DELETE' });
+            const response = await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
             showSuccessMessage(response || '订单删除成功');
             // 删除成功后跳转回列表页
             window.location.href = '/pages/admin/order-list.html';

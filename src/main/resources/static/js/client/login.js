@@ -26,7 +26,7 @@ async function login() {
     
     try {
         // 发送登录请求 - 使用RESTful风格的API
-        const response = await fetchAPI('/api/client/auth/login', {
+        const response = await fetchAPI('/api/users/login', {
             method: 'POST',
             body: JSON.stringify({
                 username: username,
