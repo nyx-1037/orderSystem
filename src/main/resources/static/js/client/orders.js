@@ -76,10 +76,10 @@ async function loadOrders(page) {
         const response = await fetchAPI(apiUrl);
         
         // 更新分页信息
-        totalPages = response.pages || 1;
+        totalPages = response.totalPages || 1;
         
         // 获取订单列表
-        let orders = response.list || [];
+        let orders = response.content || [];
         
         // 如果后端API没有正确处理状态过滤，在前端进行过滤
         if (statusFilter !== undefined && statusFilter !== null && statusFilter !== 'all') {

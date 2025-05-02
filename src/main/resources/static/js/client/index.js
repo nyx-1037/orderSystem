@@ -70,19 +70,33 @@ function renderFeaturedProducts(products) {
         // 修正API路径，使用后端控制器中定义的路径
         const imageUrl = `/api/products/${product.productId}/image`;
         
+        // 获取分类名称
+        let categoryName = '其他';
+        switch(product.category) {
+            case 1: categoryName = '电子产品'; break;
+            case 2: categoryName = '服装'; break;
+            case 3: categoryName = '食品'; break;
+            case 4: categoryName = '图书'; break;
+            case 5: categoryName = '家居'; break;
+            default: categoryName = '其他';
+        }
+        
         const productCard = $(`
             <div class="col-md-3 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <img data-src="${imageUrl}" 
-                         class="card-img-top product-img" 
-                         alt="${product.productName}"
-                         onerror="this.onerror=null; this.src='/images/default-product.jpg';">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">${product.productName}</h5>
-                        <p class="card-text text-muted">¥${formatCurrency(product.price)}</p>
-                        <a href="/pages/client/product-detail.html?id=${product.productId}" 
-                           class="btn btn-primary mt-auto">查看详情</a>
-                    </div>
+                <div class="card h-100 shadow-sm product-card">
+                    <a href="/pages/client/product-detail.html?id=${product.productId}" class="product-link">
+                        <img data-src="${imageUrl}" 
+                             class="card-img-top product-img" 
+                             alt="${product.productName}"
+                             onerror="this.onerror=null; this.src='/images/default-product.jpg';">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${product.productName}</h5>
+                            <p class="card-text text-muted">¥${formatCurrency(product.price)}</p>
+                            <span class="badge badge-info mb-2">分类: ${categoryName}</span>
+                            <a href="/pages/client/product-detail.html?id=${product.productId}" 
+                               class="btn btn-primary mt-auto">查看详情</a>
+                        </div>
+                    </a>
                 </div>
             </div>
         `);
@@ -96,7 +110,31 @@ function renderFeaturedProducts(products) {
     });
 }
 
+
 // 格式化货币
 function formatCurrency(price) {
     return parseFloat(price).toFixed(2);
+}
+
+// 显示错误消息
+function showErrorMessage(message) {
+    // 检查是否存在错误消息容器，如果不存在则创建
+    let errorContainer = $('#error-message-container');
+    if (errorContainer.length === 0) {
+        $('body').prepend('<div id="error-message-container" class="alert alert-danger alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999;" role="alert"></div>');
+        errorContainer = $('#error-message-container');
+    }
+    
+    // 设置错误消息内容
+    errorContainer.html(`
+        ${message}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `);
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+        errorContainer.alert('close');
+    }, 5000);
 }

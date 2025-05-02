@@ -13,8 +13,8 @@ $(document).ready(function() {
         return;
     }
     
-    // 检查用户是否已登录
-    checkLoginStatus().then(function(isLoggedIn) {
+    // 检查管理员登录状态 (使用 admin/main.js 中的函数)
+    checkAdminLoginStatus().then(function(isLoggedIn) {
         if (isLoggedIn) {
             // 获取当前用户信息
             getCurrentUserInfo().then(function(user) {

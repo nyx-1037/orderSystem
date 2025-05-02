@@ -8,8 +8,8 @@ let pageSize = 10;
 
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 检查登录状态
-    checkLoginStatus().then(isLoggedIn => {
+    // 检查管理员登录状态 (使用 admin/main.js 中的函数)
+    checkAdminLoginStatus().then(isLoggedIn => {
         if (isLoggedIn) {
             // 初始化页面
             initOrderListPage();
@@ -410,4 +410,12 @@ function showWarningMessage(message) {
         timer: 3000,
         showConfirmButton: false
     });
+}
+
+// 显示错误消息
+function showErrorMessage(message) {
+    $('#error-message').text(message).fadeIn();
+    setTimeout(() => {
+        $('#error-message').fadeOut();
+    }, 3000);
 }

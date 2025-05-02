@@ -7,8 +7,8 @@ import java.util.Date;
  */
 public class User {
     private Integer userId;     // 用户ID
-    // 移除了不存在的userUuid字段
-    private String username;    // 用户名
+    private String userUuid;    //  用户UUID
+    private String username;    // 用户名 (必须唯一)
     private String password;    // 密码
     private String realName;    // 真实姓名
     private String phone;       // 电话号码

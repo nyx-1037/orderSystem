@@ -38,6 +38,11 @@ async function login() {
         localStorage.setItem('token', response.token);
         localStorage.setItem('userRole', response.role);
         
+        // 确保保存了用户ID
+        if (response.userId) {
+            localStorage.setItem('userId', response.userId);
+        }
+        
         showSuccessMessage('登录成功，正在跳转...');
         
         // 管理员登录成功后跳转到管理员首页

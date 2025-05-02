@@ -4,11 +4,13 @@
     <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="com.ordersystem.entity.Product">
         <id column="product_id" property="productId" />
+        <result column="product_uuid" property="productUuid" />
         <result column="product_name" property="productName" />
         <result column="product_desc" property="productDesc" />
         <result column="price" property="price" />
         <result column="stock" property="stock" />
         <result column="status" property="status" />
+        <result column="category" property="category" />
         <result column="product_image" property="productImage" jdbcType="BLOB" />
         <result column="create_time" property="createTime" />
         <result column="update_time" property="updateTime" />
@@ -16,15 +18,15 @@
     
     <!-- 公共列 -->
     <sql id="Base_Column_List">
-        product_id, product_name, product_desc, price, stock, status, product_image, create_time, update_time
+        product_id, product_uuid, product_name, product_desc, price, stock, status, category, product_image, create_time, update_time
     </sql>
     
     <!-- 添加商品 -->
     <insert id="insertProduct" parameterType="com.ordersystem.entity.Product" useGeneratedKeys="true" keyProperty="productId">
         INSERT INTO product (
-            product_name, product_desc, price, stock, status, product_image
+            product_uuid, product_name, product_desc, price, stock, status, category, product_image
         ) VALUES (
-            #{productName}, #{productDesc}, #{price}, #{stock}, #{status}, #{productImage,jdbcType=BLOB}
+            #{productUuid}, #{productName}, #{productDesc}, #{price}, #{stock}, #{status}, #{category}, #{productImage,jdbcType=BLOB}
         )
     </insert>
     
@@ -37,11 +39,13 @@
     <update id="updateProduct" parameterType="com.ordersystem.entity.Product">
         UPDATE product
         <set>
+            <if test="productUuid != null">product_uuid = #{productUuid},</if>
             <if test="productName != null">product_name = #{productName},</if>
             <if test="productDesc != null">product_desc = #{productDesc},</if>
             <if test="price != null">price = #{price},</if>
             <if test="stock != null">stock = #{stock},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="category != null">category = #{category},</if>
             <if test="productImage != null">product_image = #{productImage,jdbcType=BLOB},</if>
         </set>
         WHERE product_id = #{productId}

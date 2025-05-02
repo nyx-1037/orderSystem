@@ -8,8 +8,8 @@ let isEditMode = false;
 
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 检查登录状态
-    checkLoginStatus().then(isLoggedIn => {
+    // 检查管理员登录状态 (使用 admin/main.js 中的函数)
+    checkAdminLoginStatus().then(isLoggedIn => {
         if (isLoggedIn) {
             // 初始化页面
             initUserListPage();
@@ -92,9 +92,7 @@ async function loadUsers() {
         // 修正API路径，使用后端控制器中定义的路径
         const apiUrl = `/api/users?pageNum=${currentPage}&pageSize=${pageSize}&${params.toString()}`;
         console.log('请求用户列表URL:', apiUrl);
-        
         const response = await fetchAPI(apiUrl, { method: 'GET' });
-        
         // 更新分页信息
         totalPages = response.pages || 1;
         currentPage = response.pageNum || 1;
@@ -151,13 +149,14 @@ function renderUserList(users) {
     let html = '';
     
     users.forEach(user => {
-        // 确保用户ID存在
-        const userId = user.id || 0;
+        // 使用正确的用户ID字段名称
+        const userId = user.userId;
         
         // 获取用户角色和状态文本
         const roleText = user.role === 1 ? '管理员' : '普通用户';
-        // 根据实体类备注正确显示状态
+        // 修正状态判断逻辑，确保正确显示状态
         const statusText = user.status === 1 ? '正常' : '禁用';
+        console.log("状态", statusText);
         const statusBadge = user.status === 1 ? 'badge-success' : 'badge-danger';
         
         html += `
@@ -258,7 +257,8 @@ function bindActionButtons() {
     // 查看用户详情
     $('.view-btn').click(function() {
         const userId = $(this).data('id');
-        if (!userId || userId === 'undefined') {
+        // 确保userId是有效的数值
+        if (!userId) {
             showErrorMessage('无效的用户ID');
             return;
         }
@@ -268,7 +268,8 @@ function bindActionButtons() {
     // 编辑用户
     $('.edit-btn').click(function() {
         const userId = $(this).data('id');
-        if (!userId || userId === 'undefined') {
+        // 确保userId是有效的数值
+        if (!userId) {
             showErrorMessage('无效的用户ID');
             return;
         }
@@ -278,7 +279,8 @@ function bindActionButtons() {
     // 重置密码
     $('.reset-pwd-btn').click(function() {
         const userId = $(this).data('id');
-        if (!userId || userId === 'undefined') {
+        // 确保userId是有效的数值
+        if (!userId) {
             showErrorMessage('无效的用户ID');
             return;
         }
@@ -288,7 +290,8 @@ function bindActionButtons() {
     // 删除用户
     $('.delete-btn').click(function() {
         const userId = $(this).data('id');
-        if (!userId || userId === 'undefined') {
+        // 确保userId是有效的数值
+        if (!userId) {
             showErrorMessage('无效的用户ID');
             return;
         }
@@ -411,8 +414,8 @@ async function saveUser() {
         let apiUrl = '/api/users';
         let method = 'POST';
         
-        // 如果是编辑模式，添加用户ID并确保ID有效
-        if (isEditMode && userId && userId !== 'undefined') {
+        // 如果是编辑模式，添加用户ID
+        if (isEditMode && userId) {
             userData.id = parseInt(userId);
             apiUrl += `/${userData.id}`;
             method = 'PUT';
@@ -441,6 +444,12 @@ async function saveUser() {
 // 查看用户详情
 async function viewUser(userId) {
     try {
+        // 确保userId是有效的数值
+        if (!userId) {
+            showErrorMessage('无效的用户ID');
+            return;
+        }
+        
         // 获取用户详情 - 使用RESTful风格
         const user = await fetchAPI(`/api/users/${userId}`, { method: 'GET' });
         
@@ -460,7 +469,8 @@ async function viewUser(userId) {
 // 编辑用户
 async function editUser(userId) {
     try {
-        if (!userId || userId === 'undefined') {
+        // 确保userId是有效的数值
+        if (!userId) {
             showErrorMessage('无效的用户ID');
             return;
         }
@@ -483,7 +493,8 @@ async function editUser(userId) {
 
 // 重置密码
 async function resetPassword(userId) {
-    if (!userId || userId === 'undefined') {
+    // 确保userId是有效的数值
+    if (!userId) {
         showErrorMessage('无效的用户ID');
         return;
     }
@@ -509,7 +520,8 @@ async function resetPassword(userId) {
 
 // 删除用户
 async function deleteUser(userId) {
-    if (!userId || userId === 'undefined') {
+    // 确保userId是有效的数值
+    if (!userId) {
         showErrorMessage('无效的用户ID');
         return;
     }
@@ -528,8 +540,8 @@ async function deleteUser(userId) {
 
 // 批量删除用户
 async function batchDeleteUsers(userIds) {
-    // 过滤掉无效的用户ID
-    const validUserIds = userIds.filter(id => id && id !== 'undefined');
+    // 过滤掉无效的用户ID，确保只保留有效的数值ID
+    const validUserIds = userIds.filter(id => id);
     
     if (validUserIds.length === 0) {
         showErrorMessage('没有有效的用户ID可删除');

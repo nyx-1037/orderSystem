@@ -2,6 +2,7 @@ package com.ordersystem.dao;
 
 import com.ordersystem.entity.SysLog;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -70,11 +71,13 @@ public interface SysLogDao {
      * @return 影响行数
      */
     int deleteById(@Param("logId") Integer logId);
-    
+
+
     /**
      * 根据ID查询日志
      * @param logId 日志ID
      * @return 日志信息
      */
+    @Select("SELECT * FROM sys_log WHERE log_id = #{logId}")
     SysLog findById(@Param("logId") Integer logId);
 }

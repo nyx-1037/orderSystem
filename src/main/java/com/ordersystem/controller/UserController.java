@@ -7,6 +7,8 @@ import com.ordersystem.service.UserService;
 import com.ordersystem.util.JwtTokenUtil;
 import com.ordersystem.util.MD5Util;
 import com.ordersystem.util.UUIDGenerater;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,14 +42,26 @@ public class UserController {
     private RedisService redisService;
     
     /**
-     * 获取所有用户列表
-     * 
-     * @return 用户列表数据
+     * 获取所有用户列表（支持分页）
+     *
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @return 用户列表分页信息
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        try {
+            PageHelper.startPage(pageNum, pageSize);
+            List<User> users = userService.getAllUsers();
+            PageInfo<User> pageInfo = new PageInfo<>(users);
+            return ResponseEntity.ok(pageInfo);
+        } catch (Exception e) {
+
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取用户列表失败: " + e.getMessage());
+        }
     }
     
 
@@ -271,10 +285,11 @@ public class UserController {
     
 
     
+
     /**
      * 更新用户信息
-     * 
-     * @param uuid 用户UUID
+     *
+     * @param userId 用户ID
      * @param user 用户信息
      * @param request HTTP请求
      * @return 更新结果
@@ -428,10 +443,11 @@ public class UserController {
     
 
     
+
     /**
      * 修改密码（管理员使用）
-     * 
-     * @param uuid 用户UUID
+     *
+     * @param userId 用户ID
      * @param request 修改密码请求
      * @param httpRequest HTTP请求
      * @return 修改结果
@@ -602,11 +618,12 @@ public class UserController {
     
 
     
+
     /**
      * 获取用户头像
-     * 
-     * @param uuid 用户UUID
-     * @return 头像数据
+     *
+     * @param userId 用户ID
+     * @return 用户头像
      */
     @GetMapping("/avatar/{userId}")
     public ResponseEntity<?> getUserAvatar(@PathVariable Integer userId) {
@@ -726,10 +743,11 @@ public class UserController {
     
 
     
+
     /**
      * 删除用户
-     * 
-     * @param uuid 用户UUID
+     *
+     * @param userId 用户ID
      * @param request HTTP请求
      * @return 删除结果
      */

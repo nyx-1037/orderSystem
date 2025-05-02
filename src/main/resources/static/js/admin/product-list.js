@@ -9,10 +9,18 @@ let pageSize = 10;
 let isEditMode = false;
 let productImageFile = null;
 
+// 显示错误消息
+function showErrorMessage(message) {
+    $('#error-message').text(message).fadeIn();
+    setTimeout(() => {
+        $('#error-message').fadeOut();
+    }, 3000);
+}
+
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 检查登录状态
-    checkLoginStatus().then(isLoggedIn => {
+    // 检查管理员登录状态 (使用 admin/main.js 中的函数)
+    checkAdminLoginStatus().then(isLoggedIn => {
         if (isLoggedIn) {
             // 初始化页面
             initProductListPage();
@@ -104,14 +112,48 @@ function updateBatchDeleteButton() {
     $('#batch-delete-btn').toggle(hasChecked);
 }
 
-// 商品实体类中不存在分类字段，移除分类相关代码
+// 加载商品分类选项
 async function loadCategories() {
-    // 由于商品实体类中不存在分类字段，此函数不再需要加载分类数据
-    console.log('商品实体类中不存在分类字段，跳过加载分类');
+    // 定义分类数据
+    const categories = [
+        { id: 0, name: '其他' },
+        { id: 1, name: '电子产品' },
+        { id: 2, name: '服装' },
+        { id: 3, name: '食品' },
+        { id: 4, name: '图书' },
+        { id: 5, name: '家居' }
+    ];
     
-    // 隐藏分类相关UI元素
-    $('#category').parent().hide();
-    $('#categoryInput').parent().hide();
+    // 填充筛选表单的分类下拉框
+    const categorySelect = $('#category');
+    categorySelect.empty().append('<option value="">全部</option>');
+    categories.forEach(category => {
+        categorySelect.append(`<option value="${category.id}">${category.name}</option>`);
+    });
+    
+    // 填充编辑表单的分类下拉框
+    const categoryInput = $('#categoryInput');
+    categoryInput.empty();
+    categories.forEach(category => {
+        categoryInput.append(`<option value="${category.id}">${category.name}</option>`);
+    });
+    
+    // 显示分类相关UI元素
+    $('#category').parent().show();
+    $('#categoryInput').parent().show();
+}
+
+// 获取分类名称
+function getCategoryName(categoryId) {
+    const categories = {
+        0: '其他',
+        1: '电子产品',
+        2: '服装',
+        3: '食品',
+        4: '图书',
+        5: '家居'
+    };
+    return categories[categoryId] || '其他';
 }
 
 // 加载商品数据
@@ -136,11 +178,11 @@ async function loadProducts() {
         
         // 添加筛选条件
         const productName = $('#productName').val();
-        // 移除分类筛选，因为商品实体类中不存在分类字段
+        const category = $('#category').val();
         const status = $('#status').val();
         
         if (productName) params.append('name', productName);
-        // 移除分类参数
+        if (category) params.append('category', category);
         if (status) params.append('status', status);
         
         // 发送API请求 - 使用RESTful风格，与ProductController中定义的路径一致
@@ -198,6 +240,14 @@ function renderProductList(products) {
         return;
     }
     
+    // 为每个商品添加分类名称
+    products.forEach(product => {
+        if (product.category === undefined || product.category === null) {
+            product.category = 0; // 默认为其他分类
+        }
+        product.categoryName = getCategoryName(product.category);
+    });
+    
     products.forEach(product => {
         const statusBadge = product.status === 1 
             ? '<span class="badge badge-success">上架</span>' 
@@ -219,7 +269,7 @@ function renderProductList(products) {
                          onerror="this.onerror=null; this.src='/images/default-product.jpg';">
                 </td>
                 <td>${product.productName}</td>
-                <td>不适用</td>
+                <td>${product.categoryName}</td>
                 <td>${formatCurrency(product.price)}</td>
                 <td>${product.stock}</td>
                 <td>${statusBadge}</td>
@@ -334,7 +384,7 @@ async function loadProductDetail(productId) {
         // 填充表单数据
         $('#productId').val(product.productId);
         $('#productNameInput').val(product.productName);
-        // 移除分类字段，因为商品实体类中不存在
+        $('#categoryInput').val(product.category || 0); // 设置分类，默认为0（其他）
         $('#priceInput').val(product.price);
         $('#stockInput').val(product.stock);
         $('#statusInput').val(product.status);
@@ -361,7 +411,7 @@ async function saveProduct() {
     // 获取表单数据
     const productId = $('#productId').val();
     const productName = $('#productNameInput').val();
-    // 移除分类字段，因为商品实体类中不存在
+    const category = $('#categoryInput').val();
     const price = $('#priceInput').val();
     const stock = $('#stockInput').val();
     const status = $('#statusInput').val();
@@ -377,7 +427,7 @@ async function saveProduct() {
         // 准备商品数据
         const productData = {
             productName,
-            // 移除分类字段
+            category,
             price,
             stock,
             status,
@@ -399,7 +449,7 @@ async function saveProduct() {
             
             showSuccessMessage('商品更新成功');
         } else {
-            // 创建商品
+            // 创建商品 - UUID将由后端自动生成
             const newProduct = await fetchAPI('/api/products', {
                 method: 'POST',
                 body: JSON.stringify(productData)

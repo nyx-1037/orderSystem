@@ -92,6 +92,16 @@ public class ProductController {
     public ResponseEntity<?> createProduct(@RequestBody Product product) {
         // 初始化商品信息
         
+        // 生成UUID
+        if (product.getProductUuid() == null || product.getProductUuid().isEmpty()) {
+            product.setProductUuid(UUIDGenerater.generateUUID());
+        }
+        
+        // 设置默认分类
+        if (product.getCategory() == null) {
+            product.setCategory(0); // 默认为其他分类
+        }
+        
         // 设置创建和更新时间
         if (product.getCreateTime() == null) {
             product.setCreateTime(new java.util.Date());

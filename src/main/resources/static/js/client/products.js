@@ -58,6 +58,19 @@ $(document).ready(function() {
     });
 });
 
+// 获取分类名称
+function getCategoryName(categoryId) {
+    const categories = {
+        0: '其他',
+        1: '电子产品',
+        2: '服装',
+        3: '食品',
+        4: '图书',
+        5: '家居'
+    };
+    return categories[categoryId] || '其他';
+}
+
 // 加载商品列表
 async function loadProducts(page, size, sort, keyword) {
     try {
@@ -130,6 +143,12 @@ function renderProducts(products) {
     }
 
     products.forEach(product => {
+        // 添加分类信息
+        if (product.category === undefined || product.category === null) {
+            product.category = 0; // 默认为其他分类
+        }
+        product.categoryName = getCategoryName(product.category);
+        
         // 使用正确的图片路径 - 修正API路径，使用后端控制器中定义的路径
         let imageUrl = `/api/products/${product.productId}/image`;
         
@@ -147,7 +166,7 @@ function renderProducts(products) {
                     <div class="card-body">
                         <h5 class="card-title product-name">${product.productName}</h5>
                         <p class="card-text text-muted">${formatCurrency(product.price)}</p>
-                        <p class="card-text"><span class="${stockStatusClass}">${stockStatusText}</span></p>
+                        <p class="card-text"><span class="badge badge-info mr-2">分类: ${product.categoryName}</span><span class="${stockStatusClass}">${stockStatusText}</span></p>
                     </div>
                     <div class="card-footer">
                         <button class="btn btn-primary btn-sm w-100" onclick="window.location.href='/pages/client/product-detail.html?id=${product.productId}'" ${product.stock <= 0 ? 'disabled' : ''}>
@@ -219,4 +238,28 @@ function formatCurrency(price) {
 function getUrlParam(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
+}
+
+
+// 显示错误消息
+function showErrorMessage(message) {
+    // 检查是否存在错误消息容器，如果不存在则创建
+    let errorContainer = $('#error-message-container');
+    if (errorContainer.length === 0) {
+        $('body').prepend('<div id="error-message-container" class="alert alert-danger alert-dismissible fade show" style="position: fixed; top: 20px; right: 20px; z-index: 9999;" role="alert"></div>');
+        errorContainer = $('#error-message-container');
+    }
+    
+    // 设置错误消息内容
+    errorContainer.html(`
+        ${message}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `);
+    
+    // 5秒后自动关闭
+    setTimeout(() => {
+        errorContainer.alert('close');
+    }, 5000);
 }

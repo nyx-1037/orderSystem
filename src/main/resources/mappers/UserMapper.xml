@@ -19,7 +19,7 @@
     
     <!-- 公共列 -->
     <sql id="Base_Column_List">
-        user_id, username, password, real_name, phone, email, address, avatar_data, role, create_time, update_time
+        user_id, user_uuid, username, password, real_name, phone, email, address, avatar_data, role, status, create_time, update_time
     </sql>
     
     <!-- 添加用户 -->

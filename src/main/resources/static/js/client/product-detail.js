@@ -54,7 +54,7 @@ $(document).ready(function() {
 async function loadProductDetail(id) {
     try {
         // 显示加载中
-        $('#product-container').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">加载中...</span></div><p class="mt-3">正在加载商品详情...</p></div>');
+        $('#product-detail-container').html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="sr-only">加载中...</span></div><p class="mt-3">正在加载商品详情...</p></div>');
         
         // 请求商品详情数据 - 修正API路径，使用后端控制器中定义的路径
         const product = await fetchAPI(`/api/products/${id}`);
@@ -66,6 +66,12 @@ async function loadProductDetail(id) {
             }, 2000);
             return;
         }
+        
+        // 添加分类信息显示
+        if (product.category === undefined || product.category === null) {
+            product.category = 0; // 默认为其他分类
+        }
+        product.categoryName = getCategoryName(product.category);
         
         // 渲染商品详情
         renderProductDetail(product);
@@ -89,6 +95,19 @@ async function loadProductDetail(id) {
     }
 }
 
+// 获取分类名称
+function getCategoryName(categoryId) {
+    const categories = {
+        0: '其他',
+        1: '电子产品',
+        2: '服装',
+        3: '食品',
+        4: '图书',
+        5: '家居'
+    };
+    return categories[categoryId] || '其他';
+}
+
 // 渲染商品详情
 function renderProductDetail(product) {
     document.title = `${product.productName} - 在线商城`;
@@ -100,6 +119,9 @@ function renderProductDetail(product) {
     // 设置商品状态文本和样式
     const statusText = product.status === 1 ? '在售' : '已下架';
     const statusClass = product.status === 1 ? 'badge-primary' : 'badge-secondary';
+    
+    // 使用之前定义的函数获取分类名称
+    const categoryName = product.categoryName || getCategoryName(product.category);
     
     // 使用正确的图片路径 - 修正API路径，使用后端控制器中定义的路径
     const imageUrl = `/api/products/${product.productId}/image`;
@@ -115,6 +137,7 @@ function renderProductDetail(product) {
                 <div class="mb-3">
                     <span class="badge ${statusClass} mr-2">${statusText}</span>
                     <span class="badge ${stockStatusClass}">${stockStatusText}</span>
+                    <span class="badge badge-info">分类: ${categoryName}</span>
                 </div>
                 <div class="product-price mb-4">¥${formatCurrency(product.price)}</div>
                 <div class="product-info mb-4">

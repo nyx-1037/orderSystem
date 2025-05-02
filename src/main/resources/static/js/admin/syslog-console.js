@@ -7,10 +7,18 @@ let currentPage = 1;
 let totalPages = 1;
 let pageSize = 10;
 
+// 显示错误消息
+function showErrorMessage(message) {
+    $('#error-message').text(message).fadeIn();
+    setTimeout(() => {
+        $('#error-message').fadeOut();
+    }, 3000);
+}
+
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 检查登录状态
-    checkLoginStatus().then(isLoggedIn => {
+    // 检查管理员登录状态 (使用 admin/main.js 中的函数)
+    checkAdminLoginStatus().then(isLoggedIn => {
         if (isLoggedIn) {
             // 初始化页面
             initSyslogPage();
@@ -169,13 +177,26 @@ function renderLogList(logs) {
             logTypeText = 'ERROR';
         }
         
+        // 根据状态码设置不同的背景颜色
+        let statusBadgeClass = 'badge-secondary';
+        if (log.statusCode) {
+            const statusCode = parseInt(log.statusCode);
+            if (statusCode >= 200 && statusCode < 300) {
+                statusBadgeClass = 'badge-success'; // 成功状态 - 绿色
+            } else if (statusCode >= 400 && statusCode < 500) {
+                statusBadgeClass = 'badge-warning'; // 客户端错误 - 黄色
+            } else if (statusCode >= 500) {
+                statusBadgeClass = 'badge-danger';  // 服务器错误 - 红色
+            }
+        }
+        
         const row = $(`
             <tr>
                 <td>${log.logId}</td>
                 <td>${log.username || '系统'}</td>
                 <td>${log.operation || '系统'}</td>
-                <td>${log.statusCode || '-'}</td>
-                <td>${truncateText(log.method || '', 100)}</td>
+                <td><span class="badge ${statusBadgeClass}">${log.statusCode || '-'}</span></td>
+                <td>${truncateText(log.method || '', 3000)}</td>
                 <td>${formatDate(log.createTime)}</td>
                 <td>
                     <button class="btn btn-sm btn-info" onclick="viewLogDetail(${log.logId})">
@@ -184,6 +205,7 @@ function renderLogList(logs) {
                 </td>
             </tr>
         `);
+
         
         tbody.append(row);
     });
