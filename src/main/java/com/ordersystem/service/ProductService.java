@@ -2,6 +2,7 @@ package com.ordersystem.service;
 
 import com.ordersystem.entity.Product;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 商品服务接口
@@ -71,4 +72,11 @@ public interface ProductService {
      * @return 图片二进制数据
      */
     byte[] getProductImage(Integer productId);
+    
+    /**
+     * 根据筛选条件查询商品
+     * @param filters 筛选条件，可包含name(商品名称)、category(分类)、status(状态)等
+     * @return 商品列表
+     */
+    List<Product> getProductsByFilters(Map<String, Object> filters);
 }

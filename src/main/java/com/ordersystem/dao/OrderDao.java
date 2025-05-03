@@ -91,53 +91,7 @@ public interface OrderDao {
      * @return 影响行数
      */
     int updateOrderStatus(Integer orderId, Integer status);
-    
-    /**
-     * 分页查询订单列表
-     * @param pageNum 页码
-     * @param pageSize 每页数量
-     * @return 订单列表
-     */
-    List<Order> getOrdersByPage(Integer pageNum, Integer pageSize);
-    
-    /**
-     * 根据用户ID分页查询订单
-     * @param userId 用户ID
-     * @param pageNum 页码
-     * @param pageSize 每页数量
-     * @return 订单列表
-     */
-    List<Order> getOrdersByUserIdWithPage(Integer userId, Integer pageNum, Integer pageSize);
-    
-    /**
-     * 根据订单状态分页查询订单
-     * @param status 订单状态
-     * @param pageNum 页码
-     * @param pageSize 每页数量
-     * @return 订单列表
-     */
-    List<Order> getOrdersByStatusWithPage(Integer status, Integer pageNum, Integer pageSize);
-    
-    /**
-     * 获取订单总数
-     * @return 订单总数
-     */
-    int getOrderCount();
-    
-    /**
-     * 获取指定用户的订单总数
-     * @param userId 用户ID
-     * @return 订单总数
-     */
-    int getOrderCountByUserId(Integer userId);
-    
-    /**
-     * 获取指定状态的订单总数
-     * @param status 订单状态
-     * @return 订单总数
-     */
-    int getOrderCountByStatus(Integer status);
-    
+
     /**
      * 根据用户ID和订单状态查询订单
      * @param userId 用户ID
@@ -146,3 +100,49 @@ public interface OrderDao {
      */
     List<Order> getOrdersByUserIdAndStatus(Integer userId, Integer status);
 }
+//    /**
+//     * 分页查询订单列表
+//     * @param pageNum 页码
+//     * @param pageSize 每页数量
+//     * @return 订单列表
+//     */
+//    List<Order> getOrdersByPage(Integer pageNum, Integer pageSize);
+//
+//    /**
+//     * 根据用户ID分页查询订单
+//     * @param userId 用户ID
+//     * @param pageNum 页码
+//     * @param pageSize 每页数量
+//     * @return 订单列表
+//     */
+//    List<Order> getOrdersByUserIdWithPage(Integer userId, Integer pageNum, Integer pageSize);
+//
+//    /**
+//     * 根据订单状态分页查询订单
+//     * @param status 订单状态
+//     * @param pageNum 页码
+//     * @param pageSize 每页数量
+//     * @return 订单列表
+//     */
+//    List<Order> getOrdersByStatusWithPage(Integer status, Integer pageNum, Integer pageSize);
+//
+//    /**
+//     * 获取订单总数
+//     * @return 订单总数
+//     */
+//    int getOrderCount();
+//
+//    /**
+//     * 获取指定用户的订单总数
+//     * @param userId 用户ID
+//     * @return 订单总数
+//     */
+//    int getOrderCountByUserId(Integer userId);
+//
+//    /**
+//     * 获取指定状态的订单总数
+//     * @param status 订单状态
+//     * @return 订单总数
+//     */
+//    int getOrderCountByStatus(Integer status);
+//

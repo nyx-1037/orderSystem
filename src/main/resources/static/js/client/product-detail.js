@@ -91,7 +91,7 @@ async function loadProductDetail(id) {
     } catch (error) {
         console.error('加载商品详情失败:', error);
         showErrorMessage('加载商品详情失败: ' + error.message);
-        $('#product-container').html('<div class="alert alert-danger">加载商品详情失败</div>');
+        $('#product-detail-container').html('<div class="alert alert-danger">加载商品详情失败</div>');
     }
 }
 
@@ -169,7 +169,7 @@ function renderProductDetail(product) {
         </div>
     `;
     
-    $('#product-container').html(html);
+    $('#product-detail-container').html(html);
 }
 
 // 绑定数量调整按钮事件
@@ -232,7 +232,7 @@ async function addToCart(productId, quantity) {
 // 立即购买
 function buyNow(productId, quantity) {
     // 跳转到确认订单页面
-    window.location.href = `/pages/client/checkout.html?productId=${productId}&quantity=${quantity}`;
+    window.location.href = `/pages/client/create-order.html?productId=${productId}&quantity=${quantity}`;
 }
 
 // 格式化货币

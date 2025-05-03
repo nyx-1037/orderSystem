@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,21 +32,60 @@ public class ProductController {
     private ProductService productService;
 
     /**
-     * 获取所有商品列表
+     * 获取商品列表（支持分页和筛选）
      * 
-     * @return 商品列表数据
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param name 商品名称（可选）
+     * @param category 商品分类（可选）
+     * @param status 商品状态（可选）
+     * @return 分页商品数据
      */
     @GetMapping
-    public ResponseEntity<?> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
+    public ResponseEntity<?> getAllProducts(
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "category", required = false) Integer category,
+            @RequestParam(value = "status", required = false) Integer status) {
+        
+        // 处理筛选条件
+        Map<String, Object> filters = new HashMap<>();
+        if (name != null && !name.trim().isEmpty()) {
+            filters.put("name", name.trim());
+        }
+        if (category != null) {
+            filters.put("category", category);
+        }
+        if (status != null) {
+            filters.put("status", status);
+        }
+        
+        // 使用筛选条件查询商品并分页
+        List<Product> products;
+        if (filters.isEmpty()) {
+            products = productService.getAllProducts();
+        } else {
+            products = productService.getProductsByFilters(filters);
+        }
+        
+        // 手动实现分页
+        int total = products.size();
+        int pages = (int) Math.ceil((double) total / pageSize);
+        int fromIndex = (pageNum - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, total);
+        
+        List<Product> pagedProducts = fromIndex < total ? 
+                products.subList(fromIndex, toIndex) : 
+                new ArrayList<>();
         
         // 创建符合前端期望的分页格式响应
         Map<String, Object> response = new HashMap<>();
-        response.put("list", products);
-        response.put("total", products.size());
-        response.put("pages", 1); // 由于返回所有数据，所以只有1页
-        response.put("pageNum", 1);
-        response.put("pageSize", products.size());
+        response.put("list", pagedProducts);
+        response.put("total", total);
+        response.put("pages", pages);
+        response.put("pageNum", pageNum);
+        response.put("pageSize", pageSize);
         
         return ResponseEntity.ok(response);
     }

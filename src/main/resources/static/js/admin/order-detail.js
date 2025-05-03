@@ -136,13 +136,18 @@ function renderOrderDetail(order) {
             </div>
         </div>
     `);
+    console.log('订单商品列表1:', order.items);
+    console.log('订单商品列表2:', order.orderItems);
     
     // 添加订单商品列表
     const itemsBody = itemsCard.find('#order-items');
     if (order.items && order.items.length > 0) {
         order.items.forEach(item => {
-            // 确保价格大于0
-            const price = (item.price && item.price > 0) ? item.price : (item.product && item.product.price ? item.product.price : 0);
+            // 确保价格大于0，优先使用productPrice字段
+            const price = (item.productPrice && item.productPrice > 0) ? item.productPrice : 
+                         (item.price && item.price > 0) ? item.price : 
+                         (item.product && item.product.productPrice) ? item.product.productPrice : 
+                         (item.product && item.product.price) ? item.product.price : 0;
             const tr = $('<tr></tr>');
             tr.html(`
                 <td>${item.productName}</td>
@@ -157,7 +162,8 @@ function renderOrderDetail(order) {
         order.orderItems.forEach(item => {
             const product = item.product || {};
             const productName = product.name || item.productName || '未知商品';
-            const price = item.price || product.price || 0;
+            // 优先使用productPrice字段，其次是price字段
+            const price = item.productPrice || item.price || product.productPrice || product.price || 0;
             const quantity = item.quantity || 1;
             
             // 如果有商品ID，添加商品图片

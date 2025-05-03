@@ -2,8 +2,11 @@ package com.ordersystem.controller;
 
 import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Order;
+import com.ordersystem.entity.OrderItem;
 import com.ordersystem.entity.User;
+import com.ordersystem.service.OrderItemService;
 import com.ordersystem.service.OrderService;
+import com.ordersystem.service.UserService;
 import com.ordersystem.util.UUIDGenerater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +37,12 @@ public class OrderController {
 
     @Autowired
     private OrderService orderService;
-    
+
+    @Autowired
+    private UserService UserService;
+
+    @Autowired
+    private OrderItemService orderItemService;
     /**
      * 获取订单列表（支持分页）
      * 
@@ -44,21 +53,45 @@ public class OrderController {
      */
     @GetMapping
     public ResponseEntity<?> getAllOrders(
-            @RequestParam(value = "page", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "size", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate,
             HttpServletRequest request) {
         // 从请求属性中获取用户ID（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
-        User user = (User) request.getAttribute("user");
+        User user = new User();
+        if( userId != null ){
+            user = UserService.getUserById(userId);
+
+        }
+
         PageInfo<Order> pageInfo;
         
         // 检查用户角色
-        if (user != null && user.getRole() == 1) {
+        if (user.getRole() == 1) {
             // 管理员可以查看所有订单
-            pageInfo = orderService.getAllOrdersByPage(pageNum, pageSize);
-            log.info("管理员查询所有订单，页码：{}，每页数量：{}", pageNum, pageSize);
-        } else if (userId != null) {
+            // 处理筛选条件
+            Map<String, Object> filters = new HashMap<>();
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                filters.put("keyword", keyword.trim());
+            }
+            if (status != null) {
+                filters.put("status", status);
+            }
+            if (startDate != null && !startDate.trim().isEmpty()) {
+                filters.put("startDate", startDate);
+            }
+            if (endDate != null && !endDate.trim().isEmpty()) {
+                filters.put("endDate", endDate);
+            }
+            
+            // 使用筛选条件查询订单
+            pageInfo = orderService.getAllOrdersByPageWithFilters(pageNum, pageSize, filters);
+            log.info("管理员查询订单，页码：{}，每页数量：{}，筛选条件：{}", pageNum, pageSize, filters);
+        } else if (user.getRole() == 0 && userId != null && user.getStatus() == 1) {
             // 普通用户只能查看自己的订单
             pageInfo = orderService.getOrdersByUserIdWithPage(userId, pageNum, pageSize);
             log.info("用户 {} 查询自己的订单，页码：{}，每页数量：{}", userId, pageNum, pageSize);
@@ -66,7 +99,7 @@ public class OrderController {
             // 未登录用户无权查看订单
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "未登录，无法查看订单");
+            response.put("message", "未登录或账号被禁用，无法查看订单");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         
@@ -136,6 +169,7 @@ public class OrderController {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
         User user = (User) request.getAttribute("user");
+
         
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
@@ -145,9 +179,13 @@ public class OrderController {
         }
         
         // 通过UUID获取订单详情
-        Order order = orderService.getOrderByUuid(uuid);
-        
+        Order order = orderService.getOrderDetailByUuid(uuid);
+        log.info("通过UUID获取订单详情，UUID：{}", uuid);
+
+
+
         if (order == null) {
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "订单不存在或已被删除");

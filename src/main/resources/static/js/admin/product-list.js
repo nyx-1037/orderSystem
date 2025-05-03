@@ -6,6 +6,7 @@
 let currentPage = 1;
 let totalPages = 1;
 let pageSize = 10;
+let pageSizeOptions = [5, 10, 20, 50]; // 分页大小选项
 let isEditMode = false;
 let productImageFile = null;
 
@@ -36,6 +37,24 @@ $(document).ready(function() {
                 $('#search-form')[0].reset();
                 currentPage = 1;
                 loadProducts();
+            });
+            
+            // 绑定分页大小选择器事件
+            $('#page-size-selector').change(function() {
+                pageSize = parseInt($(this).val());
+                currentPage = 1; // 切换每页条数时重置为第一页
+                loadProducts();
+            });
+            
+            // 绑定页码跳转事件
+            $('#goto-page-btn').click(function() {
+                const pageNum = parseInt($('#goto-page-input').val());
+                if (pageNum && pageNum > 0 && pageNum <= totalPages) {
+                    currentPage = pageNum;
+                    loadProducts();
+                } else {
+                    showErrorMessage(`请输入有效的页码 (1-${totalPages})`);
+                }
             });
             
             // 绑定添加商品按钮事件
@@ -103,6 +122,20 @@ function initProductListPage() {
     // 监听商品复选框变化
     $(document).on('change', '.product-checkbox', function() {
         updateBatchDeleteButton();
+    });
+    
+    // 初始化分页大小选择器
+    initPageSizeSelector();
+}
+
+// 初始化分页大小选择器
+function initPageSizeSelector() {
+    const pageSizeSelector = $('#page-size-selector');
+    pageSizeSelector.empty();
+    
+    // 添加选项
+    pageSizeOptions.forEach(size => {
+        pageSizeSelector.append(`<option value="${size}"${size === pageSize ? ' selected' : ''}>${size}条/页</option>`);
     });
 }
 
@@ -189,9 +222,23 @@ async function loadProducts() {
         let apiUrl = `/api/products?${params.toString()}`;
         console.log('请求商品列表URL:', apiUrl);
         
+        // 获取认证Token
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // 添加认证头
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         let response;
         try {
-            response = await fetchAPI(apiUrl, { method: 'GET' });
+            response = await fetchAPI(apiUrl, { 
+                method: 'GET',
+                headers: headers
+            });
         } catch (error) {
             console.error('商品API请求失败:', error);
             throw error;
@@ -298,6 +345,16 @@ function renderPagination() {
         return;
     }
     
+    // 更新页码输入框的最大值和当前值
+    $('#goto-page-input').attr('max', totalPages).val(currentPage);
+    
+    // 更新页面显示的分页信息
+    $('#current-page').text(currentPage);
+    $('#total-pages').text(totalPages);
+    
+    // 更新分页大小选择器
+    $('#page-size-selector').val(pageSize);
+    
     // 上一页按钮
     const prevBtn = $(`
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
@@ -379,7 +436,21 @@ function showProductModal(productId = null) {
 // 加载商品详情
 async function loadProductDetail(productId) {
     try {
-        const product = await fetchAPI(`/api/products/${productId}`);
+        // 获取认证Token
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // 添加认证头
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const product = await fetchAPI(`/api/products/${productId}`, {
+            method: 'GET',
+            headers: headers
+        });
         
         // 填充表单数据
         $('#productId').val(product.productId);
@@ -391,14 +462,18 @@ async function loadProductDetail(productId) {
         $('#descriptionInput').val(product.productDesc); // 使用正确的字段名
         
         // 显示商品图片，修正API路径并添加token
-        const token = localStorage.getItem('token');
         const imageUrl = `/api/products/${product.productId}/image`;
-        $('#preview-img').attr('src', imageUrl);
-        // 设置Authorization头
+        // 添加时间戳防止缓存
+        const timestamp = new Date().getTime();
+        $('#preview-img').attr('src', `${imageUrl}?t=${timestamp}`);
+        
+        // 设置图片加载错误处理
         $('#preview-img').on('error', function() {
             this.onerror = null;
             this.src = '/images/default-product.jpg';
+            console.log('商品图片加载失败，使用默认图片');
         });
+        
         $('#image-preview').show();
     } catch (error) {
         console.error('加载商品详情失败:', error);
@@ -479,17 +554,23 @@ async function uploadProductImage(productId, file) {
     
     try {
         const token = localStorage.getItem('token');
-        await fetch(`/api/products/${productId}/image`, {
+        const response = await fetch(`/api/products/${productId}/image`, {
             method: 'POST',
             body: formData,
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `上传失败，状态码: ${response.status}`);
+        }
+        
         console.log('商品图片上传成功');
     } catch (error) {
         console.error('上传商品图片失败:', error);
-        throw new Error('上传商品图片失败');
+        throw new Error('上传商品图片失败: ' + error.message);
     }
 }
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>用户管理 - 在线商城后台管理端</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
@@ -50,6 +51,9 @@
             <div>
                 <button id="batch-delete-btn" class="btn btn-danger mr-2" style="display: none;">
                     <i class="fas fa-trash"></i> 批量删除
+                </button>
+                <button id="online-users-btn" class="btn btn-info mr-2">
+                    <i class="fas fa-users"></i> 在线用户
                 </button>
                 <button id="add-user-btn" class="btn btn-primary">
                     <i class="fas fa-plus"></i> 添加用户
@@ -134,14 +138,32 @@
                 </div>
             </div>
             <div class="card-footer">
-                <nav aria-label="用户分页">
-                    <ul class="pagination justify-content-center mb-0" id="pagination">
-                        <!-- 分页将通过JavaScript动态加载 -->
-                    </ul>
-                </nav>
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="text-muted">
-                        <span id="total-count">0</span> 条记录，共 <span id="total-pages">0</span> 页
+                <div id="pagination-controls">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <select id="page-size-selector" class="form-control form-control-sm mr-2" style="width: auto;">
+                                <option value="5">5条/页</option>
+                                <option value="10" selected>10条/页</option>
+                                <option value="20">20条/页</option>
+                                <option value="50">50条/页</option>
+                            </select>
+                            <span class="text-muted">
+                                <span id="total-count">0</span> 条记录，共 <span id="total-pages">0</span> 页
+                            </span>
+                        </div>
+                        <nav aria-label="用户分页">
+                            <ul class="pagination justify-content-center mb-0" id="pagination">
+                                <!-- 分页将通过JavaScript动态加载 -->
+                            </ul>
+                        </nav>
+                        <div class="d-flex align-items-center">
+                            <div class="input-group input-group-sm" style="width: 150px;">
+                                <input type="number" class="form-control" id="goto-page-input" min="1" value="1">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="button" id="goto-page-btn">跳转</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -219,11 +241,60 @@
         </div>
     </div>
 
+    <!-- 在线用户Modal -->
+    <div class="modal fade" id="onlineUsersModal" tabindex="-1" role="dialog" aria-labelledby="onlineUsersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="onlineUsersModalLabel">当前在线用户</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 显示当前系统中在线的用户列表，管理员可以强制下线用户。
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>用户ID</th>
+                                    <th>用户名</th>
+                                    <th>昵称</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="online-users-list">
+                                <!-- 在线用户列表将通过JavaScript动态加载 -->
+                                <tr>
+                                    <td colspan="7" class="text-center py-3">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="sr-only">加载中...</span>
+                                        </div>
+                                        <p class="mt-2">正在加载在线用户数据...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="refresh-online-users-btn">
+                        <i class="fas fa-sync-alt"></i> 刷新列表
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/admin/main.js"></script>
     <script src="/js/admin/user-list.js"></script>
+
 </body>
 </html>

@@ -42,24 +42,52 @@ public class UserController {
     private RedisService redisService;
     
     /**
-     * 获取所有用户列表（支持分页）
+     * 获取所有用户列表（支持分页和筛选）
      *
      * @param pageNum 页码
      * @param pageSize 每页数量
+     * @param username 用户名（可选）
+     * @param role 角色（可选）
+     * @param status 状态（可选）
      * @return 用户列表分页信息
      */
     @GetMapping
     public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Integer role,
+            @RequestParam(required = false) Integer status) {
         try {
+            // 设置分页参数
             PageHelper.startPage(pageNum, pageSize);
-            List<User> users = userService.getAllUsers();
+
+            // 构建查询条件
+            Map<String, Object> params = new HashMap<>();
+            if (username != null && !username.trim().isEmpty()) {
+                params.put("username", username.trim());
+            }
+            if (role != null) {
+                params.put("role", role);
+            }
+            if (status != null) {
+                params.put("status", status);
+            }
+
+            // 根据条件查询用户
+            List<User> users;
+            if (params.isEmpty()) {
+                users = userService.getAllUsers();
+            } else {
+                Map<String, Object> userRelMap =  userService.getUsersByPage( pageNum, pageSize, username, role, status);
+
+                users = (List<User>) userRelMap.get("list");
+
+            }
+
             PageInfo<User> pageInfo = new PageInfo<>(users);
             return ResponseEntity.ok(pageInfo);
         } catch (Exception e) {
-
-
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("获取用户列表失败: " + e.getMessage());
         }
     }

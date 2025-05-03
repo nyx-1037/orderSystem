@@ -7,6 +7,7 @@ import com.ordersystem.util.MD5Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -94,7 +95,7 @@ public class UserServiceImpl implements UserService {
         com.github.pagehelper.PageInfo<User> pageInfo = new com.github.pagehelper.PageInfo<>(users);
         
         // 构建返回结果
-        Map<String, Object> result = new java.util.HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         result.put("total", pageInfo.getTotal());
         result.put("pages", pageInfo.getPages());
         result.put("pageNum", pageInfo.getPageNum());

@@ -5,6 +5,7 @@
 let currentPage = 1;
 let totalPages = 1;
 let pageSize = 10;
+let pageSizeOptions = [5, 10, 20, 50]; // 分页大小选项
 
 // 页面加载完成后执行
 $(document).ready(function() {
@@ -26,6 +27,24 @@ $(document).ready(function() {
                 currentPage = 1;
                 loadOrders();
             });
+            
+            // 绑定分页大小选择器事件
+            $('#page-size-selector').change(function() {
+                pageSize = parseInt($(this).val());
+                currentPage = 1; // 切换每页条数时重置为第一页
+                loadOrders();
+            });
+            
+            // 绑定页码跳转事件
+            $('#goto-page-btn').click(function() {
+                const pageNum = parseInt($('#goto-page-input').val());
+                if (pageNum && pageNum > 0 && pageNum <= totalPages) {
+                    currentPage = pageNum;
+                    loadOrders();
+                } else {
+                    showErrorMessage(`请输入有效的页码 (1-${totalPages})`);
+                }
+            });
         }
     });
 });
@@ -34,6 +53,20 @@ $(document).ready(function() {
 function initOrderListPage() {
     // 加载第一页订单数据
     loadOrders();
+    
+    // 初始化分页大小选择器
+    initPageSizeSelector();
+}
+
+// 初始化分页大小选择器
+function initPageSizeSelector() {
+    const pageSizeSelector = $('#page-size-selector');
+    pageSizeSelector.empty();
+    
+    // 添加选项
+    pageSizeOptions.forEach(size => {
+        pageSizeSelector.append(`<option value="${size}"${size === pageSize ? ' selected' : ''}>${size}条/页</option>`);
+    });
 }
 
 // 加载订单数据
@@ -53,8 +86,8 @@ async function loadOrders() {
     try {
         // 构建查询参数
         const params = new URLSearchParams();
-        params.append('page', currentPage);
-        params.append('size', pageSize);
+        params.append('pageNum', currentPage); // 使用pageNum参数名与后端一致
+        params.append('pageSize', pageSize);
         
         // 添加筛选条件
         const orderNo = $('#orderNo').val();
@@ -71,9 +104,23 @@ async function loadOrders() {
         const apiUrl = `/api/orders?${params.toString()}`;
         console.log('请求订单列表URL:', apiUrl);
         
+        // 获取认证Token
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // 添加认证头
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         let response;
         try {
-            response = await fetchAPI(apiUrl);
+            response = await fetchAPI(apiUrl, {
+                method: 'GET',
+                headers: headers
+            });
         } catch (error) {
             console.error('订单API请求失败:', error);
             throw error;
@@ -342,49 +389,74 @@ async function shipOrder(orderId) {
 
 // 渲染分页控件
 function renderPagination() {
+    const pagination = $('#pagination');
+    pagination.empty();
+    
     if (totalPages <= 1) {
-        $('#pagination').empty();
         return;
     }
     
-    let html = '';
+    // 更新页码输入框的最大值和当前值
+    $('#goto-page-input').attr('max', totalPages).val(currentPage);
     
-    // 上一页按钮
-    html += `
+    // 更新页面显示的分页信息
+    $('#current-page').text(currentPage);
+    $('#total-pages').text(totalPages);
+    
+    // 更新分页大小选择器
+    $('#page-size-selector').val(pageSize);
+    
+    // 添加上一页按钮
+    pagination.append(`
         <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
             <a class="page-link" href="javascript:void(0)" data-page="${currentPage - 1}">&laquo;</a>
         </li>
-    `;
+    `);
     
-    // 页码按钮
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, startPage + 4);
+    // 计算显示的页码范围
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
     
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+    // 添加页码按钮
     for (let i = startPage; i <= endPage; i++) {
-        html += `
+        pagination.append(`
             <li class="page-item ${i === currentPage ? 'active' : ''}">
                 <a class="page-link" href="javascript:void(0)" data-page="${i}">${i}</a>
             </li>
-        `;
+        `);
     }
     
-    // 下一页按钮
-    html += `
+    // 添加下一页按钮
+    pagination.append(`
         <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
             <a class="page-link" href="javascript:void(0)" data-page="${currentPage + 1}">&raquo;</a>
         </li>
-    `;
+    `);
     
-    $('#pagination').html(html);
-    
-    // 绑定分页按钮点击事件
+    // 绑定页码点击事件
     $('.page-link').click(function() {
         if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
             currentPage = parseInt($(this).data('page'));
             loadOrders();
         }
     });
+    
+    // 绑定跳转按钮事件已在页面加载时设置
+    // 这里不需要重复绑定
+    
+    
+    // 绑定每页显示数量选择事件
+    $('#page-size-selector').off('change').on('change', function() {
+        pageSize = parseInt($(this).val());
+        currentPage = 1;
+        loadOrders();
+    });
 }
+
 
 // 获取选中的订单ID
 function getSelectedOrderIds() {

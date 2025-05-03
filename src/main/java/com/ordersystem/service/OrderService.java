@@ -3,6 +3,7 @@ package com.ordersystem.service;
 import com.ordersystem.entity.Order;
 import com.github.pagehelper.PageInfo;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单服务接口
@@ -94,6 +95,15 @@ public interface OrderService {
      * @return 订单信息
      */
     Order getOrderByUuid(String orderUuid);
+    
+    /**
+     * 根据筛选条件分页查询所有订单
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param filters 筛选条件
+     * @return 分页订单信息
+     */
+    PageInfo<Order> getAllOrdersByPageWithFilters(Integer pageNum, Integer pageSize, Map<String, Object> filters);
     
     /**
      * 根据用户ID和订单状态分页查询订单

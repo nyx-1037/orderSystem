@@ -29,7 +29,7 @@ $(document).ready(function() {
 // 获取当前用户信息
 async function getCurrentUserInfo() {
     try {
-        return await fetchAPI('/api/user/current');
+        return await fetchAPI('/api/users/current');
     } catch (error) {
         console.error('获取用户信息失败:', error);
         showErrorMessage('获取用户信息失败: ' + error.message);
@@ -124,8 +124,11 @@ function renderOrderDetail(order) {
     const itemsBody = itemsCard.find('#order-items');
     if (order.items && order.items.length > 0) {
         order.items.forEach(item => {
-            // 确保价格大于0
-            const price = (item.price && item.price > 0) ? item.price : (item.product && item.product.price ? item.product.price : 0);
+            // 确保价格大于0，优先使用productPrice字段
+            const price = (item.productPrice && item.productPrice > 0) ? item.productPrice : 
+                         (item.price && item.price > 0) ? item.price : 
+                         (item.product && item.product.productPrice) ? item.product.productPrice : 
+                         (item.product && item.product.price) ? item.product.price : 0;
             // 商品图片URL
 
             const productId = item.productId || (item.product ? item.product.productId : null);
@@ -160,8 +163,11 @@ function renderOrderDetail(order) {
         order.orderItems.forEach(item => {
             const product = item.product || {};
             const productName = product.name || item.productName || '未知商品';
-            // 修复商品单价显示问题，确保优先使用商品的原始价格
-            const price = (item.price && item.price > 0) ? item.price : (product.price || 0);
+            // 修复商品单价显示问题，确保优先使用productPrice字段
+            const price = (item.productPrice && item.productPrice > 0) ? item.productPrice : 
+                         (item.price && item.price > 0) ? item.price : 
+                         (product.productPrice) ? product.productPrice : 
+                         (product.price || 0);
             const quantity = item.quantity || 1;
             
             // 商品图片URL

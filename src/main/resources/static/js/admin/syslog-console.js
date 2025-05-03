@@ -6,6 +6,7 @@
 let currentPage = 1;
 let totalPages = 1;
 let pageSize = 10;
+let pageSizeOptions = [5, 10, 20, 50]; // 分页大小选项
 
 // 显示错误消息
 function showErrorMessage(message) {
@@ -38,7 +39,28 @@ $(document).ready(function() {
             
             // 绑定刷新按钮事件
             $('#refresh-btn').click(function() {
+                // 先同步日志，然后刷新页面
+                syncLogsToDatabase().then(() => {
+                    loadSyslogs();
+                });
+            });
+            
+            // 绑定分页大小选择器事件
+            $('#page-size-selector').change(function() {
+                pageSize = parseInt($(this).val());
+                currentPage = 1; // 切换每页条数时重置为第一页
                 loadSyslogs();
+            });
+            
+            // 绑定页码跳转事件
+            $('#goto-page-btn').click(function() {
+                const pageNum = parseInt($('#goto-page-input').val());
+                if (pageNum && pageNum > 0 && pageNum <= totalPages) {
+                    currentPage = pageNum;
+                    loadSyslogs();
+                } else {
+                    showErrorMessage(`请输入有效的页码 (1-${totalPages})`);
+                }
             });
         }
     });
@@ -225,8 +247,14 @@ function renderPagination() {
     
     // 如果只有一页，不显示分页
     if (totalPages <= 1) {
+        $('#pagination-controls').hide();
         return;
+    } else {
+        $('#pagination-controls').show();
     }
+    
+    // 更新总页数和记录数显示
+    $('#total-pages').text(totalPages);
     
     // 上一页按钮
     const prevBtn = $(`
@@ -281,6 +309,42 @@ function renderPagination() {
         }
     });
     pagination.append(nextBtn);
+    
+    // 更新分页大小选择器
+    const pageSizeSelector = $('#page-size-selector');
+    pageSizeSelector.empty();
+    
+    pageSizeOptions.forEach(size => {
+        pageSizeSelector.append($(`<option value="${size}" ${pageSize === size ? 'selected' : ''}>${size}条/页</option>`));
+    });
+    
+    // 更新跳转页码输入框
+    $('#goto-page-input').attr('max', totalPages);
+    $('#goto-page-input').val(currentPage);
+}
+
+// 同步日志到数据库
+async function syncLogsToDatabase() {
+    try {
+        const response = await fetchAPI('/api/system-logs/synchronize', {
+            method: 'POST'
+        });
+        
+        if (response && response.success) {
+            const message = `${response.message}`;
+            $('#success-message').text(message).fadeIn();
+            setTimeout(() => {
+                $('#success-message').fadeOut();
+            }, 3000);
+            return true;
+        } else {
+            throw new Error(response.message || '同步失败');
+        }
+    } catch (error) {
+        console.error('同步日志失败:', error);
+        showErrorMessage('同步日志失败: ' + error.message);
+        return false;
+    }
 }
 
 // 查看日志详情

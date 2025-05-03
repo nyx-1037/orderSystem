@@ -12,8 +12,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -240,6 +242,92 @@ public class OrderServiceImpl implements OrderService {
             return orderDao.updateOrder(order) > 0;
         }
         return false;
+    }
+    
+    /**
+     * 根据筛选条件分页查询所有订单
+     * @param pageNum 页码
+     * @param pageSize 每页数量
+     * @param filters 筛选条件
+     * @return 分页订单信息
+     */
+    @Override
+    public PageInfo<Order> getAllOrdersByPageWithFilters(Integer pageNum, Integer pageSize, Map<String, Object> filters) {
+        // 设置默认值
+        if (pageNum == null || pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10; // 默认每页10条
+        }
+        
+        // 使用PageHelper进行分页查询
+        PageHelper.startPage(pageNum, pageSize);
+        
+        List<Order> orders;
+        
+        // 如果没有筛选条件，返回所有订单
+        if (filters == null || filters.isEmpty()) {
+            orders = orderDao.getAllOrders();
+            return new PageInfo<>(orders);
+        }
+        
+        // 根据用户ID筛选
+        if (filters.containsKey("userId")) {
+            Integer userId = (Integer) filters.get("userId");
+            if (userId != null) {
+                // 如果同时有状态筛选
+                if (filters.containsKey("status")) {
+                    Integer status = (Integer) filters.get("status");
+                    if (status != null) {
+                        orders = orderDao.getOrdersByUserIdAndStatus(userId, status);
+                        return new PageInfo<>(orders);
+                    }
+                }
+                // 只有用户ID筛选
+                orders = orderDao.getOrdersByUserId(userId);
+                return new PageInfo<>(orders);
+            }
+        }
+        
+        // 只有状态筛选
+        if (filters.containsKey("status")) {
+            Integer status = (Integer) filters.get("status");
+            if (status != null) {
+                orders = orderDao.getOrdersByStatus(status);
+                return new PageInfo<>(orders);
+            }
+        }
+        
+        // 根据订单编号筛选
+        if (filters.containsKey("orderNo")) {
+            String orderNo = (String) filters.get("orderNo");
+            if (orderNo != null && !orderNo.trim().isEmpty()) {
+                Order order = orderDao.getOrderByOrderNo(orderNo);
+                orders = new ArrayList<>();
+                if (order != null) {
+                    orders.add(order);
+                }
+                return new PageInfo<>(orders);
+            }
+        }
+        
+        // 根据UUID筛选
+        if (filters.containsKey("orderUuid")) {
+            String orderUuid = (String) filters.get("orderUuid");
+            if (orderUuid != null && !orderUuid.trim().isEmpty()) {
+                Order order = orderDao.getOrderByUuid(orderUuid);
+                orders = new ArrayList<>();
+                if (order != null) {
+                    orders.add(order);
+                }
+                return new PageInfo<>(orders);
+            }
+        }
+        
+        // 如果没有匹配的筛选条件，返回所有订单
+        orders = orderDao.getAllOrders();
+        return new PageInfo<>(orders);
     }
     
     /**

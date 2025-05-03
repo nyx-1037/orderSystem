@@ -25,6 +25,7 @@ $(document).ready(function() {
 let currentPage = 1;
 let totalPages = 1;
 let pageSize = 5;
+let pageSizeOptions = [5, 10, 20, 50]; // 分页大小选项
 
 // 初始化订单页面
 function initOrdersPage() {
@@ -38,6 +39,37 @@ function initOrdersPage() {
 
     // 绑定退出登录按钮事件
     $('#logout-btn').click(logout);
+    
+    // 绑定分页大小选择器事件
+    $('#page-size-selector').change(function() {
+        pageSize = parseInt($(this).val());
+        currentPage = 1; // 切换每页条数时重置为第一页
+        loadOrders(1);
+    });
+    
+    // 绑定页码跳转事件
+    $('#goto-page-btn').click(function() {
+        const pageNum = parseInt($('#goto-page-input').val());
+        if (pageNum && pageNum > 0 && pageNum <= totalPages) {
+            loadOrders(pageNum);
+        } else {
+            showErrorMessage(`请输入有效的页码 (1-${totalPages})`);
+        }
+    });
+    
+    // 初始化分页大小选择器
+    initPageSizeSelector();
+}
+
+// 初始化分页大小选择器
+function initPageSizeSelector() {
+    const pageSizeSelector = $('#page-size-selector');
+    pageSizeSelector.empty();
+    
+    // 添加选项
+    pageSizeOptions.forEach(size => {
+        pageSizeSelector.append(`<option value="${size}"${size === pageSize ? ' selected' : ''}>${size}条/页</option>`);
+    });
 }
 
 // 加载订单数据
@@ -58,22 +90,39 @@ async function loadOrders(page) {
     
     try {
         // 构建API请求参数 - 根据RESTful接口规范调整
-        let apiUrl = `/api/client/orders?page=${page}&size=${pageSize}`;
+        const params = new URLSearchParams();
+        params.append('pageNum', page); // 使用pageNum参数名与后端一致
+        params.append('pageSize', pageSize);
         
         // 添加状态过滤 - 直接在API请求中添加状态过滤参数
         if (statusFilter !== undefined && statusFilter !== null && statusFilter !== 'all') {
-            apiUrl += `&status=${statusFilter}`;
+            params.append('status', statusFilter);
         }
         
         // 添加搜索查询
         if (searchQuery) {
-            apiUrl += `&keyword=${encodeURIComponent(searchQuery)}`;
+            params.append('keyword', encodeURIComponent(searchQuery));
         }
         
+        const apiUrl = `/api/client/orders?${params.toString()}`;
         console.log('请求订单列表URL:', apiUrl);
         
+        // 获取认证Token
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // 添加认证头
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         // 发送API请求
-        const response = await fetchAPI(apiUrl);
+        const response = await fetchAPI(apiUrl, {
+            method: 'GET',
+            headers: headers
+        });
         
         // 更新分页信息
         totalPages = response.totalPages || 1;
@@ -390,6 +439,16 @@ function renderPagination() {
         $('#pagination').empty();
         return;
     }
+    
+    // 更新页码输入框的最大值和当前值
+    $('#goto-page-input').attr('max', totalPages).val(currentPage);
+    
+    // 更新页面显示的分页信息
+    $('#current-page').text(currentPage);
+    $('#total-pages').text(totalPages);
+    
+    // 更新分页大小选择器
+    $('#page-size-selector').val(pageSize);
     
     let html = '';
     
