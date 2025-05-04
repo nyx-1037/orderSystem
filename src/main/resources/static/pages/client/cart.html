@@ -2,93 +2,110 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>商品详情 - 在线商城</title>
+    <title>我的购物车 - 在线商城</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
     <style>
-        .product-image {
-            width: 100%;
-            max-height: 400px;
-            object-fit: contain;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .cart-item {
             margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         
-        .product-info {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        .cart-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
         }
         
-        .product-price {
+        .cart-item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .cart-item-price {
             color: #e74c3c;
             font-weight: bold;
-            font-size: 24px;
-            margin: 15px 0;
         }
         
-        .product-status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 14px;
-            color: white;
-            margin-right: 10px;
-        }
-        
-        .stock-status {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 14px;
-            color: white;
-        }
-        
-        .status-1 {
-            background-color: #28a745;
-        }
-        
-        .status-0 {
-            background-color: #dc3545;
-        }
-        
-        .stock-status-0 {
-            background-color: #ff6b6b;
-        }
-        
-        .stock-status-1 {
-            background-color: #ffd43b;
-        }
-        
-        .stock-status-2 {
-            background-color: #51cf66;
+        .cart-item-total {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
         
         .quantity-control {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
         }
         
         .quantity-control button {
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
+            width: 30px;
+            height: 30px;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .quantity-control input {
-            width: 60px;
-            height: 40px;
+            width: 50px;
+            height: 30px;
             text-align: center;
-            font-size: 18px;
+            font-size: 14px;
             border: 1px solid #ddd;
-            margin: 0 10px;
+            margin: 0 5px;
+        }
+        
+        .cart-summary {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .cart-summary-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .cart-summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .cart-summary-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .cart-summary-total-price {
+            color: #e74c3c;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 50px 0;
+        }
+        
+        .empty-cart-icon {
+            font-size: 60px;
+            color: #adb5bd;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -110,7 +127,7 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/pages/client/orders.html">我的订单</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item active">
                         <a class="nav-link" href="/pages/client/cart.html">购物车</a>
                     </li>
                 </ul>
@@ -139,17 +156,15 @@
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
-        <div class="mb-4">
-            <a href="/pages/client/products.html" class="btn btn-outline-secondary">返回商品列表</a>
-        </div>
+        <h2 class="mb-4">我的购物车</h2>
         
-        <div id="product-detail-container" class="row">
-            <!-- 商品详情将通过JavaScript动态加载 -->
+        <div id="cart-container" class="row">
+            <!-- 购物车内容将通过JavaScript动态加载 -->
             <div class="col-12 text-center">
                 <div class="spinner-border" role="status">
                     <span class="sr-only">加载中...</span>
                 </div>
-                <p>正在加载商品详情...</p>
+                <p>正在加载购物车...</p>
             </div>
         </div>
     </div>
@@ -167,6 +182,7 @@
                         <li><a href="/pages/client/index.html" class="text-white">首页</a></li>
                         <li><a href="/pages/client/products.html" class="text-white">全部商品</a></li>
                         <li><a href="/pages/client/orders.html" class="text-white">我的订单</a></li>
+                        <li><a href="/pages/client/cart.html" class="text-white">购物车</a></li>
                     </ul>
                 </div>
                 <div class="col-md-3">
@@ -189,6 +205,6 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
-    <script src="/js/client/product-detail.js"></script>
+    <script src="/js/client/cart.js"></script> <!-- 引入购物车脚本 -->
 </body>
 </html>

@@ -9,7 +9,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">在线商城后台管理端</a>
+            <a class="navbar-brand" href="/pages/admin/order-list.html">在线商城后台管理端</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -48,6 +48,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>系统日志</h2>
             <div>
+                <button id="batch-delete-btn" class="btn btn-danger mr-2" disabled>
+                    <i class="fas fa-trash-alt"></i> 批量删除
+                </button>
                 <button id="refresh-btn" class="btn btn-primary">
                     <i class="fas fa-sync-alt"></i> 刷新日志
                 </button>
@@ -136,6 +139,12 @@
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
+                                <th width="40">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="select-all-checkbox">
+                                        <label class="custom-control-label" for="select-all-checkbox"></label>
+                                    </div>
+                                </th>
                                 <th width="60">ID</th>
                                 <th width="100">用户名</th>
                                 <th width="100">操作类型</th>

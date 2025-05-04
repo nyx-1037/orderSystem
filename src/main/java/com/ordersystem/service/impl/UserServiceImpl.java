@@ -63,7 +63,10 @@ public class UserServiceImpl implements UserService {
         if (!user.getPassword().equals(encryptedPwd)) {
             throw new RuntimeException("密码错误");
         }
-        
+        //检查是否为禁用状态
+        if (user.getStatus() == 0) {
+            throw new RuntimeException("该用户已被禁用");
+        }
         // 更新更新时间
         user.setUpdateTime(new java.util.Date());
         userDao.updateUser(user);

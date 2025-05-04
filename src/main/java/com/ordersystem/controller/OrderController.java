@@ -7,6 +7,7 @@ import com.ordersystem.entity.User;
 import com.ordersystem.service.OrderItemService;
 import com.ordersystem.service.OrderService;
 import com.ordersystem.service.UserService;
+import com.ordersystem.service.impl.UserServiceImpl;
 import com.ordersystem.util.UUIDGenerater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +40,13 @@ public class OrderController {
     private OrderService orderService;
 
     @Autowired
-    private UserService UserService;
+    private UserService userService;
 
     @Autowired
     private OrderItemService orderItemService;
+	@Autowired
+	private UserServiceImpl userServiceImpl;
+
     /**
      * 获取订单列表（支持分页）
      * 
@@ -64,7 +68,7 @@ public class OrderController {
         Integer userId = (Integer) request.getAttribute("userId");
         User user = new User();
         if( userId != null ){
-            user = UserService.getUserById(userId);
+            user = userService.getUserById(userId);
 
         }
 
@@ -168,7 +172,7 @@ public class OrderController {
             HttpServletRequest request) {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
-        User user = (User) request.getAttribute("user");
+        User user = userService.getUserById(userId);
 
         
         if (userId == null) {
@@ -193,7 +197,7 @@ public class OrderController {
         }
         
         // 验证当前用户是否有权限查看该订单
-        boolean isAdmin = (user != null && user.getRole() == 1);
+        boolean isAdmin = (user.getRole() == 1);
         if (isAdmin || userId.equals(order.getUserId())) {
             return ResponseEntity.ok(order);
         } else {
@@ -291,7 +295,7 @@ public class OrderController {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
         User user = (User) request.getAttribute("user");
-        
+        User admin = userService.getUserById(userId);
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
@@ -310,8 +314,8 @@ public class OrderController {
         }
         
         // 验证当前用户是否有权限操作该订单
-        boolean isAdmin = (user != null && user.getRole() == 1);
-        if (isAdmin || userId.equals(order.getUserId())) {
+
+        if (admin.getRole() == 1 || userId.equals(order.getUserId())) {
             boolean success = orderService.cancelOrder(order.getOrderId());
             
             Map<String, Object> response = new HashMap<>();
@@ -404,14 +408,14 @@ public class OrderController {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
         User user = (User) request.getAttribute("user");
-        
+
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "未登录，无法操作订单");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        
+        User admin = userService.getUserById(userId);
         // 获取订单信息
         Order order = orderService.getOrderById(orderId);
         
@@ -423,7 +427,7 @@ public class OrderController {
         }
         
         // 验证当前用户是否有权限操作该订单
-        if (userId.equals(order.getUserId())) {
+        if (admin.getRole()==1 || userId.equals(order.getUserId())) {
             boolean success = orderService.completeOrder(order.getOrderId());
             
             Map<String, Object> response = new HashMap<>();
@@ -460,6 +464,7 @@ public class OrderController {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
         User user = (User) request.getAttribute("user");
+
         
         if (userId == null) {
             Map<String, Object> response = new HashMap<>();
@@ -467,10 +472,10 @@ public class OrderController {
             response.put("message", "未登录，无法操作订单");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-        
+        User admin = userService.getUserById(userId);
         // 验证是否为管理员
-        boolean isAdmin = (user != null && user.getRole() == 1);
-        if (!isAdmin) {
+
+        if (admin.getRole() != 1) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "只有管理员可以执行发货操作");
@@ -547,4 +552,57 @@ public class OrderController {
         
         return ResponseEntity.ok(pageInfo);
     }
+    
+    /**
+     * 批量删除订单（支持单个和多个订单ID）
+     * 
+     * @param orderIds 订单ID列表
+     * @param request HTTP请求
+     * @return 删除结果
+     */
+    @DeleteMapping("/batch")
+    public ResponseEntity<?> batchDeleteOrders(
+            @RequestBody List<Integer> orderIds,
+            HttpServletRequest request) {
+        log.info("批量删除订单，ID列表: {}", orderIds);
+        
+        // 从请求属性中获取用户ID和用户信息（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        User admin = userService.getUserById(userId);
+        
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录，无法操作订单");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        // 验证是否为管理员
+        if (admin.getRole() != 1) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "只有管理员可以删除订单");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        
+        if (orderIds == null || orderIds.isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未选择要删除的订单");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        int successCount = 0;
+        for (Integer orderId : orderIds) {
+            if (orderService.deleteOrder(orderId)) {
+                successCount++;
+            }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", String.format("成功删除 %d/%d 个订单", successCount, orderIds.size()));
+        return ResponseEntity.ok(response);
+    }
+
 }

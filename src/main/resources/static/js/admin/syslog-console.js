@@ -16,6 +16,78 @@ function showErrorMessage(message) {
     }, 3000);
 }
 
+// 绑定复选框事件
+function bindCheckboxEvents() {
+    // 单个复选框变化时更新批量删除按钮状态
+    $('.log-checkbox').change(function() {
+        updateBatchDeleteButton();
+        
+        // 检查是否所有复选框都被选中
+        const allChecked = $('.log-checkbox:checked').length === $('.log-checkbox').length;
+        $('#select-all-checkbox').prop('checked', allChecked);
+    });
+}
+
+// 更新批量删除按钮状态
+function updateBatchDeleteButton() {
+    const hasChecked = $('.log-checkbox:checked').length > 0;
+    $('#batch-delete-btn').prop('disabled', !hasChecked);
+}
+
+// 批量删除日志
+function batchDeleteLogs() {
+    // 获取所有选中的日志ID
+    const selectedLogIds = [];
+    $('.log-checkbox:checked').each(function() {
+        selectedLogIds.push(parseInt($(this).data('log-id')));
+    });
+    
+    if (selectedLogIds.length === 0) {
+        showErrorMessage('请至少选择一条日志记录');
+        return;
+    }
+    
+    // 显示确认对话框
+    if (confirm(`确定要删除选中的 ${selectedLogIds.length} 条日志记录吗？此操作不可恢复！`)) {
+        // 调用批量删除API
+        batchDeleteLogsApi(selectedLogIds);
+    }
+}
+
+// 调用批量删除API
+async function batchDeleteLogsApi(logIds) {
+    try {
+        // 获取认证Token
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // 添加认证头
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetchAPI('/api/system-logs/batch', {
+            method: 'DELETE',
+            headers: headers,
+            body: JSON.stringify(logIds)
+        });
+        
+        // 显示成功消息
+        $('#success-message').text(response.message).fadeIn();
+        setTimeout(() => {
+            $('#success-message').fadeOut();
+        }, 3000);
+        
+        // 重新加载日志列表
+        loadSyslogs();
+    } catch (error) {
+        console.error('批量删除日志失败:', error);
+        showErrorMessage('批量删除日志失败: ' + error.message);
+    }
+}
+
 // 页面加载完成后执行
 $(document).ready(function() {
     // 检查管理员登录状态 (使用 admin/main.js 中的函数)
@@ -61,6 +133,18 @@ $(document).ready(function() {
                 } else {
                     showErrorMessage(`请输入有效的页码 (1-${totalPages})`);
                 }
+            });
+            
+            // 绑定全选/取消全选复选框事件
+            $('#select-all-checkbox').change(function() {
+                const isChecked = $(this).prop('checked');
+                $('.log-checkbox').prop('checked', isChecked);
+                updateBatchDeleteButton();
+            });
+            
+            // 绑定批量删除按钮事件
+            $('#batch-delete-btn').click(function() {
+                batchDeleteLogs();
             });
         }
     });
@@ -174,10 +258,14 @@ function renderLogList(logs) {
     const tbody = $('#log-list');
     tbody.empty();
     
+    // 重置批量删除按钮状态
+    $('#batch-delete-btn').prop('disabled', true);
+    $('#select-all-checkbox').prop('checked', false);
+    
     if (!logs || logs.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="7" class="text-center py-3">
+                <td colspan="8" class="text-center py-3">
                     <p class="text-muted mb-0">暂无系统日志数据</p>
                 </td>
             </tr>
@@ -214,6 +302,12 @@ function renderLogList(logs) {
         
         const row = $(`
             <tr>
+                <td>
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input log-checkbox" id="log-${log.logId}" data-log-id="${log.logId}">
+                        <label class="custom-control-label" for="log-${log.logId}"></label>
+                    </div>
+                </td>
                 <td>${log.logId}</td>
                 <td>${log.username || '系统'}</td>
                 <td>${log.operation || '系统'}</td>
@@ -231,6 +325,9 @@ function renderLogList(logs) {
         
         tbody.append(row);
     });
+    
+    // 绑定复选框事件
+    bindCheckboxEvents();
 }
 
 // 截断文本

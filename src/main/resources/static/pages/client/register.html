@@ -43,8 +43,9 @@
                 </div>
                 <div class="form-group">
                     <label for="password">密码 <span class="text-danger">*</span></label>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                    <small class="form-text text-muted">密码长度至少为6个字符</small>
+                    <!-- 密码强度验证 -->
+                    <input type="password" class="form-control" id="password" name="password" required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$">
+                    <small class="form-text text-muted">密码长度6-18位，需包含字母和数字</small>
                 </div>
                 <div class="form-group">
                     <label for="confirm-password">确认密码 <span class="text-danger">*</span></label>

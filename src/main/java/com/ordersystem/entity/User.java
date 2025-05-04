@@ -123,12 +123,19 @@ public class User {
         this.status = status;
     }
 
+    public String getUserUuid() {
+        return userUuid;
+    }
+    public void setUserUuid(String userUuid) {
+        this.userUuid = userUuid;
+    }
+
     @Override
     public String toString() {
         // Note: Avoid printing large byte arrays in toString
         return "User{" +
                 "userId=" + userId +
-                // 移除了不存在的userUuid字段
+                ", userUuid='" + userUuid + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", realName='" + realName + '\'' +

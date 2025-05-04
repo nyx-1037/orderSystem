@@ -90,9 +90,11 @@ async function loadOrders(page) {
     
     try {
         // 构建API请求参数 - 根据RESTful接口规范调整
+
+        // 修改后
         const params = new URLSearchParams();
-        params.append('pageNum', page); // 使用pageNum参数名与后端一致
-        params.append('pageSize', pageSize);
+        params.append('page', page);
+        params.append('size', pageSize);
         
         // 添加状态过滤 - 直接在API请求中添加状态过滤参数
         if (statusFilter !== undefined && statusFilter !== null && statusFilter !== 'all') {
@@ -345,7 +347,7 @@ function bindOrderActionEvents() {
 async function payOrder(orderUuid) {
     showConfirmModal('确定要支付此订单吗？', async () => {
         try {
-            await fetchAPI(`/api/order/pay/${orderUuid}`, { method: 'POST' });
+            await fetchAPI(`/api/client/order/${orderUuid}/pay`, { method: 'POST' });
             showSuccessMessage('订单支付成功');
             loadOrders(currentPage);
         } catch (error) {
@@ -359,7 +361,7 @@ async function payOrder(orderUuid) {
 async function cancelOrder(orderUuid) {
     showConfirmModal('确定要取消此订单吗？', async () => {
         try {
-            await fetchAPI(`/api/order/cancel/${orderUuid}`, { method: 'POST' });
+            await fetchAPI(`/api/client/order/${orderUuid}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             loadOrders(currentPage);
         } catch (error) {
@@ -373,7 +375,7 @@ async function cancelOrder(orderUuid) {
 async function confirmReceipt(orderUuid) {
     showConfirmModal('确认已收到商品吗？', async () => {
         try {
-            await fetchAPI(`/api/order/confirm/${orderUuid}`, { method: 'POST' });
+            await fetchAPI(`/api/client/order/${orderUuid}/confirm`, { method: 'POST' });
             showSuccessMessage('已确认收货');
             loadOrders(currentPage);
         } catch (error) {

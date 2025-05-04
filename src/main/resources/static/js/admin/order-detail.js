@@ -172,7 +172,7 @@ function renderOrderDetail(order) {
                 // 商品图片URL
                 const imageUrl = `/api/product/${product.productId}/image`;
                 // 使用data-src属性存储原始URL，让image-loader.js处理认证
-                productImageHtml = `<img data-src="${imageUrl}" src="/images/loading.gif" alt="${productName}" class="mr-2" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null; this.src='/images/default-product.jpg'; console.log('商品图片加载失败，使用默认图片');">`;;
+                productImageHtml = `<img data-src="${imageUrl}" src="/images/default-product.jpg" alt="${productName}" class="mr-2" style="width: 50px; height: 50px; object-fit: cover;" onerror="this.onerror=null; this.src='/images/default-product.jpg'; console.log('商品图片加载失败，使用默认图片');">`;;
             }
             
             const tr = $('<tr></tr>');
@@ -212,51 +212,57 @@ function renderOrderActions(order) {
     const actionsContainer = $('#order-actions');
     actionsContainer.empty();
     const orderId = order.orderId || order.id;
+    // 保存订单UUID，用于安全操作
+    const uuid = order.uuid || orderUuid;
 
     let buttonsHtml = '';
 
     // 根据订单状态添加不同的操作按钮
     switch (parseInt(order.status)) {
         case 0: // 待付款
-            buttonsHtml += `<button class="btn btn-danger cancel-btn mr-2" data-id="${orderId}">取消订单</button>`;
+            buttonsHtml += `<button class="btn btn-danger cancel-btn mr-2" data-id="${orderId}" data-uuid="${uuid}">取消订单</button>`;
             break;
         case 1: // 已付款
-            buttonsHtml += `<button class="btn btn-primary ship-btn mr-2" data-id="${orderId}">去发货</button>`;
+            buttonsHtml += `<button class="btn btn-primary ship-btn mr-2" data-id="${orderId}" data-uuid="${uuid}">去发货</button>`;
             break;
         // 其他状态暂时不添加特定操作按钮，但保留删除按钮
     }
 
     // 添加删除按钮（对所有状态都可用）
-    buttonsHtml += `<button class="btn btn-danger delete-btn" data-id="${orderId}">删除订单</button>`;
+    buttonsHtml += `<button class="btn btn-danger delete-btn" data-id="${orderId}" data-uuid="${uuid}">删除订单</button>`;
 
     actionsContainer.html(buttonsHtml);
 
     // 绑定按钮事件
-    bindActionButtons(orderId);
+    bindActionButtons(orderId, uuid);
 }
 
 // 绑定操作按钮事件
-function bindActionButtons(orderId) {
+function bindActionButtons(orderId, uuid) {
     // 取消订单
     $('.cancel-btn').click(function() {
-        cancelOrder(orderId);
+        const btnUuid = $(this).data('uuid');
+        cancelOrder(orderId, btnUuid || uuid);
     });
 
     // 发货
     $('.ship-btn').click(function() {
-        shipOrder(orderId);
+        const btnUuid = $(this).data('uuid');
+        shipOrder(orderId, btnUuid || uuid);
     });
 
     // 删除订单
     $('.delete-btn').click(function() {
-        deleteOrder(orderId);
+        const btnUuid = $(this).data('uuid');
+        deleteOrder(orderId, btnUuid || uuid);
     });
 }
 
 // 取消订单
-async function cancelOrder(orderId) {
+async function cancelOrder(orderId, uuid) {
     showConfirmModal('确定要取消该订单吗？', async () => {
         try {
+            // 由于后端没有实现基于UUID的取消订单API，只能使用ID进行操作
             await fetchAPI(`/api/orders/${orderId}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             // 刷新页面或重新加载数据
@@ -269,9 +275,10 @@ async function cancelOrder(orderId) {
 }
 
 // 发货
-async function shipOrder(orderId) {
+async function shipOrder(orderId, uuid) {
     showConfirmModal('确定要标记为已发货吗？', async () => {
         try {
+            // 由于后端没有实现基于UUID的发货API，只能使用ID进行操作
             await fetchAPI(`/api/orders/${orderId}/ship`, { method: 'POST' });
             showSuccessMessage('订单已标记为已发货');
             // 刷新页面或重新加载数据
@@ -284,10 +291,12 @@ async function shipOrder(orderId) {
 }
 
 // 删除订单
-async function deleteOrder(orderId) {
+async function deleteOrder(orderId, uuid) {
     showConfirmModal(`确定要删除此订单吗？此操作不可恢复。`, async () => {
         try {
-            const response = await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
+            let response;
+            // 由于后端没有实现基于UUID的删除订单API，只能使用ID进行操作
+            response = await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
             showSuccessMessage(response || '订单删除成功');
             // 删除成功后跳转回列表页
             window.location.href = '/pages/admin/order-list.html';

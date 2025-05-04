@@ -129,8 +129,8 @@ public class LogAspect {
                     if (arg != null && !(arg instanceof HttpServletRequest) && !(arg instanceof HttpServletRequest)) {
                         // 避免参数内容过长
                         String argStr = arg.toString();
-                        if (argStr.length() > 3000) {
-                            argStr = argStr.substring(0, 3000) + "... [内容过长已截断]";
+                        if (argStr.length() > 1000) {
+                            argStr = argStr.substring(0, 1000) + "... [内容过长已截断]";
                         }
                         params.append(argStr).append("; ");
                     }
@@ -218,8 +218,8 @@ public class LogAspect {
                         Object body = responseEntity.getBody();
                         if (body != null) {
                             String bodyStr = body.toString();
-                            if (bodyStr.length() > 200) {
-                                bodyStr = bodyStr.substring(0, 200) + "... [内容过长已截断]";
+                            if (bodyStr.length() > 1000) {
+                                bodyStr = bodyStr.substring(0, 1000) + "... [内容过长已截断]";
                             }
                             resultInfo += ", 响应体: " + bodyStr;
                         }
@@ -240,8 +240,8 @@ public class LogAspect {
                     } else {
                         // 其他类型结果
                         String resultStr = result.toString();
-                        if (resultStr.length() > 200) {
-                            resultStr = resultStr.substring(0, 200) + "... [内容过长已截断]";
+                        if (resultStr.length() > 1000) {
+                            resultStr = resultStr.substring(0, 1000) + "... [内容过长已截断]";
                         }
                         resultInfo = "返回结果: " + resultStr;
                     }

@@ -213,16 +213,14 @@ function bindQuantityButtons() {
 // 添加到购物车
 async function addToCart(productId, quantity) {
     try {
-        // 发送添加到购物车请求 - 修正API路径，使用后端控制器中定义的路径
-        const result = await fetchAPI('/api/cart/add', {
-            method: 'POST',
-            body: JSON.stringify({
-                productId: productId,
-                quantity: quantity
-            })
+        // 发送添加到购物车请求 - 使用URL参数而非请求体，与后端Controller匹配
+        const result = await fetchAPI(`/api/client/cart?productId=${productId}&quantity=${quantity}`, {
+            method: 'POST'
+            // 不使用请求体，因为后端使用@RequestParam接收参数
         });
         
-        showSuccessMessage('已成功添加到购物车');
+        // 显示成功消息，并添加购物车链接
+        showSuccessMessage(`已成功添加到购物车 <a href="/pages/client/cart.html" class="alert-link">去购物车查看</a>`);
     } catch (error) {
         console.error('添加到购物车失败:', error);
         showErrorMessage('添加到购物车失败: ' + error.message);

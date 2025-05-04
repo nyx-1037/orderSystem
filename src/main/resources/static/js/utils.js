@@ -35,7 +35,7 @@ function showSuccessMessage(message) {
     const errorElement = $('#error-message');
     
     if (successElement.length) {
-        successElement.text(message).fadeIn();
+        successElement.html(message).fadeIn(); // 使用 .html() 渲染 HTML
         if (errorElement.length) {
             errorElement.hide();
         }

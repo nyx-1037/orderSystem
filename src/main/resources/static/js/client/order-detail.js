@@ -40,8 +40,8 @@ async function getCurrentUserInfo() {
 // 加载订单详情
 async function loadOrderDetail(uuid) {
     try {
-        // 使用RESTful API路径
-        const apiPath = `/api/client/orders/${uuid}`;
+        // 使用查询参数方式请求，避免将UUID直接放在路径中
+        const apiPath = `/api/orders/by-uuid?uuid=${uuid}`;
         console.log('请求订单详情URL:', apiPath);
         const order = await fetchAPI(apiPath);
         
@@ -239,41 +239,51 @@ function renderOrderActions(order) {
     const actionsContainer = $('#order-actions');
     actionsContainer.empty();
     
+    // 获取订单ID和UUID
+    const orderId = order.orderId || order.id;
+    const uuid = order.uuid || orderUuid;
+    
     // 根据订单状态显示不同的操作按钮
     switch (parseInt(order.status)) {
         case 0: // 待付款
             actionsContainer.append(`
-                <button class="btn btn-primary" id="pay-btn">立即付款</button>
-                <button class="btn btn-danger ml-2" id="cancel-btn">取消订单</button>
+                <button class="btn btn-primary" id="pay-btn" data-id="${orderId}" data-uuid="${uuid}">立即付款</button>
+                <button class="btn btn-danger ml-2" id="cancel-btn" data-id="${orderId}" data-uuid="${uuid}">取消订单</button>
             `);
             break;
         case 2: // 已发货
             actionsContainer.append(`
-                <button class="btn btn-success" id="confirm-receipt-btn">确认收货</button>
+                <button class="btn btn-success" id="confirm-receipt-btn" data-id="${orderId}" data-uuid="${uuid}">确认收货</button>
             `);
             break;
     }
     
     // 绑定按钮事件
     $('#pay-btn').click(function() {
-        payOrder(order.orderId || order.id);
+        const btnId = $(this).data('id');
+        const btnUuid = $(this).data('uuid');
+        payOrder(btnId, btnUuid);
     });
     
     $('#cancel-btn').click(function() {
-        cancelOrder(order.orderId || order.id);
+        const btnId = $(this).data('id');
+        const btnUuid = $(this).data('uuid');
+        cancelOrder(btnId, btnUuid);
     });
     
     $('#confirm-receipt-btn').click(function() {
-        confirmReceipt(order.orderId || order.id);
+        const btnId = $(this).data('id');
+        const btnUuid = $(this).data('uuid');
+        confirmReceipt(btnId, btnUuid);
     });
 }
 
 // 支付订单
-async function payOrder(orderId) {
+async function payOrder(orderId, uuid) {
     showConfirmModal('确定要支付此订单吗？', async () => {
         try {
-            // 使用订单ID进行支付操作
-            await fetchAPI(`/api/client/orders/${orderId}/pay`, { method: 'POST' });
+            // 由于后端没有实现基于UUID的支付订单API，只能使用ID进行操作
+            await fetchAPI(`/api/client/orders/${uuid}/pay`, { method: 'POST' });
             showSuccessMessage('订单支付成功');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情
@@ -287,11 +297,11 @@ async function payOrder(orderId) {
 }
 
 // 取消订单
-async function cancelOrder(orderId) {
+async function cancelOrder(orderId, uuid) {
     showConfirmModal('确定要取消此订单吗？', async () => {
         try {
-            // 使用订单ID进行取消操作
-            await fetchAPI(`/api/client/orders/${orderId}/cancel`, { method: 'POST' });
+            // 由于后端没有实现基于UUID的取消订单API，只能使用ID进行操作
+            await fetchAPI(`/api/client/orders/${uuid}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情
@@ -305,11 +315,11 @@ async function cancelOrder(orderId) {
 }
 
 // 确认收货
-async function confirmReceipt(orderId) {
+async function confirmReceipt(orderId, uuid) {
     showConfirmModal('确认已收到商品吗？', async () => {
         try {
-            // 使用订单ID进行确认收货操作
-            await fetchAPI(`/api/client/orders/${orderId}/confirm`, { method: 'POST' });
+            // 由于后端没有实现基于UUID的确认收货API，只能使用ID进行操作
+            await fetchAPI(`/api/client/orders/${uuid}/confirm`, { method: 'POST' });
             showSuccessMessage('已确认收货');
             setTimeout(() => {
                 // 使用UUID重新加载订单详情

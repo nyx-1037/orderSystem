@@ -320,7 +320,14 @@ function updateBatchDeleteButton() {
 async function deleteOrder(orderId) {
     showConfirmModal('确定要删除该订单吗？此操作不可恢复！', async () => {
         try {
-            await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
+            // 使用批量删除接口，传入单个ID作为数组
+            await fetchAPI('/api/orders/batch', { 
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify([orderId])
+            });
             showSuccessMessage('订单已删除');
             loadOrders(); // 重新加载订单列表
         } catch (error) {
@@ -334,21 +341,19 @@ async function deleteOrder(orderId) {
 async function batchDeleteOrders(orderIds) {
     showConfirmModal(`确定要删除选中的 ${orderIds.length} 个订单吗？此操作不可恢复！`, async () => {
         try {
-            // 由于后端没有批量删除接口，改为循环调用单个删除接口
-            let successCount = 0;
-            for (const orderId of orderIds) {
-                try {
-                    await fetchAPI(`/api/orders/${orderId}`, { method: 'DELETE' });
-                    successCount++;
-                } catch (err) {
-                    console.error(`删除订单 ${orderId} 失败:`, err);
-                }
-            }
+            // 使用批量删除接口，一次性传入所有ID
+            const response = await fetchAPI('/api/orders/batch', { 
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderIds)
+            });
             
-            if (successCount === orderIds.length) {
-                showSuccessMessage(`已成功删除 ${successCount} 个订单`);
+            if (response.success) {
+                showSuccessMessage(response.message || '订单删除成功');
             } else {
-                showWarningMessage(`成功删除 ${successCount}/${orderIds.length} 个订单`);
+                showWarningMessage(response.message || '部分订单删除失败');
             }
             
             loadOrders(); // 重新加载订单列表
@@ -385,6 +390,26 @@ async function shipOrder(orderId) {
             showErrorMessage('发货失败: ' + error.message);
         }
     });
+}
+
+// 显示确认对话框
+function showConfirmModal(message, confirmCallback) {
+    // 设置确认消息
+    $('#confirmMessage').text(message);
+    
+    // 移除之前的事件监听
+    $('#confirmActionBtn').off('click');
+    
+    // 绑定确认按钮事件
+    $('#confirmActionBtn').on('click', function() {
+        $('#confirmModal').modal('hide');
+        if (typeof confirmCallback === 'function') {
+            confirmCallback();
+        }
+    });
+    
+    // 显示模态框
+    $('#confirmModal').modal('show');
 }
 
 // 渲染分页控件

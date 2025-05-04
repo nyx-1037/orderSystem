@@ -10,7 +10,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">在线商城后台管理端</a>
+            <a class="navbar-brand" href="/pages/admin/order-list.html">在线商城后台管理端</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -193,8 +193,10 @@
                         </div>
                         <div class="form-group">
                             <label for="form-password">密码</label>
-                            <input type="password" class="form-control" id="form-password">
+                            <input type="password" class="form-control" id="form-password" required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$">
                             <small class="form-text text-muted">编辑用户时留空表示不修改密码</small>
+                            <small class="form-text text-muted">密码长度6-18位，需包含字母和数字</small>
+
                         </div>
                         <div class="form-group">
                             <label for="form-role">角色</label>

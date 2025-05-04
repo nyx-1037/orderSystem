@@ -19,15 +19,15 @@
     
     <!-- 公共列 -->
     <sql id="Base_Column_List">
-        user_id, user_uuid, username, password, real_name, phone, email, address, avatar_data, role, status, create_time, update_time
+        user_id, user_uuid, username, password, real_name, phone, email, address, role, status, create_time, update_time
     </sql>
     
     <!-- 添加用户 -->
     <insert id="insertUser" parameterType="com.ordersystem.entity.User" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO user (
-            username, password, real_name, phone, email, address, avatar_data, role, create_time, update_time
+            user_uuid, username, password, real_name, phone, email, address,avatar_data, role, create_time, update_time
         ) VALUES (
-            #{username}, #{password}, #{realName}, #{phone}, #{email}, #{address}, #{avatarData, jdbcType=BLOB}, #{role,jdbcType=INTEGER}, NOW(), NOW()
+            #{userUuid}, #{username}, #{password}, #{realName}, #{phone}, #{email}, #{address}, #{avatarData, jdbcType=BLOB}, #{role,jdbcType=INTEGER}, NOW(), NOW()
         )
     </insert>
     
@@ -47,8 +47,8 @@
             <if test="email != null">email = #{email},</if>
             <if test="address != null">address = #{address},</if>
             <if test="avatarData != null">avatar_data = #{avatarData, jdbcType=BLOB},</if> <!-- 添加 avatarData 更新 -->
+            <if test="status != null">status = #{status},</if> <!-- 添加 status 更新 -->
             <if test="role != null">role = #{role},</if> <!-- 添加 role 更新 -->
-            <!-- 移除了不存在的last_login_time字段更新 -->
             update_time = NOW()
         </set>
         WHERE user_id = #{userId}

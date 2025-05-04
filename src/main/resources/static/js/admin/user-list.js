@@ -333,7 +333,8 @@ function bindActionButtons() {
     
     // 编辑用户
     $('.edit-btn').click(function() {
-        const userId = $(this).data('id');
+        const userId = $(this).data('id');-
+        console.log("用户ID", userId);
         // 确保userId是有效的数值
         if (!userId) {
             showErrorMessage('无效的用户ID');
@@ -424,10 +425,11 @@ function showUserModal(user = null) {
     if (user) {
         // 编辑模式
         isEditMode = true;
+        console.log("编辑用户", user);
         $('#userModalLabel').text('编辑用户');
-        $('#user-id').val(user.id);
+        $('#user-id').val(user.userId);
         $('#form-username').val(user.username);
-        $('#form-nickname').val(user.nickname || '');
+        $('#form-nickname').val( user.realName ||'');
         $('#form-role').val(user.role);
         $('#form-status').val(user.status);
         
@@ -465,8 +467,9 @@ function showUserModal(user = null) {
 async function saveUser() {
     // 获取表单数据
     const userId = $('#user-id').val();
+    console.log("用户ID111", userId);
     const username = $('#form-username').val();
-    const nickname = $('#form-nickname').val();
+    const realName = $('#form-nickname').val();
     const password = $('#form-password').val();
     const role = $('#form-role').val();
     const status = $('#form-status').val();
@@ -480,7 +483,7 @@ async function saveUser() {
     // 构建用户数据
     const userData = {
         username,
-        nickname,
+        realName,
         role: parseInt(role),
         status: parseInt(status)
     };
@@ -491,16 +494,22 @@ async function saveUser() {
     }
     
     try {
-        let apiUrl = '/api/users';
-        let method = 'POST';
-        
-        // 如果是编辑模式，添加用户ID
-        if (isEditMode && userId) {
-            userData.id = parseInt(userId);
-            apiUrl += `/${userData.id}`;
+        let apiUrl;
+        let method;
+        console.log("是否为编辑模式：" + isEditMode)
+        // 根据是否为编辑模式选择不同的API端点和方法
+        if (isEditMode) {
+            // 编辑现有用户 - 使用PUT方法
+            // userId = parseInt(userId); // 确保使用正确的字段名userId
+            console.log("用户ID", userId);
+            apiUrl = `/api/users/${userId}`;
             method = 'PUT';
+        } else {
+            // 添加新用户 - 使用注册接口
+            apiUrl = '/api/users/register';
+            method = 'POST';
         }
-        
+
         // 发送API请求
         await fetchAPI(apiUrl, {
             method,
@@ -571,29 +580,43 @@ async function editUser(userId) {
     }
 }
 
+// 重置密码（使用POST方法）
 // 重置密码
 async function resetPassword(userId) {
-    // 确保userId是有效的数值
-    if (!userId) {
-        showErrorMessage('无效的用户ID');
+    // 增强数字类型验证（允许数字字符串）
+    if (isNaN(userId) || parseInt(userId) != userId) {
+        showErrorMessage('无效的用户ID格式');
         return;
     }
-    
+
     showConfirmModal('确定要重置该用户的密码吗？', async () => {
         try {
-            // 发送重置密码请求 - 使用RESTful风格
-            const result = await fetchAPI(`/api/users/${userId}/reset-password`, { method: 'POST' });
+            // 获取认证Token
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
             
-            if (!result || !result.newPassword) {
-                showErrorMessage('重置密码失败，未返回新密码');
-                return;
+            // 添加认证头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
+            // 改为POST方法并明确设置Content-Type
+            const result = await fetchAPI(`/api/users/${userId}/resetPassword`, {
+                method: 'POST',
+                headers: headers
+                
+            });
             
-            // 显示成功消息
-            showSuccessMessage(`密码重置成功，新密码: ${result.newPassword}`);
+            // 根据响应结构判断
+            if (result && result.success) {
+                showSuccessMessage(result.message || '密码重置成功');
+            } else {
+                showErrorMessage(result?.message || '重置密码失败');
+            }
         } catch (error) {
             console.error('重置密码失败:', error);
-            showErrorMessage('重置密码失败: ' + error.message);
+            showErrorMessage(`请求失败：${error.message}`);
         }
     });
 }
@@ -677,6 +700,7 @@ async function forceLogout(userId) {
 
 // 显示用户详情模态框
 function showUserDetailModal(user) {
+    console.log("用户详情", user);
     // 创建模态框HTML
     const modalHtml = `
         <div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
@@ -693,8 +717,8 @@ function showUserDetailModal(user) {
                             <table class="table table-bordered">
                                 <tbody>
                                     <tr>
-                                        <th>ID</th>
-                                        <td>${user.id}</td>
+                                        <th>Uuid</th>
+                                        <td>${user.userUuid || '未知'}</td>
                                     </tr>
                                     <tr>
                                         <th>用户名</th>
@@ -702,7 +726,7 @@ function showUserDetailModal(user) {
                                     </tr>
                                     <tr>
                                         <th>昵称</th>
-                                        <td>${user.nickname || '-'}</td>
+                                        <td>${user.realName || '--'}</td>
                                     </tr>
                                     <tr>
                                         <th>角色</th>
@@ -989,6 +1013,7 @@ async function forceLogout(userId) {
 
 // 显示用户详情模态框
 function showUserDetailModal(user) {
+    console.log("用户详情", user);
     // 创建模态框HTML
     const modalHtml = `
         <div class="modal fade" id="userDetailModal" tabindex="-1" role="dialog" aria-labelledby="userDetailModalLabel" aria-hidden="true">
@@ -1006,7 +1031,11 @@ function showUserDetailModal(user) {
                                 <tbody>
                                     <tr>
                                         <th>ID</th>
-                                        <td>${user.id}</td>
+                                        <td>${user.userId}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>UUID</th>
+                                        <td>${user.userUuid}</td>
                                     </tr>
                                     <tr>
                                         <th>用户名</th>
@@ -1014,7 +1043,7 @@ function showUserDetailModal(user) {
                                     </tr>
                                     <tr>
                                         <th>昵称</th>
-                                        <td>${user.nickname || '-'}</td>
+                                        <td>${user.realName || '-'}</td>
                                     </tr>
                                     <tr>
                                         <th>角色</th>

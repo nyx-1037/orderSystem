@@ -249,7 +249,7 @@ public class ProductController {
     /**
      * 根据名称搜索商品
      * 
-     * @param name 商品名称
+     * @param productName 商品名称
      * @return 商品列表
      */
     @GetMapping("/search")

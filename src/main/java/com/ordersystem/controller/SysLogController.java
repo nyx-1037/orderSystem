@@ -185,8 +185,11 @@ public class SysLogController {
                 count++;
             }
         }
+        HashMap<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("message",String.format("成功删除 %d 条日志记录", count ));
         
-        return ResponseEntity.ok().body(String.format("成功删除 %d 条日志记录", count));
+        return ResponseEntity.ok().body(result);
     }
     
     /**

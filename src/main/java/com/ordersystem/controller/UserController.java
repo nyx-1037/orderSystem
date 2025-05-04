@@ -217,18 +217,14 @@ public class UserController {
             errorResponse.put("message", "用户名已存在");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
-    
-
-        
         // 初始化用户信息
-        
         // 加密密码
         user.setPassword(MD5Util.encode(user.getPassword()));
-        
+        user.setUserUuid(UUID.randomUUID().toString());
+        user.setRole(0);
         // 设置创建时间
         user.setCreateTime(new Date());
         user.setUpdateTime(new Date());
-        
         // 保存用户信息
         boolean success = userService.addUser(user);
         
@@ -329,6 +325,7 @@ public class UserController {
             HttpServletRequest request) {
         // 从请求属性中获取用户ID（由拦截器设置）
         Integer currentUserId = (Integer) request.getAttribute("userId");
+
         if (currentUserId == null) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
@@ -349,21 +346,29 @@ public class UserController {
         }
     
 
-        
+        User admin = userService.getUserById(currentUserId);
         // 验证当前用户是否有权限更新此用户信息
-        if (!currentUserId.equals(existingUser.getUserId()) && existingUser.getRole() != 1) {
+        if (admin.getRole() != 1) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "无权限修改其他用户信息");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
-    
 
+        System.out.println(user.toString());
         
         // 保留原始ID和密码
         user.setUserId(existingUser.getUserId());
-        user.setPassword(existingUser.getPassword()); // 不通过此接口修改密码
+
+        if(user.getPassword() == null || user.getPassword().isEmpty() || user.getPassword().equals(" ")){
+            user.setPassword(existingUser.getPassword());//保留原始密码
+
+        }else{
+            user.setPassword(MD5Util.encode(user.getPassword()));//加密密码,更新密码
+        }
+
         user.setUpdateTime(new Date());
+
         
         boolean result = userService.updateUser(user);
         if (result) {
@@ -473,82 +478,68 @@ public class UserController {
     
 
     /**
-     * 修改密码（管理员使用）
+     * 管理员重置其他密码（管理员使用）
      *
-     * @param userId 用户ID
-     * @param request 修改密码请求
-     * @param httpRequest HTTP请求
-     * @return 修改结果
+     * @param userId 目标用户ID
+     *                request body
+     *                httpRequest
+     *                返回响应
+     *
      */
-    @PutMapping("/{userId}/password")
+    @PostMapping("/{userId}/resetPassword") // 改为POST方法
     public ResponseEntity<?> changePassword(
             @PathVariable Integer userId,
-            @RequestBody ChangePasswordRequest request,
-            HttpServletRequest httpRequest) {
-        // 从请求属性中获取用户ID（由拦截器设置）
+            HttpServletRequest httpRequest) { // 移除不需要的request body
+
         Integer currentUserId = (Integer) httpRequest.getAttribute("userId");
+        Map<String, Object> response = new HashMap<>(); // 复用响应对象
+
+        // 身份验证（保持原有结构）
         if (currentUserId == null) {
-            Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-    
 
-        
-        // 查找用户
+        // 获取当前用户（新增检查）
+        User admin = userService.getUserById(currentUserId);
+        if (admin == null) {
+            response.put("success", false);
+            response.put("message", "当前用户不存在");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        // 获取目标用户
         User user = userService.getUserById(userId);
-        
         if (user == null) {
-            Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "用户不存在");
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
-    
 
-        
-        // 验证当前用户是否有权限修改此用户密码
-        if (!currentUserId.equals(user.getUserId())) {
-            Map<String, Object> response = new HashMap<>();
+        // 权限校验（优化逻辑判断）
+        boolean isAdmin = admin.getRole() == 1;
+        boolean isSelf = currentUserId.equals(user.getUserId());
+        if (!isAdmin && !isSelf) {
             response.put("success", false);
-            response.put("message", "无权限修改其他用户密码");
+            response.put("message", "无权限修改密码");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
-    
 
-        
-        // 验证旧密码
-        String oldPasswordEncrypted = MD5Util.encode(request.getCurrentPassword());
-        if (!oldPasswordEncrypted.equals(user.getPassword())) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "旧密码不正确");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-    
-
-        
-        // 更新密码
-        user.setPassword(MD5Util.encode(request.getNewPassword()));
+        // 执行更新（保持原有逻辑）
+        user.setPassword(MD5Util.encode("123abc"));
         user.setUpdateTime(new Date());
-        
-        boolean result = userService.updateUser(user);
-        if (result) {
-            Map<String, Object> response = new HashMap<>();
+
+        if (userService.updateUser(user)) {
+            String msg = "用户：" + user.getUsername() + "密码重置成功，新密码为：123abc" ;
             response.put("success", true);
-            response.put("message", "密码修改成功");
+            response.put("message", msg);
             return ResponseEntity.ok(response);
         }
-    
- else {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", "密码修改失败");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    
 
+        response.put("success", false);
+        response.put("message", "密码更新失败");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
     
 
