@@ -333,7 +333,7 @@ public class LogAspect {
             
             if (logIds != null && !logIds.isEmpty()) {
                 int totalCount = logIds.size();
-                int batchSize = 50; // 每批处理的日志数量
+                int batchSize = 5; // 每批处理的日志数量，改为5条以减轻数据库压力
                 int processedCount = 0;
                 
                 logger.info("共有{}条日志需要同步", totalCount);
@@ -383,6 +383,18 @@ public class LogAspect {
                                         redisTemplate.delete(key);
                                         redisTemplate.opsForList().remove(LOG_IDS_KEY, 1, id);
                                     }
+                                    
+                                    // 输出进度
+                                    logger.info("已处理: {}/{} 条日志", processedCount, totalCount);
+                                    
+                                    // 每批处理完成后暂停一段时间，减轻数据库压力
+                                    try {
+                                        Thread.sleep(200); // 暂停200毫秒
+                                        logger.debug("批处理暂停200ms，缓解数据库压力");
+                                    } catch (InterruptedException ie) {
+                                        Thread.currentThread().interrupt();
+                                        logger.warn("同步过程被中断");
+                                    }
                                 } else {
                                     logger.warn("批量保存日志失败，本批次共{}条", logBatch.size());
                                 }
@@ -394,9 +406,6 @@ public class LogAspect {
                             logBatch.clear();
                             processedLogIds.clear();
                         }
-                        
-                        // 输出进度
-                        logger.info("已处理: {}/{} 条日志", processedCount, totalCount);
                     }
                 }
                 
