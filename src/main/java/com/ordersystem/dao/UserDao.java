@@ -1,6 +1,8 @@
 package com.ordersystem.dao;
 
 import com.ordersystem.entity.User;
+import org.apache.ibatis.annotations.Select;
+
 import java.util.List;
 
 /**
@@ -55,4 +57,12 @@ public interface UserDao {
      * @return 用户列表
      */
     List<User> getUsersByFilter(User filter);
+
+    /**
+     * 根据用户ID获取用户头像数据
+     * @param userId 用户ID
+     * @return 用户头像数据
+     */
+    @Select("SELECT avatar_data FROM user WHERE user_id = #{userId}")
+    byte[] getUserByAvatarData(Integer userId);
 }

@@ -18,7 +18,7 @@ $(document).ready(function() {
             $('#search-btn').click(function() {
                 const keyword = $('#search-input').val().trim();
                 if (keyword) {
-                    window.location.href = `/pages/client/products.html?keyword=${encodeURIComponent(keyword)}`;
+                    window.location.href = `/pages/client/products.html?name=${encodeURIComponent(keyword)}`;
                 }
             });
             
@@ -27,7 +27,7 @@ $(document).ready(function() {
                 if (e.which === 13) {
                     const keyword = $(this).val().trim();
                     if (keyword) {
-                        window.location.href = `/pages/client/products.html?keyword=${encodeURIComponent(keyword)}`;
+                        window.location.href = `/pages/client/products.html?name=${encodeURIComponent(keyword)}`;
                     }
                 }
             });

@@ -1,155 +1,77 @@
-# 后端接口文档
+# 订单管理系统
 
-## 用户认证模块
+## 项目简介
+基于Spring Boot 2.7构建的分布式小电商平台，带有后台订单管理，集成MyBatis+MySQL数据持久化方案，提供完整的订单生命周期管理功能。
 
-### 管理员登录
-- **URL**: `/api/admin/auth/login`
-- **Method**: POST
-- **Request Body**:
-  ```json
-  {
-    "username": "string",
-    "password": "string"
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "success": true/false,
-    "message": "string",
-    "token": "string",
-    "role": 1,
-    "user": {
-      "userId": 1,
-      "username": "string",
-      "realName": "string"
-    }
-  }
-  ```
+## 功能特性
+- 多状态订单管理（创建/支付/发货/完成）
+- JWT鉴权与RBAC权限控制
+- Redis缓存热点数据
+- AOP实现操作日志追踪
+- PageHelper分页查询/前端界面懒加载
+- MD5密码加密
 
-## 在线用户模块
+## 技术栈
+- **核心框架**: Spring Boot 2.7.0
+- **持久层**: MyBatis 2.2.2 + MySQL 8.0.28
+- **安全认证**: JJWT 0.9.1
+- **缓存**: Spring Data Redis
+- **连接池**: Druid 1.2.8
+- **分页插件**: PageHelper 1.4.2
+- **日志系统**: SLF4J 1.7.36 + Logback 1.2.11
+- **前端**: HTML5 + CSS3 + JavaScript + Bootstrap 4.6.1 响应式布局
 
-### 获取在线用户列表
-- **URL**: `/api/online-users`
-- **Method**: GET
-- **Response**:
-  ```json
-  [
-    {
-      "userId": 1,
-      "username": "string",
-      "realName": "string",
-      "isCurrentUser": true/false
-    }
-  ]
-  ```
+## 环境要求
+- JDK 1.8+
+- MySQL 8.0+
+- Redis 3.0+
+- Maven 3.6+
 
-## 商品管理模块
+## 快速开始
+```bash
+# 1. 克隆项目
+git clone https://github.com/nyx-1037/orderSystem.git
 
-### 获取所有商品
-- **URL**: `/api/products`
-- **Method**: GET
-- **Response**:
-  ```json
-  [
-    {
-      "productId": 1,
-      "name": "string",
-      "price": 100.0,
-      "stock": 10
-    }
-  ]
-  ```
+# 2. 初始化数据库
+mysql -u root -p < docs/sql/order-system.sql
 
-### 添加商品
-- **URL**: `/api/products`
-- **Method**: POST
-- **Request Body**:
-  ```json
-  {
-    "name": "string",
-    "price": 100.0,
-    "stock": 10
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "success": true/false,
-    "message": "string",
-    "productId": 1,
-    "product": {
-      "productId": 1,
-      "name": "string",
-      "price": 100.0,
-      "stock": 10
-    }
-  }
-  ```
+# 3. 修改配置
+vim src/main/resources/application.properties
 
-## 订单管理模块
+# 4. 打包运行
+mvn clean package
+java -jar target/order-management.jar
+```
 
-### 创建订单
-- **URL**: `/api/orders`
-- **Method**: POST
-- **Request Body**:
-  ```json
-  {
-    "items": [
-      {
-        "productId": 1,
-        "quantity": 1
-      }
-    ]
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "success": true/false,
-    "message": "string",
-    "orderId": 1,
-    "order": {
-      "orderId": 1,
-      "userId": 1,
-      "status": 0
-    }
-  }
-  ```
+## 配置说明
+`application.properties` 主要配置项：
+```properties
+# 数据源配置
+spring.datasource.url=jdbc:mysql://localhost:3306/order_system?useSSL=false
+spring.datasource.username=root
+spring.datasource.password=123456
 
-### 支付订单
-- **URL**: `/api/orders/{orderId}/pay`
-- **Method**: POST
-- **Response**:
-  ```json
-  {
-    "success": true/false,
-    "message": "string"
-  }
-  ```
+# Redis配置
+spring.redis.host=localhost
+spring.redis.port=6379
 
-## 客户端订单模块
+# JWT配置
+jwt.secret=your-256-bit-secret
+jwt.expiration=86400000
+```
 
-### 获取订单列表
-- **URL**: `/api/client/orders`
-- **Method**: GET
-- **Query Parameters**:
-  - `page`: 页码
-  - `size`: 每页数量
-  - `status`: 订单状态(可选)
-- **Response**:
-  ```json
-  {
-    "success": true,
-    "content": [
-      {
-        "orderId": 1,
-        "status": 0
-      }
-    ],
-    "totalPages": 1,
-    "totalElements": 1,
-    "size": 5,
-    "number": 1
-  }
-  ```
+
+
+## 项目结构
+```
+src/main/java
+├── com.ordersystem
+│   ├── config       # 配置类
+│   ├── controller   # REST接口
+│   ├── service      # 业务逻辑
+│   ├── dao          # 数据持久
+│   ├── entity       # 数据实体
+│   ├── aspect       # AOP切面
+│   └── OrderSystemApplication.java # 启动类
+```
+

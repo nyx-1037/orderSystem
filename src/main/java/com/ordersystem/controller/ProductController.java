@@ -1,5 +1,7 @@
 package com.ordersystem.controller;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Product;
 import com.ordersystem.service.ProductService;
 import com.ordersystem.util.UUIDGenerater;
@@ -33,6 +35,7 @@ public class ProductController {
 
     /**
      * 获取商品列表（支持分页和筛选）
+     * 使用PageHelper实现分页
      * 
      * @param pageNum 页码
      * @param pageSize 每页数量
@@ -44,10 +47,12 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<?> getAllProducts(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "pageSize", defaultValue = "8") Integer pageSize,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "category", required = false) Integer category,
-            @RequestParam(value = "status", required = false) Integer status) {
+            @RequestParam(value = "status", required = false) Integer status,
+            @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "order", required = false) String order) {
         
         // 处理筛选条件
         Map<String, Object> filters = new HashMap<>();
@@ -61,7 +66,28 @@ public class ProductController {
             filters.put("status", status);
         }
         
-        // 使用筛选条件查询商品并分页
+        // 构建排序条件
+        String orderBy = null;
+        if (sort != null && !sort.isEmpty() && order != null && !order.isEmpty()) {
+            // 防止SQL注入，只允许特定字段排序
+            if ("price".equals(sort)) {
+                String orderDirection = "asc".equalsIgnoreCase(order) ? "asc" : "desc";
+                orderBy = sort + " " + orderDirection;
+            } else if ("createTime".equals(sort)) {
+                // 将Java属性名映射到数据库列名
+                String orderDirection = "asc".equalsIgnoreCase(order) ? "asc" : "desc";
+                orderBy = "create_time " + orderDirection;
+            }
+        }
+        
+        // 使用PageHelper设置分页参数和排序
+        if (orderBy != null) {
+            PageHelper.startPage(pageNum, pageSize, orderBy);
+        } else {
+            PageHelper.startPage(pageNum, pageSize);
+        }
+        
+        // 使用筛选条件查询商品
         List<Product> products;
         if (filters.isEmpty()) {
             products = productService.getAllProducts();
@@ -69,23 +95,17 @@ public class ProductController {
             products = productService.getProductsByFilters(filters);
         }
         
-        // 手动实现分页
-        int total = products.size();
-        int pages = (int) Math.ceil((double) total / pageSize);
-        int fromIndex = (pageNum - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, total);
-        
-        List<Product> pagedProducts = fromIndex < total ? 
-                products.subList(fromIndex, toIndex) : 
-                new ArrayList<>();
+        // 使用PageInfo包装查询结果
+        PageInfo<Product> pageInfo = new PageInfo<>(products);
         
         // 创建符合前端期望的分页格式响应
         Map<String, Object> response = new HashMap<>();
-        response.put("list", pagedProducts);
-        response.put("total", total);
-        response.put("pages", pages);
-        response.put("pageNum", pageNum);
-        response.put("pageSize", pageSize);
+        response.put("list", pageInfo.getList());
+        response.put("total", pageInfo.getTotal());
+        response.put("pages", pageInfo.getPages());
+        response.put("pageNum", pageInfo.getPageNum());
+        response.put("pageSize", pageInfo.getPageSize());
+        response.put("hasNextPage", pageInfo.isHasNextPage());
         
         return ResponseEntity.ok(response);
     }

@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <title>全部商品 - 在线商城</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
+    <link rel="stylesheet" href="/css/float-buttons.css">
     <style>
         .product-card {
             transition: transform 0.3s;
@@ -85,28 +87,28 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/pages/client/index.html">在线商城</a>
+            <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mr-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/pages/client/index.html">首页</a>
+                        <a class="nav-link" href="/pages/client/index.html"><i class="fas fa-home"></i> 首页</a>
                     </li>
                     <li class="nav-item active">
-                        <a class="nav-link" href="/pages/client/products.html">全部商品</a>
+                        <a class="nav-link" href="/pages/client/products.html"><i class="fas fa-box-open"></i> 全部商品</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/pages/client/orders.html">我的订单</a>
+                        <a class="nav-link" href="/pages/client/orders.html"><i class="fas fa-file-invoice"></i> 我的订单</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/pages/client/cart.html">购物车</a>
+                        <a class="nav-link" href="/pages/client/cart.html"><i class="fas fa-shopping-cart"></i> 购物车</a>
                     </li>
                 </ul>
                 <form class="form-inline my-2 my-lg-0 mr-3">
                     <input class="form-control mr-sm-2" type="search" placeholder="搜索商品" id="search-input">
-                    <button class="btn btn-light my-2 my-sm-0" type="button" id="search-btn">搜索</button>
+                    <button class="btn btn-light my-2 my-sm-0" type="button" id="search-btn"><i class="fas fa-search"></i> 搜索</button>
                 </form>
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
@@ -115,9 +117,9 @@
                             <span id="current-username">用户未登录</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="/pages/user/profile.html">个人中心</a>
+                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-user-circle mr-2"></i>个人中心</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="logout-btn">退出登录</a>
+                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
                         </div>
                     </li>
                 </ul>
@@ -144,6 +146,33 @@
             </div>
         </div>
         
+        <!-- 商品分类导航 -->
+        <div class="category-nav mb-4">
+            <ul class="nav nav-pills">
+                <li class="nav-item">
+                    <a class="nav-link category-filter active" href="#" data-category="all">全部分类</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="1">电子产品</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="2">服装</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="3">食品</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="4">图书</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="5">家居</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link category-filter" href="#" data-category="0">其他</a>
+                </li>
+            </ul>
+        </div>
+        
         <div id="products-container" class="row">
             <!-- 商品列表将通过JavaScript动态加载 -->
             <div class="col-12 text-center">
@@ -154,13 +183,12 @@
             </div>
         </div>
         
-        <div class="d-flex justify-content-center mt-4">
-            <nav aria-label="商品分页">
-                <ul class="pagination" id="pagination">
-                    <!-- 分页将通过JavaScript动态加载 -->
-                </ul>
-            </nav>
+        <!-- 手动加载更多按钮 -->
+        <div class="text-center mt-4 mb-4" id="load-more-container" style="display: none;">
+            <button class="btn btn-outline-primary" id="load-more-btn">加载更多商品</button>
         </div>
+        
+        <!-- 已改为无限滚动加载，不再需要分页导航 -->
     </div>
 
     <footer class="bg-dark text-white mt-5 py-4">
@@ -199,6 +227,7 @@
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script>
     <script src="/js/image-loader.js"></script>
+    <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮脚本 -->
     <script src="/js/client/products.js"></script>
 </body>
 </html>

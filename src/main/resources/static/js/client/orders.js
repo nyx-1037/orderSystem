@@ -34,7 +34,20 @@ function initOrdersPage() {
 
     // 绑定搜索按钮事件
     $('#search-btn').click(function() {
-        loadOrders(1);
+        const keyword = $('#search-input').val().trim();
+        if (keyword) {
+            window.location.href = `/pages/client/products.html?name=${encodeURIComponent(keyword)}`;
+        }
+    });
+    
+    // 绑定搜索框回车事件
+    $('#search-input').keypress(function(e) {
+        if (e.which === 13) {
+            const keyword = $(this).val().trim();
+            if (keyword) {
+                window.location.href = `/pages/client/products.html?name=${encodeURIComponent(keyword)}`;
+            }
+        }
     });
 
     // 绑定退出登录按钮事件
@@ -347,7 +360,7 @@ function bindOrderActionEvents() {
 async function payOrder(orderUuid) {
     showConfirmModal('确定要支付此订单吗？', async () => {
         try {
-            await fetchAPI(`/api/client/order/${orderUuid}/pay`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderUuid}/pay`, { method: 'POST' });
             showSuccessMessage('订单支付成功');
             loadOrders(currentPage);
         } catch (error) {
@@ -361,7 +374,7 @@ async function payOrder(orderUuid) {
 async function cancelOrder(orderUuid) {
     showConfirmModal('确定要取消此订单吗？', async () => {
         try {
-            await fetchAPI(`/api/client/order/${orderUuid}/cancel`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderUuid}/cancel`, { method: 'POST' });
             showSuccessMessage('订单已取消');
             loadOrders(currentPage);
         } catch (error) {
@@ -375,7 +388,7 @@ async function cancelOrder(orderUuid) {
 async function confirmReceipt(orderUuid) {
     showConfirmModal('确认已收到商品吗？', async () => {
         try {
-            await fetchAPI(`/api/client/order/${orderUuid}/confirm`, { method: 'POST' });
+            await fetchAPI(`/api/client/orders/${orderUuid}/confirm`, { method: 'POST' });
             showSuccessMessage('已确认收货');
             loadOrders(currentPage);
         } catch (error) {

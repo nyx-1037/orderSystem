@@ -170,6 +170,33 @@ function renderProductDetail(product) {
     `;
     
     $('#product-detail-container').html(html);
+    
+    // 绑定图片点击事件，实现图片预览功能
+    $('.product-image').click(function() {
+        const modal = $('#image-preview-modal');
+        const previewImg = $('#preview-image');
+        
+        // 设置预览图片的src
+        previewImg.attr('src', $(this).attr('src'));
+        
+        // 显示模态框
+        modal.css('display', 'block');
+    });
+    
+    // 绑定关闭按钮事件
+    $('.image-preview-close').click(function() {
+        $('#image-preview-modal').css('display', 'none');
+    });
+    
+    // 点击模态框背景也可以关闭
+    $('#image-preview-modal').click(function(e) {
+        if (e.target === this) {
+            $(this).css('display', 'none');
+        }
+    });
+    
+    // 加载推荐商品
+    loadRecommendedProducts(product.category, product.productId);
 }
 
 // 绑定数量调整按钮事件
@@ -236,6 +263,132 @@ function buyNow(productId, quantity) {
 // 格式化货币
 function formatCurrency(price) {
     return parseFloat(price).toFixed(2);
+}
+
+// 加载推荐商品
+async function loadRecommendedProducts(category, currentProductId) {
+    try {
+        // 显示加载中
+        $('#recommended-products').html(`
+            <div class="col-12 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">加载中...</span>
+                </div>
+                <p>正在加载推荐商品...</p>
+            </div>
+        `);
+        
+        // 构建API URL，获取同类别的其他商品
+        let apiUrl = `/api/products?pageNum=1&pageSize=4`;
+        
+        // 添加分类筛选
+        if (category !== undefined && category !== null) {
+            apiUrl += `&category=${category}`;
+        }
+        
+        // 发送API请求获取推荐商品
+        const response = await fetchAPI(apiUrl);
+        
+        // 获取商品列表
+        const products = response.list || [];
+        
+        // 过滤掉当前商品
+        const filteredProducts = products.filter(product => product.productId != currentProductId);
+        
+        // 如果过滤后商品数量不足4个，则随机获取其他分类的商品
+        if (filteredProducts.length < 4) {
+            const otherProductsResponse = await fetchAPI(`/api/products?pageNum=1&pageSize=${8 - filteredProducts.length}`);
+            const otherProducts = (otherProductsResponse.list || []).filter(product => 
+                product.productId != currentProductId && product.category != category
+            );
+            
+            // 合并商品列表
+            filteredProducts.push(...otherProducts);
+        }
+        
+        // 限制最多显示4个推荐商品
+        const recommendedProducts = filteredProducts.slice(0, 4);
+        
+        // 渲染推荐商品
+        renderRecommendedProducts(recommendedProducts);
+        
+    } catch (error) {
+        console.error('加载推荐商品失败:', error);
+        $('#recommended-products').html('<div class="col-12"><div class="alert alert-danger">加载推荐商品失败</div></div>');
+    }
+}
+
+// 渲染推荐商品
+function renderRecommendedProducts(products) {
+    const container = $('#recommended-products');
+    
+    // 清空容器
+    container.empty();
+    
+    if (!products || products.length === 0) {
+        container.html('<div class="col-12"><div class="alert alert-info">暂无推荐商品</div></div>');
+        return;
+    }
+    
+    products.forEach(product => {
+        // 添加分类信息
+        if (product.category === undefined || product.category === null) {
+            product.category = 0; // 默认为其他分类
+        }
+        product.categoryName = getCategoryName(product.category);
+        
+        // 使用正确的图片路径
+        let imageUrl = `/api/products/${product.productId}/image`;
+        
+        // 设置库存状态文本和样式
+        let stockStatusText = product.stock > 0 ? `库存: ${product.stock}` : '缺货';
+        let stockStatusClass = product.stock > 0 ? 'text-success' : 'text-danger';
+        
+        const productCard = $(`
+            <div class="col-md-3 mb-4">
+                <div class="card product-card">
+                    <div class="product-img-container">
+                        <img src="${imageUrl}" 
+                             class="product-img" 
+                             alt="${product.productName}"
+                             onerror="this.onerror=null; this.src='/images/default-product.jpg';">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title product-name">${product.productName}</h5>
+                        <p class="card-text product-price">¥${formatCurrency(product.price)}</p>
+                        <p class="card-text">
+                            <span class="badge badge-info mr-2">分类: ${product.categoryName}</span>
+                            <span class="${stockStatusClass}">${stockStatusText}</span>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-white border-top-0">
+                        <a href="/pages/client/product-detail.html?id=${product.productId}" class="btn btn-primary btn-sm w-100" ${product.stock <= 0 ? 'disabled' : ''}>
+                            ${product.stock <= 0 ? '暂时缺货' : '查看详情'}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        container.append(productCard);
+    });
+    
+    // 初始化图片懒加载
+    initLazyLoading();
+}
+
+// 初始化图片懒加载
+function initLazyLoading() {
+    // 简单的图片懒加载实现
+    $('.product-img').each(function() {
+        const img = $(this);
+        if (img.attr('src') && !img.hasClass('loaded')) {
+            img.addClass('loading');
+            img.on('load', function() {
+                img.removeClass('loading').addClass('loaded');
+            });
+        }
+    });
 }
 
 // 从URL获取参数

@@ -124,6 +124,7 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Integer userId) {
         User user = userService.getUserById(userId);
+
         if (user != null) {
             // 不返回密码等敏感信息
             user.setPassword(null);
@@ -290,6 +291,7 @@ public class UserController {
         Integer userId = (Integer) request.getAttribute("userId");
         if (userId != null) {
             User user = userService.getUserById(userId);
+
             if (user != null) {
                 // 不返回密码等敏感信息
                 user.setPassword(null);

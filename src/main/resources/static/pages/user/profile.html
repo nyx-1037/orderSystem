@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>用户中心 - 在线商城</title>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <style>
         .profile-container {
@@ -47,7 +48,7 @@
 
     <div class="container profile-container">
         <div class="profile-header">
-            <h2>个人中心</h2>
+            <h2><i class="fas fa-user-cog"></i> 个人中心</h2>
             <p class="text-muted">管理您的个人信息</p>
         </div>
         
@@ -64,56 +65,56 @@
                                 <input type="file" class="custom-file-input" id="avatar-upload" accept="image/*">
                                 <label class="custom-file-label" for="avatar-upload">选择图片</label>
                             </div>
-                            <button type="button" class="btn btn-primary btn-block mt-2" id="upload-avatar-btn">确认上传</button>
+                            <button type="button" class="btn btn-primary btn-block mt-2" id="upload-avatar-btn"><i class="fas fa-upload"></i> 确认上传</button>
                         </form>
                     </div>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="form-section">
-                    <h4>个人信息</h4>
+                    <h4><i class="fas fa-id-card"></i> 个人信息</h4>
                     <form id="profile-form">
                         <div class="form-group">
-                            <label for="username">用户名</label>
+                            <label for="username"><i class="fas fa-user"></i> 用户名</label>
                             <input type="text" class="form-control" id="username" readonly>
                         </div>
                         <div class="form-group">
-                            <label for="realName">真实姓名</label>
+                            <label for="realName"><i class="fas fa-user-tag"></i> 真实姓名</label>
                             <input type="text" class="form-control" id="realName">
                         </div>
                         <div class="form-group">
-                            <label for="email">电子邮箱</label>
+                            <label for="email"><i class="fas fa-envelope"></i> 电子邮箱</label>
                             <input type="email" class="form-control" id="email">
                         </div>
                         <div class="form-group">
-                            <label for="phone">手机号码</label>
+                            <label for="phone"><i class="fas fa-mobile-alt"></i> 手机号码</label>
                             <input type="tel" class="form-control" id="phone">
                         </div>
                         <div class="form-group">
-                            <label for="address">地址</label>
+                            <label for="address"><i class="fas fa-map-marker-alt"></i> 地址</label>
                             <textarea class="form-control" id="address" rows="3"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary">保存修改</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> 保存修改</button>
                     </form>
                 </div>
                 
                 <div class="form-section mt-4">
-                    <h4>修改密码</h4>
+                    <h4><i class="fas fa-key"></i> 修改密码</h4>
                     <form id="password-form">
                         <div class="form-group">
-                            <label for="currentPassword">当前密码</label>
+                            <label for="currentPassword"><i class="fas fa-unlock"></i> 当前密码</label>
                             <input type="password" class="form-control" id="currentPassword" required>
                         </div>
                         <div class="form-group">
-                            <label for="newPassword">新密码</label>
+                            <label for="newPassword"><i class="fas fa-lock"></i> 新密码</label>
                             <input type="password" class="form-control" id="newPassword" required pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,18}$">
                             <small class="form-text text-muted">密码长度6-18位，需包含字母和数字</small>
                         </div>
                         <div class="form-group">
-                            <label for="confirmPassword">确认新密码</label>
+                            <label for="confirmPassword"><i class="fas fa-check-circle"></i> 确认新密码</label>
                             <input type="password" class="form-control" id="confirmPassword" required>
                         </div>
-                        <button type="submit" class="btn btn-warning">修改密码</button>
+                        <button type="submit" class="btn btn-warning"><i class="fas fa-lock"></i> 修改密码</button>
                     </form>
                 </div>
             </div>

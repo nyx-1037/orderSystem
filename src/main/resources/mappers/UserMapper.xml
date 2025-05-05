@@ -25,7 +25,7 @@
     <!-- 添加用户 -->
     <insert id="insertUser" parameterType="com.ordersystem.entity.User" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO user (
-            user_uuid, username, password, real_name, phone, email, address,avatar_data, role, create_time, update_time
+            user_uuid, username, password, real_name, phone, email, address, avatar_data, role, create_time, update_time
         ) VALUES (
             #{userUuid}, #{username}, #{password}, #{realName}, #{phone}, #{email}, #{address}, #{avatarData, jdbcType=BLOB}, #{role,jdbcType=INTEGER}, NOW(), NOW()
         )
@@ -57,6 +57,7 @@
     <!-- 根据ID查询用户 -->
     <select id="getUserById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List" />
+            , avatar_data
         FROM user
         WHERE user_id = #{userId}
     </select>

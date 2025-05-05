@@ -111,4 +111,10 @@ public class UserServiceImpl implements UserService {
         
         return result;
     }
+
+    @Override
+    public byte[] getUserAvatar(Integer userId) {
+        byte[] avatarData = userDao.getUserByAvatarData(userId);
+        return avatarData;
+    }
 }

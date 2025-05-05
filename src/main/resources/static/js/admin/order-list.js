@@ -320,12 +320,21 @@ function updateBatchDeleteButton() {
 async function deleteOrder(orderId) {
     showConfirmModal('确定要删除该订单吗？此操作不可恢复！', async () => {
         try {
+            // 获取认证Token
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // 添加认证头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
             // 使用批量删除接口，传入单个ID作为数组
             await fetchAPI('/api/orders/batch', { 
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify([orderId])
             });
             showSuccessMessage('订单已删除');
@@ -341,12 +350,21 @@ async function deleteOrder(orderId) {
 async function batchDeleteOrders(orderIds) {
     showConfirmModal(`确定要删除选中的 ${orderIds.length} 个订单吗？此操作不可恢复！`, async () => {
         try {
+            // 获取认证Token
+            const token = localStorage.getItem('token');
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
+            // 添加认证头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
             // 使用批量删除接口，一次性传入所有ID
             const response = await fetchAPI('/api/orders/batch', { 
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify(orderIds)
             });
             
@@ -368,7 +386,19 @@ async function batchDeleteOrders(orderIds) {
 async function cancelOrder(orderId) {
     showConfirmModal('确定要取消该订单吗？', async () => {
         try {
-            await fetchAPI(`/api/orders/${orderId}/cancel`, { method: 'POST' });
+            // 获取认证Token
+            const token = localStorage.getItem('token');
+            const headers = {};
+            
+            // 添加认证头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            await fetchAPI(`/api/orders/${orderId}/cancel`, { 
+                method: 'POST',
+                headers: headers
+            });
             showSuccessMessage('订单已取消');
             loadOrders();
         } catch (error) {
@@ -382,7 +412,19 @@ async function cancelOrder(orderId) {
 async function shipOrder(orderId) {
     showConfirmModal('确定要发货吗？', async () => {
         try {
-            await fetchAPI(`/api/orders/${orderId}/ship`, { method: 'POST' });
+            // 获取认证Token
+            const token = localStorage.getItem('token');
+            const headers = {};
+            
+            // 添加认证头
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            await fetchAPI(`/api/orders/${orderId}/ship`, { 
+                method: 'POST',
+                headers: headers
+            });
             showSuccessMessage('发货成功');
             loadOrders();
         } catch (error) {

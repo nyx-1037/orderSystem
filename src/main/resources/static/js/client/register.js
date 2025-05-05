@@ -50,7 +50,7 @@ async function register() {
         const registerData = {
             username: username,
             password: password,
-            nickname: nickname || username // 如果没有填写昵称，则使用用户名作为昵称
+            realName: nickname || username // 如果没有填写昵称，则使用用户名作为昵称
         };
         
         // 发送注册请求 - 使用RESTful风格的API

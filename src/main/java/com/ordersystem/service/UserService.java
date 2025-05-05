@@ -68,4 +68,10 @@ public interface UserService {
      * @return 分页用户列表数据
      */
     Map<String, Object> getUsersByPage(Integer pageNum, Integer pageSize, String username, Integer role, Integer status);
+
+    /**
+     * 获取用户头像
+     * @param userId 用户ID
+     */
+    byte[] getUserAvatar(Integer userId);
 }

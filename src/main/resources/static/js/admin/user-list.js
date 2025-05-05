@@ -76,6 +76,11 @@ $(document).ready(function() {
                 loadOnlineUsers(); // 加载在线用户数据
                 $('#onlineUsersModal').modal('show'); // 显示模态框
             });
+            
+            // 绑定刷新在线用户按钮事件
+            $('#refresh-online-users-btn').click(function() {
+                loadOnlineUsers(); // 重新加载在线用户数据
+            });
         }
     });
 });
@@ -679,10 +684,10 @@ async function forceLogout(userId) {
     try {
         // 发送强制登出请求 - 使用RESTful风格
         // 尝试使用不同的API路径，以适应后端接口
-        await fetchAPI(`/api/users/${userId}/force-logout`, { method: 'POST' })
+        await fetchAPI(`/api/online-users/${userId}/force-logout`, { method: 'POST' })
             .catch(async () => {
                 // 如果第一个路径失败，尝试备用路径
-                return await fetchAPI(`/api/admin/users/${userId}/force-logout`, { method: 'POST' });
+                return await fetchAPI(`/api/online-users/${userId}/force-logout`, { method: 'POST' });
             });
         
         // 显示成功消息
@@ -989,19 +994,26 @@ async function forceLogout(userId) {
     try {
         const token = localStorage.getItem('token');
         const headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': '*/*' // 接受任何类型的响应，不仅限于JSON
         };
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        // 注意：后端强制下线接口路径可能需要调整，这里假设为 /api/admin/users/{userId}/force-logout
-        // 请根据实际后端接口修改
-        const response = await fetchAPI(`/api/admin/users/${userId}/force-logout`, {
+        // 使用原生fetch而不是fetchAPI，以便处理非JSON响应
+        const response = await fetch(`/api/online-users/${userId}/force-logout`, {
             method: 'POST',
-            headers: headers
+            headers: headers,
+            credentials: 'include'
         });
-
+        
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`请求失败: ${response.status}`);
+        }
+        
+        // 不尝试解析JSON，直接显示成功消息
         showSuccessMessage('强制下线成功');
         loadOnlineUsers(); // 刷新在线用户列表
 
