@@ -567,9 +567,7 @@ public class UserController {
             response.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-    
 
-        
         // 查找用户
         User user = userService.getUserById(userId);
         
@@ -579,9 +577,7 @@ public class UserController {
             response.put("message", "用户不存在");
             return ResponseEntity.notFound().build();
         }
-    
 
-        
         // 验证当前用户是否有权限更新此用户头像
         if (!currentUserId.equals(user.getUserId())) {
             Map<String, Object> response = new HashMap<>();
@@ -589,9 +585,7 @@ public class UserController {
             response.put("message", "无权限修改其他用户头像");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
-    
 
-        
         if (file.isEmpty()) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
@@ -599,8 +593,6 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     
-
-
         try {
             // 读取文件内容为字节数组
             byte[] avatarData = file.getBytes();
