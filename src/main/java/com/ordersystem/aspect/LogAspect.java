@@ -389,8 +389,8 @@ public class LogAspect {
                                     
                                     // 每批处理完成后暂停一段时间，减轻数据库压力
                                     try {
-                                        Thread.sleep(200); // 暂停200毫秒
-                                        logger.debug("批处理暂停200ms，缓解数据库压力");
+                                        Thread.sleep(50); // 暂停200毫秒
+                                        logger.debug("批处理暂停50ms，缓解数据库压力");
                                     } catch (InterruptedException ie) {
                                         Thread.currentThread().interrupt();
                                         logger.warn("同步过程被中断");

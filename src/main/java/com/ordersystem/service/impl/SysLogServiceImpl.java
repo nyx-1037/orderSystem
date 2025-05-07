@@ -9,6 +9,8 @@ import com.ordersystem.service.SysLogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +31,27 @@ public class SysLogServiceImpl implements SysLogService {
     private RedisService redisService;
     
     @Override
+    @Transactional
     public boolean saveLog(SysLog sysLog) {
-        return sysLogDao.save(sysLog) > 0;
+        boolean result = sysLogDao.save(sysLog) > 0;
+        if (result) {
+            // 更新最近日志缓存
+            String key = "recent:logs";
+            List<SysLog> recentLogs = redisService.get(key, List.class);
+            if (recentLogs != null) {
+                // 移除最旧的日志，添加新日志
+                if (recentLogs.size() >= 100) {
+                    recentLogs.remove(recentLogs.size() - 1);
+                }
+                recentLogs.add(0, sysLog); // 添加到列表开头
+                redisService.set(key, recentLogs, 24 * 60 * 60); // 更新缓存
+            }
+            
+            // 缓存单个日志
+            String logKey = "log:" + sysLog.getLogId();
+            redisService.set(logKey, sysLog, 24 * 60 * 60); // 缓存24小时
+        }
+        return result;
     }
     
     @Override
@@ -52,17 +73,47 @@ public class SysLogServiceImpl implements SysLogService {
     }
     
     @Override
+    @Cacheable(value = "logsByPage", key = "#pageNum + '-' + #pageSize", unless = "#result == null")
     public PageInfo<SysLog> getAllLogsWithPage(int pageNum, int pageSize) {
+        // 先从Redis缓存中获取
+        String key = "logs:page:" + pageNum + ":" + pageSize;
+        PageInfo<SysLog> pageInfo = redisService.get(key, PageInfo.class);
+        if (pageInfo != null) {
+            logger.debug("从Redis缓存中获取分页日志数据，pageNum={}, pageSize={}", pageNum, pageSize);
+            return pageInfo;
+        }
+        
+        // 缓存中没有，从数据库获取
         PageHelper.startPage(pageNum, pageSize);
         List<SysLog> logs = sysLogDao.findAll();
-        return new PageInfo<>(logs);
+        pageInfo = new PageInfo<>(logs);
+        
+        // 放入缓存
+        redisService.set(key, pageInfo, 1 * 60 * 60); // 缓存1小时，日志更新频繁，缓存时间短一些
+        
+        return pageInfo;
     }
     
     @Override
+    @Cacheable(value = "logsByUser", key = "#userId + '-' + #pageNum + '-' + #pageSize", unless = "#result == null")
     public PageInfo<SysLog> getLogsByUserIdWithPage(Integer userId, int pageNum, int pageSize) {
+        // 先从Redis缓存中获取
+        String key = "logs:user:" + userId + ":page:" + pageNum + ":" + pageSize;
+        PageInfo<SysLog> pageInfo = redisService.get(key, PageInfo.class);
+        if (pageInfo != null) {
+            logger.debug("从Redis缓存中获取用户日志分页数据，userId={}, pageNum={}, pageSize={}", userId, pageNum, pageSize);
+            return pageInfo;
+        }
+        
+        // 缓存中没有，从数据库获取
         PageHelper.startPage(pageNum, pageSize);
         List<SysLog> logs = sysLogDao.findByUserId(userId);
-        return new PageInfo<>(logs);
+        pageInfo = new PageInfo<>(logs);
+        
+        // 放入缓存
+        redisService.set(key, pageInfo, 1 * 60 * 60); // 缓存1小时
+        
+        return pageInfo;
     }
     
     @Override
@@ -80,8 +131,24 @@ public class SysLogServiceImpl implements SysLogService {
     }
     
     @Override
+    @Transactional
+    @CacheEvict(value = "logs", key = "#logId")
     public boolean deleteLog(Integer logId) {
-        return sysLogDao.deleteById(logId) > 0;
+        boolean result = sysLogDao.deleteById(logId) > 0;
+        if (result) {
+            // 从Redis缓存中删除
+            String key = "log:" + logId;
+            redisService.delete(key);
+            
+            // 更新最近日志缓存
+            String recentKey = "recent:logs";
+            List<SysLog> recentLogs = redisService.get(recentKey, List.class);
+            if (recentLogs != null) {
+                recentLogs.removeIf(log -> log.getLogId().equals(logId));
+                redisService.set(recentKey, recentLogs, 24 * 60 * 60); // 更新缓存
+            }
+        }
+        return result;
     }
     
     @Override
@@ -103,10 +170,25 @@ public class SysLogServiceImpl implements SysLogService {
     }
     
     @Override
+    @Cacheable(value = "logs", key = "#logId", unless = "#result == null")
     public SysLog getLogById(Integer logId) {
         if (logId == null) {
             return null;
         }
-        return sysLogDao.findById(logId);
+        // 先从Redis缓存中获取
+        String key = "log:" + logId;
+        SysLog log = redisService.get(key, SysLog.class);
+        if (log != null) {
+            logger.debug("从Redis缓存中获取日志数据，logId={}", logId);
+            return log;
+        }
+        
+        // 缓存中没有，从数据库获取
+        log = sysLogDao.findById(logId);
+        if (log != null) {
+            // 放入缓存
+            redisService.set(key, log, 24 * 60 * 60); // 缓存24小时
+        }
+        return log;
     }
 }

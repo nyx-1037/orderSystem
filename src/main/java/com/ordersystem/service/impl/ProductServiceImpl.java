@@ -6,10 +6,13 @@ import com.ordersystem.entity.OrderItem;
 import com.ordersystem.entity.Product;
 import com.ordersystem.service.ProductService;
 import com.ordersystem.service.RedisService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,46 +22,163 @@ import java.util.Map;
  * 商品服务实现类
  */
 @Service
-public class ProductServiceImpl implements ProductService {
+public class ProductServiceImpl implements ProductService, CommandLineRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
     @Autowired
     private ProductDao productDao;
     
-
     @Autowired
     private OrderItemDao orderItemDao; // 注入OrderItemDao
     
+    @Autowired
+    private RedisService redisService;
+    
+    /**
+     * 项目启动时初始化商品数据到Redis缓存
+     */
     @Override
+    public void run(String... args) throws Exception {
+        logger.info("开始初始化商品数据到Redis缓存...");
+        List<Product> products = productDao.getAllProducts();
+        for (Product product : products) {
+            String key = "product:" + product.getProductId();
+            redisService.set(key, product, 24 * 60 * 60); // 缓存24小时
+        }
+        logger.info("商品数据缓存初始化完成，共缓存{}条记录", products.size());
+    }
+    
+    @Override
+    @Transactional
     public boolean addProduct(Product product) {
-        return productDao.insertProduct(product) > 0;
+        boolean result = productDao.insertProduct(product) > 0;
+        if (result) {
+            try {
+                // 更新Redis缓存
+                String key = "product:" + product.getProductId();
+                redisService.set(key, product, 24 * 60 * 60); // 缓存24小时
+                
+                // 不再需要清除allProducts缓存，因为我们不再使用它
+                // redisTemplate.delete("allProducts");
+            } catch (Exception e) {
+                logger.error("添加商品后更新缓存失败", e);
+                // 缓存更新失败不影响业务操作
+            }
+        }
+        return result;
     }
 
     @Override
+    @Transactional
     public boolean deleteProduct(Integer productId) {
         // 检查是否有订单项关联此商品
         List<OrderItem> relatedItems = orderItemDao.getOrderItemsByProductId(productId);
         if (relatedItems != null && !relatedItems.isEmpty()) {
             // 如果有关联的订单项，则不允许删除
-            System.err.println("无法删除商品ID " + productId + "，因为它已被订单引用。");
+            logger.error("无法删除商品ID {}，因为它已被订单引用。", productId);
             return false;
         }
         // 没有关联的订单项，可以删除
-        return productDao.deleteProductById(productId) > 0;
+        boolean result = productDao.deleteProductById(productId) > 0;
+        if (result) {
+            try {
+                // 从Redis缓存中删除
+                String key = "product:" + productId;
+                redisService.delete(key);
+                
+                // 不再需要清除allProducts缓存，因为我们不再使用它
+                // redisTemplate.delete("allProducts");
+            } catch (Exception e) {
+                logger.error("删除商品后清除缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
 
     @Override
+    @Transactional
     public boolean updateProduct(Product product) {
-        return productDao.updateProduct(product) > 0;
+        boolean result = productDao.updateProduct(product) > 0;
+        if (result) {
+            try {
+                // 获取更新后的商品信息
+                Product updatedProduct = productDao.getProductById(product.getProductId());
+                if (updatedProduct != null) {
+                    // 更新Redis缓存
+                    String key = "product:" + product.getProductId();
+                    redisService.set(key, updatedProduct, 24 * 60 * 60); // 缓存24小时
+                    
+                    // 不再需要清除allProducts缓存，因为我们不再使用它
+                    // redisTemplate.delete("allProducts");
+                }
+            } catch (Exception e) {
+                logger.error("更新商品后更新缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
 
     @Override
     public Product getProductById(Integer productId) {
-        return productDao.getProductById(productId);
+        Product product = null;
+        String key = "product:" + productId;
+        
+        try {
+            // 先从Redis缓存中获取
+            product = redisService.get(key, Product.class);
+            if (product != null) {
+                logger.debug("从Redis缓存中获取商品数据，productId={}", productId);
+                return product;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取商品数据失败，将从数据库获取, productId={}", productId, e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 缓存中没有或获取失败，从数据库获取
+        product = productDao.getProductById(productId);
+        if (product != null) {
+            try {
+                // 放入缓存
+                redisService.set(key, product, 24 * 60 * 60); // 缓存24小时
+            } catch (Exception e) {
+                logger.error("将商品数据放入Redis缓存失败, productId={}", productId, e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return product;
     }
 
     @Override
     public List<Product> getAllProducts() {
-        return productDao.getAllProducts();
+        // 直接从数据库获取所有商品，不使用Redis缓存整个列表
+        // 这样可以让PageHelper正确处理分页
+        List<Product> products = productDao.getAllProducts();
+        
+        try {
+            if (products != null && !products.isEmpty()) {
+                // 只缓存单个商品，不缓存整个列表
+                // 这样可以保证分页功能正常工作
+                for (Product product : products) {
+                    String key = "product:" + product.getProductId();
+                    redisService.set(key, product, 24 * 60 * 60); // 缓存24小时
+                }
+                
+                // 不再缓存整个列表，因为这会导致分页失效
+                // redisService.set("allProducts", products, 24 * 60 * 60);
+            }
+        } catch (Exception e) {
+            logger.error("将商品数据放入Redis缓存失败", e);
+            // 缓存操作失败不影响业务操作
+        }
+        
+        return products;
     }
 
     @Override
@@ -67,8 +187,9 @@ public class ProductServiceImpl implements ProductService {
     }
     
     @Override
+    @Transactional
     public boolean updateProductStock(Integer productId, Integer stock) {
-        Product product = productDao.getProductById(productId);
+        Product product = getProductById(productId);
         if (product != null) {
             // 计算新库存
             int newStock = product.getStock() + stock;
@@ -77,7 +198,13 @@ public class ProductServiceImpl implements ProductService {
                 return false;
             }
             product.setStock(newStock);
-            return productDao.updateProduct(product) > 0;
+            boolean result = productDao.updateProduct(product) > 0;
+            if (result) {
+                // 更新Redis缓存
+                String key = "product:" + productId;
+                redisService.set(key, product, 24 * 60 * 60); // 缓存24小时
+            }
+            return result;
         }
         return false;
     }
@@ -131,7 +258,8 @@ public class ProductServiceImpl implements ProductService {
             }
         }
         
-        // 如果没有通过名称筛选，但需要其他筛选条件，先获取所有商品
+        // 如果没有通过名称筛选，但需要其他筛选条件，直接从数据库获取所有商品
+        // 不使用缓存，确保PageHelper可以正确处理分页
         if (result.isEmpty()) {
             result = productDao.getAllProducts();
         }

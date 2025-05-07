@@ -70,4 +70,10 @@ public interface RedisService {
      * @param timeout 过期时间（秒）
      */
     void set(String key, Object value, long timeout);
+    
+    /**
+     * 删除缓存
+     * @param key 键
+     */
+    void delete(String key);
 }

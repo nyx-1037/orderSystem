@@ -1,6 +1,8 @@
 package com.ordersystem.dao;
 
 import com.ordersystem.entity.OrderItem;
+import org.apache.ibatis.annotations.Select;
+
 import java.util.List;
 
 /**
@@ -70,4 +72,11 @@ public interface OrderItemDao {
      * @return 订单明细列表
      */
     List<OrderItem> getOrderItemsWithProduct(Integer orderId);
+    
+    /**
+     * 获取所有订单明细
+     * @return 所有订单明细列表
+     */
+    @Select("select * from order_item")
+    List<OrderItem> getAllOrderItems();
 }

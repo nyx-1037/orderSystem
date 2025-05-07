@@ -2,11 +2,18 @@ package com.ordersystem.service.impl;
 
 import com.ordersystem.dao.OrderDao;
 import com.ordersystem.dao.OrderItemDao;
+import com.ordersystem.dao.ProductDao;
+import com.ordersystem.dao.UserDao;
 import com.ordersystem.entity.Order;
 import com.ordersystem.entity.OrderItem;
 import com.ordersystem.service.OrderService;
 import com.ordersystem.service.ProductService;
+import com.ordersystem.service.RedisService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.github.pagehelper.PageHelper;
@@ -22,8 +29,14 @@ import java.util.UUID;
  * 订单服务实现类
  */
 @Service
-public class OrderServiceImpl implements OrderService {
+public class OrderServiceImpl implements OrderService, CommandLineRunner {
 
+
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
     @Autowired
     private OrderDao orderDao;
     
@@ -31,7 +44,30 @@ public class OrderServiceImpl implements OrderService {
     private OrderItemDao orderItemDao;
     
     @Autowired
+    private UserDao userDao;
+    
+    @Autowired
+    private ProductDao productDao;
+    
+    @Autowired
+    private RedisService redisService;
+    
+    @Autowired
     private ProductService productService;
+    
+    /**
+     * 项目启动时初始化订单数据到Redis缓存
+     */
+    @Override
+    public void run(String... args) throws Exception {
+        logger.info("开始初始化订单数据到Redis缓存...");
+        List<Order> orders = orderDao.getAllOrders();
+        for (Order order : orders) {
+            String key = "order:" + order.getOrderId();
+            redisService.set(key, order, 24 * 60 * 60); // 缓存24小时
+        }
+        logger.info("订单数据缓存初始化完成，共缓存{}条记录", orders.size());
+    }
     
     @Override
     @Transactional
@@ -81,7 +117,32 @@ public class OrderServiceImpl implements OrderService {
                 productService.updateProductStock(item.getProductId(), -item.getQuantity());
             }
             // 批量保存订单明细
-            return orderItemDao.batchInsertOrderItems(order.getOrderItems()) > 0;
+            boolean success = orderItemDao.batchInsertOrderItems(order.getOrderItems()) > 0;
+            if (success) {
+                try {
+                    // 更新Redis缓存
+                    String key = "order:" + order.getOrderId();
+                    redisService.set(key, order, 24 * 60 * 60); // 缓存24小时
+                    // 清除相关缓存
+                    redisTemplate.delete("allOrders");
+                } catch (Exception e) {
+                    logger.error("添加订单后更新缓存失败", e);
+                    // 缓存更新失败不影响业务操作
+                }
+            }
+            return success;
+        }
+        if (result > 0) {
+            try {
+                // 更新Redis缓存
+                String key = "order:" + order.getOrderId();
+                redisService.set(key, order, 24 * 60 * 60); // 缓存24小时
+                // 清除相关缓存
+                redisTemplate.delete("allOrders");
+            } catch (Exception e) {
+                logger.error("添加订单后更新缓存失败", e);
+                // 缓存更新失败不影响业务操作
+            }
         }
         return result > 0;
     }
@@ -91,17 +152,76 @@ public class OrderServiceImpl implements OrderService {
     public boolean deleteOrder(Integer orderId) {
         // 先删除订单明细，再删除订单
         orderItemDao.deleteOrderItemsByOrderId(orderId);
-        return orderDao.deleteOrderById(orderId) > 0;
+        boolean result = orderDao.deleteOrderById(orderId) > 0;
+        if (result) {
+            try {
+                // 从Redis缓存中删除
+                String key = "order:" + orderId;
+                redisService.delete(key);
+                // 清除相关缓存
+                redisTemplate.delete("allOrders");
+            } catch (Exception e) {
+                logger.error("删除订单后清除缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
     
     @Override
     public boolean updateOrder(Order order) {
-        return orderDao.updateOrder(order) > 0;
+        boolean result = orderDao.updateOrder(order) > 0;
+        if (result) {
+            try {
+                // 获取更新后的订单信息
+                Order updatedOrder = orderDao.getOrderById(order.getOrderId());
+                if (updatedOrder != null) {
+                    // 更新Redis缓存
+                    String key = "order:" + order.getOrderId();
+                    redisService.set(key, updatedOrder, 24 * 60 * 60); // 缓存24小时
+                    // 清除相关缓存
+                    redisTemplate.delete("allOrders");
+                    if (updatedOrder.getUserId() != null) {
+                        redisTemplate.delete("ordersByUser::" + updatedOrder.getUserId());
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("更新订单后更新缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
     
     @Override
     public Order getOrderById(Integer orderId) {
-        return orderDao.getOrderById(orderId);
+        Order order = null;
+        String key = "order:" + orderId;
+        
+        try {
+            // 先从Redis缓存中获取
+            order = redisService.get(key, Order.class);
+            if (order != null) {
+                logger.debug("从Redis缓存中获取订单数据，orderId={}", orderId);
+                return order;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取订单数据失败，将从数据库获取, orderId={}", orderId, e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 缓存中没有或获取失败，从数据库获取
+        order = orderDao.getOrderById(orderId);
+        if (order != null) {
+            try {
+                // 放入缓存
+                redisService.set(key, order, 24 * 60 * 60); // 缓存24小时
+            } catch (Exception e) {
+                logger.error("将订单数据放入Redis缓存失败, orderId={}", orderId, e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return order;
     }
     
     @Override

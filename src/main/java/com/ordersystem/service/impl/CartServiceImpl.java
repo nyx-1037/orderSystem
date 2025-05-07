@@ -7,6 +7,7 @@ import com.ordersystem.dao.ProductDao;
 import com.ordersystem.entity.Cart;
 import com.ordersystem.entity.Product;
 import com.ordersystem.service.CartService;
+import com.ordersystem.service.RedisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private ProductDao productDao;
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 添加商品到购物车
@@ -119,7 +122,17 @@ public class CartServiceImpl implements CartService {
                 log.warn("购物车数量超过库存，已调整为最大库存，cartId={}, quantity={}, stock={}", cartId, quantity, product.getStock());
             }
 
-            return cartDao.updateCartQuantity(cartId, quantity) > 0;
+            boolean result = cartDao.updateCartQuantity(cartId, quantity) > 0;
+            if (result) {
+                // 更新Redis缓存
+                String key = "cart:" + cartId;
+                redisService.set(key, cart, 24 * 60 * 60); // 缓存24小时
+                
+                // 清除用户购物车列表缓存，以便重新加载
+                String userCartKey = "user:cart:" + cart.getUserId();
+                redisService.delete(userCartKey);
+            }
+            return result;
         } catch (Exception e) {
             log.error("更新购物车数量异常", e);
             return false;
@@ -148,7 +161,17 @@ public class CartServiceImpl implements CartService {
                 return false;
             }
 
-            return cartDao.updateCartSelected(cartId, selected) > 0;
+            boolean result = cartDao.updateCartSelected(cartId, selected) > 0;
+            if (result) {
+                // 更新Redis缓存
+                String key = "cart:" + cartId;
+                redisService.set(key, cart, 24 * 60 * 60); // 缓存24小时
+                
+                // 清除用户购物车列表缓存，以便重新加载
+                String userCartKey = "user:cart:" + cart.getUserId();
+                redisService.delete(userCartKey);
+            }
+            return result;
         } catch (Exception e) {
             log.error("更新购物车选中状态异常", e);
             return false;
@@ -164,7 +187,18 @@ public class CartServiceImpl implements CartService {
     @Override
     public boolean deleteCart(Integer cartId) {
         try {
-            return cartDao.deleteCart(cartId) > 0;
+            Cart cart = cartDao.getCartById(cartId);
+            boolean result = cartDao.deleteCart(cartId) > 0;
+            if (result && cart != null) {
+                // 从Redis缓存中删除
+                String key = "cart:" + cartId;
+                redisService.delete(key);
+                
+                // 清除用户购物车列表缓存，以便重新加载
+                String userCartKey = "user:cart:" + cart.getUserId();
+                redisService.delete(userCartKey);
+            }
+            return result;
         } catch (Exception e) {
             log.error("删除购物车异常", e);
             return false;
@@ -180,7 +214,20 @@ public class CartServiceImpl implements CartService {
     @Override
     public boolean clearCart(Integer userId) {
         try {
-            return cartDao.clearCart(userId) >= 0; // 即使没有记录被删除也视为成功
+            boolean result = cartDao.clearCart(userId) >= 0; // 即使没有记录被删除也视为成功
+            if (result) {
+                // 清除用户购物车列表缓存
+                String userCartKey = "user:cart:" + userId;
+                redisService.delete(userCartKey);
+                
+                // 获取用户所有购物车项并删除缓存
+                List<Cart> userCarts = cartDao.getCartListByUserId(userId);
+                for (Cart cart : userCarts) {
+                    String key = "cart:" + cart.getCartId();
+                    redisService.delete(key);
+                }
+            }
+            return result;
         } catch (Exception e) {
             log.error("清空购物车异常", e);
             return false;
@@ -196,7 +243,27 @@ public class CartServiceImpl implements CartService {
     @Override
     public List<Cart> getCartList(Integer userId) {
         try {
-            return cartDao.getCartListByUserId(userId);
+            // 先从Redis缓存中获取
+            String userCartKey = "user:cart:" + userId;
+            List<Cart> carts = redisService.get(userCartKey, List.class);
+            if (carts != null && !carts.isEmpty()) {
+                log.debug("从Redis缓存中获取购物车数据，userId={}", userId);
+                return carts;
+            }
+            
+            // 缓存中没有，从数据库获取
+            carts = cartDao.getCartListByUserId(userId);
+            if (carts != null && !carts.isEmpty()) {
+                // 放入缓存
+                redisService.set(userCartKey, carts, 24 * 60 * 60); // 缓存24小时
+                
+                // 同时缓存每个购物车项
+                for (Cart cart : carts) {
+                    String key = "cart:" + cart.getCartId();
+                    redisService.set(key, cart, 24 * 60 * 60); // 缓存24小时
+                }
+            }
+            return carts;
         } catch (Exception e) {
             log.error("获取购物车列表异常", e);
             return null;

@@ -45,23 +45,38 @@ public class RedisServiceImpl implements RedisService {
      * @return 值
      */
     @Override
+
     public <T> T get(String key, Class<T> clazz) {
-        Object value = redisTemplate.opsForValue().get(key);
-        if (value == null) {
+        try {
+            Object value = redisTemplate.opsForValue().get(key);
+            if (value == null) {
+                return null;
+            }
+            
+            // 如果是目标类型的实例，直接返回
+            if (clazz.isInstance(value)) {
+                return clazz.cast(value);
+            }
+            
+            // 如果是布尔值但期望的是实体类，返回null而不是抛出异常
+            if (value instanceof Boolean && !clazz.equals(Boolean.class)) {
+                return null;
+            }
+            
+            // 其他类型转换错误，记录日志并返回null
+            throw new IllegalArgumentException("无法将缓存值转换为目标类型: " + clazz.getName() + ", 实际类型: " + value.getClass().getName());
+        } catch (Exception e) {
+            // 捕获所有异常，确保缓存问题不会导致应用崩溃
             return null;
         }
-        // 如果是字符串类型，尝试反序列化为目标类型
-        if (clazz.isInstance(value)) {
-            return clazz.cast(value);
-        }
-        throw new IllegalArgumentException("无法将缓存值转换为目标类型: " + clazz.getName());
     }
 
     /**
      * 删除缓存
      * @param key 键
      */
-    private void delete(String key) {
+    @Override
+    public void delete(String key) {
         redisTemplate.delete(key);
     }
     

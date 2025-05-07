@@ -2,11 +2,18 @@ package com.ordersystem.service.impl;
 
 import com.ordersystem.dao.UserDao;
 import com.ordersystem.entity.User;
+import com.ordersystem.service.RedisService;
 import com.ordersystem.service.UserService;
 import com.ordersystem.util.MD5Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,42 +22,266 @@ import java.util.Map;
  * 用户服务实现类
  */
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements UserService, CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
     @Autowired
     private UserDao userDao;
     
+    @Autowired
+    private RedisService redisService;
+    
+    /**
+     * 项目启动时初始化用户数据到Redis缓存
+     */
     @Override
+    public void run(String... args) throws Exception {
+        logger.info("开始初始化用户数据到Redis缓存...");
+        List<User> users = userDao.getAllUsers();
+        for (User user : users) {
+            // 不缓存密码等敏感信息
+            user.setPassword(null);
+            String key = "user:" + user.getUserId();
+            redisService.set(key, user, 24 * 60 * 60); // 缓存24小时
+        }
+        logger.info("用户数据缓存初始化完成，共缓存{}条记录", users.size());
+    }
+    
+    @Override
+    @Transactional
     public boolean addUser(User user) {
-        return userDao.insertUser(user) > 0;
+        boolean result = userDao.insertUser(user) > 0;
+        if (result) {
+            try {
+                // 不缓存密码等敏感信息
+                User cacheUser = userDao.getUserById(user.getUserId());
+                if (cacheUser != null) {
+                    cacheUser.setPassword(null);
+                    // 更新Redis缓存
+                    String key = "user:" + user.getUserId();
+                    redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
+                    
+                    // 清除相关缓存
+                    redisTemplate.delete("allUsers");
+                }
+            } catch (Exception e) {
+                logger.error("添加用户后更新缓存失败", e);
+                // 缓存更新失败不影响业务操作
+            }
+        }
+        return result;
     }
     
     @Override
+    @Transactional
     public boolean deleteUser(Integer userId) {
-        return userDao.deleteUserById(userId) > 0;
+        boolean result = userDao.deleteUserById(userId) > 0;
+        if (result) {
+            try {
+                // 从Redis缓存中删除
+                String key = "user:" + userId;
+                redisService.delete(key);
+                
+                // 清除相关缓存
+                redisTemplate.delete("allUsers");
+            } catch (Exception e) {
+                logger.error("删除用户后清除缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
     
     @Override
+    @Transactional
     public boolean updateUser(User user) {
-        return userDao.updateUser(user) > 0;
+        boolean result = userDao.updateUser(user) > 0;
+        if (result) {
+            try {
+                // 获取更新后的用户信息，不包含密码
+                User updatedUser = userDao.getUserById(user.getUserId());
+                if (updatedUser != null) {
+                    updatedUser.setPassword(null); // 不缓存密码
+                    
+                    // 更新Redis缓存
+                    String key = "user:" + user.getUserId();
+                    redisService.set(key, updatedUser, 24 * 60 * 60); // 缓存24小时
+                    
+                    // 清除相关缓存
+                    redisTemplate.delete("allUsers");
+                    if (updatedUser.getUsername() != null) {
+                        redisTemplate.delete("usersByUsername::" + updatedUser.getUsername());
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("更新用户后更新缓存失败", e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return result;
     }
     
     @Override
     public User getUserById(Integer userId) {
-        return userDao.getUserById(userId);
+        User user = null;
+        String key = "user:" + userId;
+        
+        try {
+            // 先从Redis缓存中获取
+            user = redisService.get(key, User.class);
+            if (user != null) {
+                logger.debug("从Redis缓存中获取用户数据，userId={}", userId);
+                return user;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取用户数据失败，将从数据库获取, userId={}", userId, e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 缓存中没有或获取失败，从数据库获取
+        user = userDao.getUserById(userId);
+        if (user != null) {
+            try {
+                User cacheUser = new User();
+                cacheUser.setUserId(user.getUserId());
+                cacheUser.setUsername(user.getUsername());
+                cacheUser.setUserUuid(user.getUserUuid());
+                cacheUser.setRealName(user.getRealName());
+                cacheUser.setPhone(user.getPhone());
+                cacheUser.setEmail(user.getEmail());
+                cacheUser.setAddress(user.getAddress());
+                cacheUser.setRole(user.getRole());
+                cacheUser.setStatus(user.getStatus());
+                cacheUser.setCreateTime(user.getCreateTime());
+                cacheUser.setUpdateTime(user.getUpdateTime());
+                // 不缓存密码和头像数据
+                
+                // 放入缓存
+                redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
+            } catch (Exception e) {
+                logger.error("将用户数据放入Redis缓存失败, userId={}", userId, e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return user;
     }
     
     @Override
     public User getUserByUsername(String username) {
-        return userDao.getUserByUsername(username);
+        User user = null;
+        String usernameKey = "username:" + username;
+        
+        try {
+            // 尝试从缓存获取用户ID
+            Integer userId = redisService.get(usernameKey, Integer.class);
+            if (userId != null) {
+                // 如果找到用户ID，则获取用户详情
+                user = getUserById(userId);
+                if (user != null) {
+                    return user;
+                }
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取用户名对应的用户数据失败，将从数据库获取, username={}", username, e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 从数据库获取
+        user = userDao.getUserByUsername(username);
+        if (user != null) {
+            try {
+                // 缓存用户名到用户ID的映射
+                redisService.set(usernameKey, user.getUserId(), 24 * 60 * 60);
+                
+                // 更新用户缓存
+                String key = "user:" + user.getUserId();
+                User cacheUser = new User();
+                cacheUser.setUserId(user.getUserId());
+                cacheUser.setUsername(user.getUsername());
+                cacheUser.setUserUuid(user.getUserUuid());
+                cacheUser.setRealName(user.getRealName());
+                cacheUser.setPhone(user.getPhone());
+                cacheUser.setEmail(user.getEmail());
+                cacheUser.setAddress(user.getAddress());
+                cacheUser.setRole(user.getRole());
+                cacheUser.setStatus(user.getStatus());
+                cacheUser.setCreateTime(user.getCreateTime());
+                cacheUser.setUpdateTime(user.getUpdateTime());
+                // 不缓存密码和头像数据
+                
+                redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
+            } catch (Exception e) {
+                logger.error("将用户名对应的用户数据放入Redis缓存失败, username={}", username, e);
+                // 缓存操作失败不影响业务操作
+            }
+        }
+        return user;
     }
     
     @Override
     public List<User> getAllUsers() {
-        return userDao.getAllUsers();
+        List<User> users = null;
+        
+        try {
+            // 尝试从缓存获取所有用户列表
+            users = redisService.get("allUsers", List.class);
+            if (users != null && !users.isEmpty()) {
+                logger.debug("从Redis缓存中获取所有用户数据");
+                return users;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取所有用户数据失败，将从数据库获取", e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 从数据库获取所有用户
+        users = userDao.getAllUsers();
+        
+        try {
+            if (users != null && !users.isEmpty()) {
+                // 创建不包含敏感信息的用户列表用于缓存
+                List<User> cacheUsers = new ArrayList<>();
+                
+                // 更新每个用户的缓存
+                for (User user : users) {
+                    User cacheUser = new User();
+                    cacheUser.setUserId(user.getUserId());
+                    cacheUser.setUsername(user.getUsername());
+                    cacheUser.setUserUuid(user.getUserUuid());
+                    cacheUser.setRealName(user.getRealName());
+                    cacheUser.setPhone(user.getPhone());
+                    cacheUser.setEmail(user.getEmail());
+                    cacheUser.setAddress(user.getAddress());
+                    cacheUser.setRole(user.getRole());
+                    cacheUser.setStatus(user.getStatus());
+                    cacheUser.setCreateTime(user.getCreateTime());
+                    cacheUser.setUpdateTime(user.getUpdateTime());
+                    // 不缓存密码和头像数据
+                    
+                    cacheUsers.add(cacheUser);
+                    
+                    // 单独缓存每个用户
+                    String key = "user:" + user.getUserId();
+                    redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
+                }
+                
+                // 缓存整个列表
+                redisService.set("allUsers", cacheUsers, 24 * 60 * 60); // 缓存24小时
+            }
+        } catch (Exception e) {
+            logger.error("将所有用户数据放入Redis缓存失败", e);
+            // 缓存操作失败不影响业务操作
+        }
+        
+        return users;
     }
     
     @Override
+    @Transactional
     public User login(String username, String password) {
         // 先检查用户是否存在
         User user = userDao.getUserByUsername(username);
