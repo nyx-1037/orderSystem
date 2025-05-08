@@ -49,6 +49,14 @@
         .status-1 {
             background-color: #17a2b8; /* 已付款 */
         }
+
+        /* 确保退出登录按钮有手型光标并且可点击 (orders.html specific) */
+        #logout-btn,
+        #logout-btn * {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            /* outline: 1px dashed fuchsia !important; */ /* 调试时可取消注释此行以查看元素边界 */
+        }
         
         .status-2 {
             background-color: #fd7e14; /* 已发货 */
@@ -96,6 +104,12 @@
         .dropdown-menu {
             z-index: 1030;
         }
+
+        /* 确保导航栏在内容元素之上，以便其下拉菜单可见 */
+        .navbar {
+            position: relative; /* 确保 z-index 生效 */
+            z-index: 1035;   /* 比默认内容高，但低于模态框等 */
+        }
         
         /* 退出登录按钮样式 */
         #logout-btn {
@@ -104,7 +118,6 @@
         }
         
         #logout-btn:hover {
-            color: #dc3545;
             text-decoration: none;
         }
     </style>
@@ -152,7 +165,7 @@
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-user-circle mr-2"></i>个人中心</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="javascript:void(0);" id="logout-btn" style="cursor: pointer;"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
+                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
                         </div>
                     </li>
                 </ul>
@@ -264,29 +277,28 @@
             }, 500);
         });
         
-        // 为按钮添加悬停效果
         $(document).ready(function() {
+            console.log('orders.html: Document ready started.');
+
             $('.btn').addClass('btn-hover-effect');
-            $('.order-card').addClass('card-animate');
+            $('.order-card:not(.card-animate)').addClass('card-animate');
             
-            // 动态添加的订单卡片也添加动画效果
-            $(document).on('DOMNodeInserted', '#orders-container', function() {
-                $('.order-card').addClass('card-animate');
+            $(document).on('DOMNodeInserted', '#orders-container', function(event) {
+                var $insertedElement = $(event.target);
+                if ($insertedElement.hasClass('order-card')) {
+                    $insertedElement.addClass('card-animate');
+                }
+                $insertedElement.find('.order-card:not(.card-animate)').addClass('card-animate');
             });
             
-            // 确保退出登录按钮绑定事件 - 移除之前的所有事件后重新绑定
-            $('#logout-btn').off('click').on('click', function(e) {
-                e.preventDefault();
-                console.log('退出登录按钮被点击');
-                logout();
-            });
-            
-            // 添加明显的悬停效果
-            $('#logout-btn').parent().css('cursor', 'pointer');
-            $('#logout-btn').hover(
-                function() { $(this).css('color', '#dc3545'); },
-                function() { $(this).css('color', ''); }
-            );
+            // Logout button event handling is now intended to be managed by the global main.js
+            // This log helps confirm if the button is available when orders.html's ready function runs.
+            if ($('#logout-btn').length) {
+                console.log('orders.html: Logout button (#logout-btn) is present. Expecting global handler in main.js to manage it.');
+            } else {
+                console.error('orders.html: Logout button (#logout-btn) is NOT present in the DOM when orders.html ready function executes. Global handler in main.js may not bind.');
+            }
+            console.log('orders.html: Document ready finished.');
         });
     </script>
 </body>

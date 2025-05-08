@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .cart-item {
             margin-bottom: 20px;
@@ -15,6 +16,15 @@
             border-radius: 5px;
             background-color: #fff;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .cart-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
         }
         
         .cart-item-image {
@@ -52,6 +62,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .quantity-control button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
         }
         
         .quantity-control input {
@@ -69,6 +85,15 @@
             border-radius: 5px;
             position: sticky;
             top: 20px;
+            opacity: 0;
+            animation: fadeInRight 0.8s ease forwards;
+            animation-delay: 0.3s;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .cart-summary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
         }
         
         .cart-summary-title {
@@ -102,6 +127,8 @@
         .empty-cart {
             text-align: center;
             padding: 50px 0;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
         }
         
         .empty-cart-icon {
@@ -111,7 +138,7 @@
         }
     </style>
 </head>
-<body>
+<body class="page-transition">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
@@ -154,7 +181,7 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 content-container">
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
@@ -164,10 +191,10 @@
             <!-- 购物车内容将通过JavaScript动态加载 -->
             <div class="col-12 d-flex justify-content-center align-items-center" style="min-height: 200px;">
                 <div class="text-center">
-                    <div class="spinner-border mb-3" role="status">
+                    <div class="spinner-border mb-3 loading-spinner" role="status">
                         <span class="sr-only">加载中...</span>
                     </div>
-                    <p>正在加载购物车...</p>
+                    <p class="loader-text">正在加载购物车...</p>
                 </div>
             </div>
         </div>
