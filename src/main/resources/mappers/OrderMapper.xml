@@ -189,4 +189,30 @@
         WHERE user_id = #{userId} AND status = #{status}
         ORDER BY create_time DESC
     </select>
+    
+    <!-- 根据筛选条件查询订单 -->
+    <select id="getOrdersByFilters" parameterType="java.util.Map" resultMap="OrderDetailResultMap">
+        SELECT 
+            o.order_id, o.order_no, o.order_uuid, o.user_id, o.total_amount, o.status, o.payment_time, o.shipping_time, 
+            o.complete_time, o.address, o.receiver, o.receiver_phone, o.remark, o.create_time, o.update_time,
+            u.user_id as u_user_id, u.username as u_username, u.real_name as u_real_name, 
+            u.phone as u_phone, u.email as u_email, u.address as u_address
+        FROM `order` o
+        LEFT JOIN user u ON o.user_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                o.order_no LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="status != null">
+                AND o.status = #{status}
+            </if>
+            <if test="startDate != null and startDate != ''">
+                AND o.create_time &gt;= #{startDate}
+            </if>
+            <if test="endDate != null and endDate != ''">
+                AND o.create_time &lt;= #{endDate}
+            </if>
+        </where>
+        ORDER BY o.create_time DESC
+    </select>
 </mapper>

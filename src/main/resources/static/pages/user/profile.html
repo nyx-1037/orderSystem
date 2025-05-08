@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .profile-container {
             max-width: 800px;
@@ -40,25 +41,33 @@
     </style>
 </head>
 <body>
-    <div class="container mt-3">
-        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
+    <div class="container mt-3 page-transition">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3 btn-hover-effect">
             <i class="fas fa-arrow-left"></i> 返回上一页
         </a>
     </div>
 
-    <div class="container profile-container">
-        <div class="profile-header">
+    <div class="container profile-container page-transition" style="animation-delay: 0.2s;">
+        <div class="profile-header content-container">
             <h2><i class="fas fa-user-cog"></i> 个人中心</h2>
             <p class="text-muted">管理您的个人信息</p>
         </div>
         
-        <div class="alert alert-success" id="success-message" style="display: none;"></div>
-        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+        <div class="alert alert-success content-container" id="success-message" style="display: none; animation-delay: 0.1s;"></div>
+        <div class="alert alert-danger content-container" id="error-message" style="display: none; animation-delay: 0.1s;"></div>
         
         <div class="row">
             <div class="col-md-4">
-                <div class="avatar-container">
-                    <img src="/images/default-avatar.jpg" alt="用户头像" class="avatar-img" id="avatar-preview">
+                <div class="avatar-container content-container" style="animation-delay: 0.3s;">
+                    <img src="/images/default-avatar.jpg" alt="用户头像" class="avatar-img" id="avatar-preview" style="cursor: pointer;" onclick="openAvatarPreview()">
                     <div class="avatar-upload mt-3">
                         <form id="avatar-form" enctype="multipart/form-data">
                             <div class="custom-file">
@@ -71,7 +80,7 @@
                 </div>
             </div>
             <div class="col-md-8">
-                <div class="form-section">
+                <div class="form-section content-container" style="animation-delay: 0.4s;">
                     <h4><i class="fas fa-id-card"></i> 个人信息</h4>
                     <form id="profile-form">
                         <div class="form-group">
@@ -98,7 +107,7 @@
                     </form>
                 </div>
                 
-                <div class="form-section mt-4">
+                <div class="form-section mt-4 content-container" style="animation-delay: 0.5s;">
                     <h4><i class="fas fa-key"></i> 修改密码</h4>
                     <form id="password-form">
                         <div class="form-group">
@@ -121,6 +130,26 @@
         </div>
     </div>
 
+    <!-- 头像预览模态框 -->
+    <div class="modal fade" id="avatarPreviewModal" tabindex="-1" role="dialog" aria-labelledby="avatarPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="avatarPreviewModalLabel">头像预览</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="" id="avatar-preview-large" class="img-fluid" style="max-height: 70vh;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
@@ -128,6 +157,17 @@
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
     <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+        
+        // 为按钮添加悬停效果
+        $(document).ready(function() {
+            $('.btn').addClass('btn-hover-effect');
+        });
         $(document).ready(function() {
             // 检查用户是否已登录
             checkLoginStatus().then(function(isLoggedIn) {
@@ -162,6 +202,19 @@
                 }
             });
         });
+        
+        /**
+         * 打开头像大图预览模态框
+         * 将当前头像图片的src属性传递给模态框中的大图
+         */
+        function openAvatarPreview() {
+            // 获取当前头像的src
+            const avatarSrc = $('#avatar-preview').attr('src');
+            // 设置模态框中大图的src
+            $('#avatar-preview-large').attr('src', avatarSrc);
+            // 显示模态框
+            $('#avatarPreviewModal').modal('show');
+        }
         
         // 加载用户头像
         function loadUserProfile() {

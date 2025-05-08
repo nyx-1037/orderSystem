@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .order-container {
             margin-top: 30px;
@@ -54,6 +55,14 @@
     </style>
 </head>
 <body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html">在线商城</a>
@@ -96,12 +105,12 @@
         </div>
     </nav>
 
-    <div class="container mt-3">
+    <div class="container mt-3 page-transition">
         <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
             <i class="fas fa-arrow-left"></i> 返回上一页
         </a>
 
-        <div class="container order-container">
+        <div class="container order-container content-container">
             <div class="order-header">
                 <h2>订单详情</h2>
             </div>
@@ -183,5 +192,18 @@
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
     <script src="/js/client/order-detail.js"></script>
+    <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+        
+        // 为按钮添加悬停效果
+        $(document).ready(function() {
+            $('.btn').addClass('btn-hover-effect');
+        });
+    </script>
 </body>
 </html>

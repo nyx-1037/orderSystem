@@ -120,6 +120,10 @@ async function loadUsers() {
     `);
     
     try {
+        // 获取当前选择的分页大小
+        pageSize = parseInt($('#page-size-selector').val());
+        console.log('当前选择的分页大小:', pageSize);
+        
         // 构建查询参数
         const params = new URLSearchParams();
         params.append('pageNum', currentPage);
@@ -136,8 +140,14 @@ async function loadUsers() {
         
         // 发送API请求 - 使用RESTful风格
         // 修正API路径，使用后端控制器中定义的路径
-        const apiUrl = `/api/users?${params.toString()}`;
-        console.log('请求用户列表URL:', apiUrl);
+        const apiUrl = `/api/users/page/${currentPage}/${pageSize}`;
+        let queryParams = new URLSearchParams();
+        if (username) queryParams.append('username', username);
+        if (role) queryParams.append('role', role);
+        if (status) queryParams.append('status', status);
+        
+        const finalUrl = queryParams.toString() ? `${apiUrl}?${queryParams.toString()}` : apiUrl;
+        console.log('请求用户列表URL:', finalUrl);
         
         // 获取认证Token
         const token = localStorage.getItem('token');
@@ -149,8 +159,9 @@ async function loadUsers() {
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         }
+
         
-        const response = await fetchAPI(apiUrl, { 
+        const response = await fetchAPI(finalUrl, { 
             method: 'GET',
             headers: headers
         });

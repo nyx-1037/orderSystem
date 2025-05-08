@@ -177,7 +177,52 @@ function redirectToLoginPage() {
  * 退出登录
  * (这个函数也比较通用，可以考虑放在这里)
  */
-async function logout() {
+/**
+ * 退出登录函数
+ * 显示确认模态框，用户确认后执行退出登录操作
+ */
+function logout() {
+    // 创建确认模态框（如果不存在）
+    if ($('#logoutConfirmModal').length === 0) {
+        $('body').append(`
+            <div class="modal fade" id="logoutConfirmModal" tabindex="-1" role="dialog" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="logoutConfirmModalLabel"><i class="fas fa-sign-out-alt"></i> 退出确认</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>您确定要退出登录吗？</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" id="confirm-logout-btn">确认退出</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        // 绑定确认退出按钮事件
+        $(document).on('click', '#confirm-logout-btn', function() {
+            // 隐藏模态框
+            $('#logoutConfirmModal').modal('hide');
+            // 执行实际的退出登录操作
+            performLogout();
+        });
+    }
+    
+    // 显示确认模态框
+    $('#logoutConfirmModal').modal('show');
+}
+
+/**
+ * 执行实际的退出登录操作
+ */
+async function performLogout() {
     try {
         // 发送退出登录请求 - 使用后端控制器中定义的路径
         await fetchAPI('/api/users/logout', { method: 'POST' });

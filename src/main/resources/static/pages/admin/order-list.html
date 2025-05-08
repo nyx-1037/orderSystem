@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin-animations.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -34,7 +35,7 @@
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                             <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right">
+                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1030;">
                             <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
@@ -47,7 +48,7 @@
 
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-shopping-cart"></i> 订单管理</h2>
+            <h2 class="admin-page-title"><i class="fas fa-shopping-cart"></i> 订单管理</h2>
             <div>
                 <button id="batch-delete-btn" class="btn btn-danger mr-2" style="display: none;">
                     <i class="fas fa-trash"></i> 批量删除
@@ -61,12 +62,12 @@
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
-        <div class="card mb-4">
+        <div class="card mb-4 admin-card">
             <div class="card-header bg-white">
                 <h5 class="mb-0">筛选条件</h5>
             </div>
             <div class="card-body">
-                <form id="search-form">
+                <form id="search-form" class="admin-form">
                     <div class="form-row">
                         <div class="form-group col-md-3">
                             <label for="orderNo">订单编号</label>

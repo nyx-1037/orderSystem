@@ -10,7 +10,9 @@ $(document).ready(function() {
             
             // 绑定退出登录事件
             $('#logout-btn').click(function(e) {
+
                 e.preventDefault();
+                // 直接调用utils.js中的logout函数，它会显示统一的确认模态框
                 logout();
             });
             
@@ -135,9 +137,14 @@ function renderCartData(cartItems) {
     
     // 绑定清空购物车事件
     $('#clear-cart-btn').click(function() {
-        if (confirm('确定要清空购物车吗？')) {
+        // 显示确认模态框
+        $('#confirmModalLabel').text('清空购物车');
+        $('#confirmModalBody').text('确定要清空购物车吗？');
+        $('#confirmModalBtn').off('click').on('click', function() {
+            $('#confirmModal').modal('hide');
             clearCart();
-        }
+        });
+        $('#confirmModal').modal('show');
     });
     
     // 绑定去结算按钮事件
@@ -276,9 +283,14 @@ function bindCartItemEvents() {
     // 绑定删除按钮事件
     $('.remove-item-btn').click(function() {
         const cartId = $(this).closest('.cart-item').data('cart-id');
-        if (confirm('确定要删除该商品吗？')) {
+        // 显示确认模态框
+        $('#confirmModalLabel').text('删除商品');
+        $('#confirmModalBody').text('确定要删除该商品吗？');
+        $('#confirmModalBtn').off('click').on('click', function() {
+            $('#confirmModal').modal('hide');
             deleteCartItem(cartId);
-        }
+        });
+        $('#confirmModal').modal('show');
     });
 }
 
@@ -364,7 +376,7 @@ async function deleteCartItem(cartId) {
 // 清空购物车
 async function clearCart() {
     try {
-        const response = await fetchAPI('/api/client/cart/clear', {
+        const response = await fetchAPI('/api/client/cart', {
             method: 'DELETE'
         });
         

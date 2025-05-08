@@ -111,9 +111,25 @@ $(document).ready(function() {
             
             // 绑定刷新按钮事件
             $('#refresh-btn').click(function() {
+                // 添加加载动画
+                const $refreshBtn = $(this);
+                const originalHtml = $refreshBtn.html();
+                $refreshBtn.html('<i class="fas fa-sync-alt fa-spin"></i> 刷新中...');
+                $refreshBtn.prop('disabled', true);
+                
                 // 先同步日志，然后刷新页面
                 syncLogsToDatabase().then(() => {
                     loadSyslogs();
+                    // 恢复按钮原始状态
+                    setTimeout(() => {
+                        $refreshBtn.html(originalHtml);
+                        $refreshBtn.prop('disabled', false);
+                    }, 500);
+                }).catch(error => {
+                    // 发生错误时也恢复按钮状态
+                    $refreshBtn.html(originalHtml);
+                    $refreshBtn.prop('disabled', false);
+                    showErrorMessage('同步日志失败: ' + error.message);
                 });
             });
             

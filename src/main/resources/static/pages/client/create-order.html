@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .order-form {
             background-color: #f8f9fa;
@@ -45,6 +46,14 @@
     </style>
 </head>
 <body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
@@ -83,17 +92,17 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 page-transition">
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
-        <h2 class="mb-4">创建订单</h2>
+        <h2 class="mb-4 content-container">创建订单</h2>
         
-        <div class="row">
+        <div class="row content-container" style="animation-delay: 0.2s;">
             <div class="col-md-8">
                 <div class="order-form">
                     <h4 class="mb-3">收货信息</h4>
-                    <form id="order-form">
+                    <form id="order-form" class="form-animate">
                         <div class="form-group">
                             <label for="receiver">收货人</label>
                             <input type="text" class="form-control" id="receiver" name="receiver" required>
@@ -110,7 +119,7 @@
                             <label for="remark">订单备注</label>
                             <textarea class="form-control" id="remark" name="remark" rows="2"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-order-btn">提交订单</button>
+                        <button type="submit" class="btn btn-primary btn-lg btn-block btn-hover-effect" id="submit-order-btn">提交订单</button>
                     </form>
                 </div>
             </div>
@@ -130,7 +139,7 @@
 
     <footer class="bg-dark text-white mt-5 py-4">
         <div class="container">
-            <div class="row">
+            <div class="row content-container" style="animation-delay: 0.2s;">
                 <div class="col-md-6">
                     <h5>关于我们</h5>
                     <p>在线商城提供优质的商品和服务，致力于为用户创造最佳的购物体验。</p>
@@ -166,5 +175,18 @@
     <script src="/js/main.js"></script>
     <script src="/js/image-loader.js"></script>
     <script src="/js/client/create-order.js"></script>
+    <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+        
+        // 为按钮添加悬停效果
+        $(document).ready(function() {
+            $('.btn').addClass('btn-hover-effect');
+        });
+    </script>
 </body>
 </html>

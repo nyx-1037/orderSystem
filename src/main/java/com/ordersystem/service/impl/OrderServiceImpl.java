@@ -386,54 +386,8 @@ public class OrderServiceImpl implements OrderService, CommandLineRunner {
         
         List<Order> orders;
         
-        // 如果没有筛选条件，返回所有订单
-        if (filters == null || filters.isEmpty()) {
-            orders = orderDao.getAllOrders();
-            return new PageInfo<>(orders);
-        }
-        
-        // 根据用户ID筛选
-        if (filters.containsKey("userId")) {
-            Integer userId = (Integer) filters.get("userId");
-            if (userId != null) {
-                // 如果同时有状态筛选
-                if (filters.containsKey("status")) {
-                    Integer status = (Integer) filters.get("status");
-                    if (status != null) {
-                        orders = orderDao.getOrdersByUserIdAndStatus(userId, status);
-                        return new PageInfo<>(orders);
-                    }
-                }
-                // 只有用户ID筛选
-                orders = orderDao.getOrdersByUserId(userId);
-                return new PageInfo<>(orders);
-            }
-        }
-        
-        // 只有状态筛选
-        if (filters.containsKey("status")) {
-            Integer status = (Integer) filters.get("status");
-            if (status != null) {
-                orders = orderDao.getOrdersByStatus(status);
-                return new PageInfo<>(orders);
-            }
-        }
-        
-        // 根据订单编号筛选
-        if (filters.containsKey("orderNo")) {
-            String orderNo = (String) filters.get("orderNo");
-            if (orderNo != null && !orderNo.trim().isEmpty()) {
-                Order order = orderDao.getOrderByOrderNo(orderNo);
-                orders = new ArrayList<>();
-                if (order != null) {
-                    orders.add(order);
-                }
-                return new PageInfo<>(orders);
-            }
-        }
-        
-        // 根据UUID筛选
-        if (filters.containsKey("orderUuid")) {
+        // 处理订单号模糊搜索（优先级最高）
+        if (filters != null && filters.containsKey("orderUuid")) {
             String orderUuid = (String) filters.get("orderUuid");
             if (orderUuid != null && !orderUuid.trim().isEmpty()) {
                 Order order = orderDao.getOrderByUuid(orderUuid);
@@ -441,12 +395,29 @@ public class OrderServiceImpl implements OrderService, CommandLineRunner {
                 if (order != null) {
                     orders.add(order);
                 }
-                return new PageInfo<>(orders);
+            } else {
+                orders = orderDao.getAllOrders();
+            }
+        } 
+        // 处理其他筛选条件
+        else if (filters != null && !filters.isEmpty()) {
+            orders = orderDao.getOrdersByFilters(filters);
+        } 
+        // 无筛选条件时返回所有订单
+        else {
+            orders = orderDao.getAllOrders();
+        }
+        
+        // 为每个订单加载订单项
+        if (orders != null && !orders.isEmpty()) {
+            for (Order order : orders) {
+                if (order.getOrderId() != null) {
+                    List<OrderItem> items = orderItemDao.getOrderItemsByOrderId(order.getOrderId());
+                    order.setOrderItems(items);
+                }
             }
         }
         
-        // 如果没有匹配的筛选条件，返回所有订单
-        orders = orderDao.getAllOrders();
         return new PageInfo<>(orders);
     }
     

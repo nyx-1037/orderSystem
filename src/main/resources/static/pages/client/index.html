@@ -21,6 +21,11 @@
         #carouselBanner .carousel-item img {
             height: 100%;
             object-fit: cover;
+            transition: transform 1.5s ease, opacity 0.5s ease;
+        }
+        
+        #carouselBanner .carousel-item.active img {
+            transform: scale(1.05);
         }
         
         .fixed-caption {
@@ -31,22 +36,40 @@
             bottom: 0;
             top: 0;
             text-align: center;
-            z-index: 10;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         #carouselBanner h1 {
             font-size: 2.5rem;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: fadeInDown 1s ease-out;
         }
         
         #carouselBanner .lead {
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1s ease-out 0.3s;
+            animation-fill-mode: both;
+        }
+        
+        #carouselBanner .btn-primary {
+            animation: fadeIn 1s ease-out 0.6s;
+            animation-fill-mode: both;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        #carouselBanner .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         /* 轮播图动画效果 */
         .carousel-item {
-            transition: transform 0.6s ease-in-out;
+            transition: transform 0.8s ease-in-out;
         }
         
         /* 轮播指示器样式 */
@@ -55,19 +78,59 @@
             height: 12px;
             border-radius: 50%;
             margin: 0 5px;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+        
+        .carousel-indicators li.active {
+            transform: scale(1.2);
+        }
+        
+        /* 定义动画关键帧 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
         
         .product-card {
-            transition: transform 0.3s;
+            transition: all 0.4s ease;
             margin-bottom: 20px;
             border: 1px solid #eee;
             border-radius: 5px;
             overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
         }
         
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         
         .product-img-container {
@@ -79,6 +142,11 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover .product-img {
+            transform: scale(1.08);
         }
         
         .product-name {
@@ -87,12 +155,22 @@
             margin-bottom: 10px;
             height: 40px;
             overflow: hidden;
+            transition: color 0.3s ease;
+        }
+        
+        .product-card:hover .product-name {
+            color: #007bff;
         }
         
         .product-price {
             color: #e74c3c;
             font-weight: bold;
             font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .product-card:hover .product-price {
+            transform: scale(1.05);
         }
         
         .product-link {
@@ -111,16 +189,132 @@
         .category-nav .nav-link {
             color: #333;
             font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .category-nav .nav-link:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: #007bff;
+            transition: width 0.3s ease;
+        }
+        
+        .category-nav .nav-link:hover:before {
+            width: 100%;
         }
         
         .category-nav .nav-link.active {
             color: #007bff;
             font-weight: bold;
         }
+        
+        .category-nav .nav-link.active:before {
+            width: 100%;
+        }
+        
+        /* 为不同的商品卡片设置不同的动画延迟 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 为每个商品卡片设置不同的动画延迟 */
+        #featured-products .product-card:nth-child(1) { animation-delay: 0.1s; }
+        #featured-products .product-card:nth-child(2) { animation-delay: 0.2s; }
+        #featured-products .product-card:nth-child(3) { animation-delay: 0.3s; }
+        #featured-products .product-card:nth-child(4) { animation-delay: 0.4s; }
+        #featured-products .product-card:nth-child(5) { animation-delay: 0.5s; }
+        #featured-products .product-card:nth-child(6) { animation-delay: 0.6s; }
+        #featured-products .product-card:nth-child(7) { animation-delay: 0.7s; }
+        #featured-products .product-card:nth-child(8) { animation-delay: 0.8s; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <style>
+        /* 导航栏动画效果 */
+        .navbar {
+            animation: slideDown 0.5s ease;
+        }
+        
+        .navbar .nav-item {
+            opacity: 0;
+            animation: fadeInRight 0.5s ease forwards;
+        }
+        
+        .navbar .nav-item:nth-child(1) { animation-delay: 0.1s; }
+        .navbar .nav-item:nth-child(2) { animation-delay: 0.2s; }
+        .navbar .nav-item:nth-child(3) { animation-delay: 0.3s; }
+        .navbar .nav-item:nth-child(4) { animation-delay: 0.4s; }
+        
+        .navbar .form-inline {
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.5s forwards;
+        }
+        
+        .navbar .navbar-brand {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .navbar .navbar-brand:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: white;
+            transition: width 0.3s ease;
+        }
+        
+        .navbar .navbar-brand:hover:after {
+            width: 100%;
+        }
+        
+        .navbar .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar .nav-link:hover {
+            transform: translateY(-2px);
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" style="position: relative; z-index: 1050;">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
@@ -151,7 +345,7 @@
                             <img id="nav-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mr-1" style="width: 25px; height: 25px; object-fit: cover;">
                             <span id="current-username">用户未登录</span>
                         </a>
-                        <div class="dropdown-menu dropdown-menu-right">
+                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1040;">
                             <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-user-circle mr-2"></i>个人中心</a>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
@@ -165,7 +359,7 @@
 
     
     <!-- 轮播图组件 -->
-    <div id="carouselBanner" class="carousel slide" data-ride="carousel" style="position: relative;">
+    <div id="carouselBanner" class="carousel slide" data-ride="carousel" style="position: relative; z-index: 1;">
         <!-- 固定文字和按钮 -->
         <div class="carousel-caption fixed-caption">
             <h1>欢迎来到在线商城</h1>
@@ -212,6 +406,44 @@
     </div>
 
     <div class="container">
+        <style>
+            /* 内容区域动画 */
+            .container h2 {
+                position: relative;
+                display: inline-block;
+                opacity: 0;
+                transform: translateY(20px);
+                animation: fadeInUp 0.8s ease forwards;
+                animation-delay: 0.3s;
+            }
+            
+            .container h2:after {
+                content: '';
+                position: absolute;
+                bottom: -5px;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background-color: #007bff;
+                animation: expandWidth 1s ease forwards;
+                animation-delay: 1s;
+            }
+            
+            #load-more-btn {
+                transition: all 0.3s ease;
+                transform: scale(1);
+            }
+            
+            #load-more-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            .alert {
+                animation: slideDown 0.5s ease;
+            }
+        </style>
+        
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
@@ -234,6 +466,67 @@
     </div>
 
     <footer class="bg-dark text-white mt-5 py-4">
+        <style>
+            /* 页脚动画效果 */
+            footer {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            footer h5 {
+                position: relative;
+                display: inline-block;
+                margin-bottom: 15px;
+                opacity: 0;
+                animation: fadeInUp 0.5s ease forwards;
+            }
+            
+            footer .col-md-6 h5 { animation-delay: 0.1s; }
+            footer .col-md-3:nth-of-type(1) h5 { animation-delay: 0.2s; }
+            footer .col-md-3:nth-of-type(2) h5 { animation-delay: 0.3s; }
+            
+            footer p, footer ul {
+                opacity: 0;
+                animation: fadeInUp 0.5s ease forwards;
+                animation-delay: 0.4s;
+            }
+            
+            footer hr {
+                position: relative;
+                background: linear-gradient(to right, transparent, rgba(255,255,255,0.5), transparent);
+                height: 1px;
+                border: 0;
+                opacity: 0;
+                animation: expandWidth 1s ease forwards;
+                animation-delay: 0.6s;
+            }
+            
+            footer .text-center p {
+                animation-delay: 0.8s;
+            }
+            
+            footer a {
+                position: relative;
+                transition: all 0.3s ease;
+            }
+            
+            footer a:hover {
+                padding-left: 5px;
+                color: #007bff !important;
+            }
+            
+            @keyframes expandWidth {
+                from {
+                    opacity: 0;
+                    width: 0;
+                }
+                to {
+                    opacity: 1;
+                    width: 100%;
+                }
+            }
+        </style>
+        
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
@@ -263,6 +556,56 @@
         </div>
     </footer>
 
+    <!-- 页面加载动画 -->
+    <style>
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .loader-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        body {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out 0.3s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+    
+    <div class="page-loader">
+        <div class="loader-spinner"></div>
+    </div>
+    
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
@@ -271,5 +614,14 @@
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
     <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮脚本 -->
     <script src="/js/client/index.js"></script>
+    
+    <!-- 页面加载完成后隐藏加载动画 -->
+    <script>
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('.page-loader').addClass('loader-hidden');
+            }, 500);
+        });
+    </script>
 </body>
 </html>

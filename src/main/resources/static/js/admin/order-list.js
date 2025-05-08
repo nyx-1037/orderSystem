@@ -84,6 +84,9 @@ async function loadOrders() {
     `);
     
     try {
+        // 获取当前选择的分页大小
+        pageSize = parseInt($('#page-size-selector').val());
+        
         // 构建查询参数
         const params = new URLSearchParams();
         params.append('pageNum', currentPage); // 使用pageNum参数名与后端一致
@@ -99,6 +102,8 @@ async function loadOrders() {
         if (status) params.append('status', status);
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
+        
+        console.log('订单搜索条件:', { orderNo, status, startDate, endDate });
         
         // 发送API请求 - 直接使用OrderController中定义的API路径
         const apiUrl = `/api/orders?${params.toString()}`;

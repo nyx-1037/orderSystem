@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .product-image {
             width: 100%;
@@ -171,6 +172,14 @@
     </style>
 </head>
 <body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
@@ -213,7 +222,7 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 page-transition">
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
@@ -221,7 +230,7 @@
             <a href="/pages/client/products.html" class="btn btn-outline-secondary">返回商品列表</a>
         </div>
         
-        <div id="product-detail-container" class="row">
+        <div id="product-detail-container" class="row content-container">
             <!-- 商品详情将通过JavaScript动态加载 -->
             <div class="col-12 text-center">
                 <div class="spinner-border" role="status">
@@ -238,7 +247,7 @@
         </div>
         
         <!-- 推荐商品区域 -->
-        <div class="mt-5">
+        <div class="mt-5 content-container" style="animation-delay: 0.5s;">
             <h3 class="mb-4">猜你喜欢</h3>
             <div id="recommended-products" class="row">
                 <!-- 推荐商品将通过JavaScript动态加载 -->
@@ -289,5 +298,19 @@
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
     <script src="/js/client/product-detail.js"></script>
+    <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+        
+        // 为按钮添加悬停效果
+        $(document).ready(function() {
+            $('.btn').addClass('btn-hover-effect');
+            $('.product-card').addClass('card-animate');
+        });
+    </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/client.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .order-card {
             margin-bottom: 20px;
@@ -90,9 +91,33 @@
             font-weight: bold;
             font-size: 18px;
         }
+        
+        /* 确保下拉菜单显示在最上层 */
+        .dropdown-menu {
+            z-index: 1030;
+        }
+        
+        /* 退出登录按钮样式 */
+        #logout-btn {
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        #logout-btn:hover {
+            color: #dc3545;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner" style="margin: 0 auto;"></div>
+            <div class="loader-text" style="text-align: center;">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 在线商城</a>
@@ -127,7 +152,7 @@
                         <div class="dropdown-menu dropdown-menu-right">
                             <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-user-circle mr-2"></i>个人中心</a>
                             <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
+                            <a class="dropdown-item" href="javascript:void(0);" id="logout-btn" style="cursor: pointer;"><i class="fas fa-sign-out-alt mr-2"></i>退出登录</a>
                         </div>
                     </li>
                 </ul>
@@ -135,13 +160,13 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 page-transition">
         <div class="alert alert-success" id="success-message" style="display: none;"></div>
         <div class="alert alert-danger" id="error-message" style="display: none;"></div>
         
-        <h2 class="mb-4"><i class="fas fa-file-invoice mr-2"></i>我的订单</h2>
+        <h2 class="mb-4 content-container"><i class="fas fa-file-invoice mr-2"></i>我的订单</h2>
         
-        <div class="mb-4">
+        <div class="mb-4 content-container" style="animation-delay: 0.2s;">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-outline-secondary status-filter active" data-status="all"><i class="fas fa-list mr-1"></i>全部订单</button>
                 <button type="button" class="btn btn-outline-secondary status-filter" data-status="0"><i class="fas fa-hourglass-start mr-1"></i>待付款</button>
@@ -152,7 +177,7 @@
             </div>
         </div>
         
-        <div id="orders-container">
+        <div id="orders-container" class="content-container" style="animation-delay: 0.4s;">
             <!-- 订单列表将通过JavaScript动态加载 -->
             <div class="text-center">
                 <div class="spinner-border text-primary" role="status">
@@ -231,5 +256,38 @@
     <script src="/js/image-loader.js"></script>
     <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮脚本 -->
     <script src="/js/client/orders.js"></script>
+    <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+        
+        // 为按钮添加悬停效果
+        $(document).ready(function() {
+            $('.btn').addClass('btn-hover-effect');
+            $('.order-card').addClass('card-animate');
+            
+            // 动态添加的订单卡片也添加动画效果
+            $(document).on('DOMNodeInserted', '#orders-container', function() {
+                $('.order-card').addClass('card-animate');
+            });
+            
+            // 确保退出登录按钮绑定事件 - 移除之前的所有事件后重新绑定
+            $('#logout-btn').off('click').on('click', function(e) {
+                e.preventDefault();
+                console.log('退出登录按钮被点击');
+                logout();
+            });
+            
+            // 添加明显的悬停效果
+            $('#logout-btn').parent().css('cursor', 'pointer');
+            $('#logout-btn').hover(
+                function() { $(this).css('color', '#dc3545'); },
+                function() { $(this).css('color', ''); }
+            );
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,169 @@
+/* 后台管理系统动画效果 */
+
+/* 基础淡入动画 */
+@keyframes adminFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 从上方淡入动画 */
+@keyframes adminFadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 从下方淡入动画 */
+@keyframes adminFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 从左侧淡入动画 */
+@keyframes adminFadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 从右侧淡入动画 */
+@keyframes adminFadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 缩放动画 */
+@keyframes adminZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 应用于卡片元素 */
+.admin-card {
+    animation: adminFadeInUp 0.5s ease forwards;
+}
+
+/* 应用于表格行 */
+.admin-table tr {
+    opacity: 0;
+    animation: adminFadeInLeft 0.3s ease forwards;
+}
+
+/* 为表格行添加延迟，实现依次显示效果 */
+.admin-table tr:nth-child(1) { animation-delay: 0.1s; }
+.admin-table tr:nth-child(2) { animation-delay: 0.15s; }
+.admin-table tr:nth-child(3) { animation-delay: 0.2s; }
+.admin-table tr:nth-child(4) { animation-delay: 0.25s; }
+.admin-table tr:nth-child(5) { animation-delay: 0.3s; }
+.admin-table tr:nth-child(6) { animation-delay: 0.35s; }
+.admin-table tr:nth-child(7) { animation-delay: 0.4s; }
+.admin-table tr:nth-child(8) { animation-delay: 0.45s; }
+.admin-table tr:nth-child(9) { animation-delay: 0.5s; }
+.admin-table tr:nth-child(10) { animation-delay: 0.55s; }
+.admin-table tr:nth-child(n+11) { animation-delay: 0.6s; }
+
+/* 应用于表单元素 */
+.admin-form .form-group {
+    opacity: 0;
+    animation: adminFadeInRight 0.4s ease forwards;
+}
+
+/* 为表单元素添加延迟，实现依次显示效果 */
+.admin-form .form-group:nth-child(1) { animation-delay: 0.1s; }
+.admin-form .form-group:nth-child(2) { animation-delay: 0.2s; }
+.admin-form .form-group:nth-child(3) { animation-delay: 0.3s; }
+.admin-form .form-group:nth-child(4) { animation-delay: 0.4s; }
+.admin-form .form-group:nth-child(5) { animation-delay: 0.5s; }
+.admin-form .form-group:nth-child(n+6) { animation-delay: 0.6s; }
+
+/* 应用于按钮 */
+.admin-btn {
+    transition: all 0.3s ease;
+}
+
+.admin-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* 应用于模态框 */
+.admin-modal .modal-content {
+    animation: adminZoomIn 0.3s ease;
+}
+
+/* 应用于页面标题 */
+.admin-page-title {
+    animation: adminFadeInDown 0.5s ease;
+}
+
+/* 应用于统计卡片 */
+.admin-stat-card {
+    opacity: 0;
+    animation: adminFadeInUp 0.5s ease forwards;
+}
+
+/* 为统计卡片添加延迟，实现依次显示效果 */
+.admin-stat-card:nth-child(1) { animation-delay: 0.1s; }
+.admin-stat-card:nth-child(2) { animation-delay: 0.2s; }
+.admin-stat-card:nth-child(3) { animation-delay: 0.3s; }
+.admin-stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* 应用于导航菜单项 */
+.admin-nav-item {
+    opacity: 0;
+    animation: adminFadeInLeft 0.3s ease forwards;
+}
+
+/* 为导航菜单项添加延迟，实现依次显示效果 */
+.admin-nav-item:nth-child(1) { animation-delay: 0.05s; }
+.admin-nav-item:nth-child(2) { animation-delay: 0.1s; }
+.admin-nav-item:nth-child(3) { animation-delay: 0.15s; }
+.admin-nav-item:nth-child(4) { animation-delay: 0.2s; }
+.admin-nav-item:nth-child(5) { animation-delay: 0.25s; }
+.admin-nav-item:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* 应用于加载动画 */
+.admin-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+.admin-loading .spinner-border {
+    margin-bottom: 10px;
+}
+
+/* 应用于下拉菜单 */
+.dropdown-menu {
+    z-index: 1030;
+    animation: adminFadeInDown 0.3s ease;
+}

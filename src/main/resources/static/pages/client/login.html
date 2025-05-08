@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/animations.css">
     <style>
         .login-container {
             max-width: 400px;
@@ -26,8 +27,16 @@
     </style>
 </head>
 <body class="bg-light">
-    <div class="container">
-        <div class="login-container">
+    <!-- 页面加载动画 -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">正在加载，请稍候...</div>
+        </div>
+    </div>
+    
+    <div class="container page-transition">
+        <div class="login-container content-container">
             <div class="login-header">
                 <h2><i class="fas fa-store"></i> 在线商城客户端</h2>
                 <p class="text-muted"><i class="fas fa-sign-in-alt"></i> 请登录您的账号</p>
@@ -36,7 +45,7 @@
             <div class="alert alert-success" id="success-message" style="display: none;"></div>
             <div class="alert alert-danger" id="error-message" style="display: none;"></div>
             
-            <form id="login-form">
+            <form id="login-form" class="form-animate">
                 <div class="form-group">
                     <label for="username"><i class="fas fa-user"></i> 用户名</label>
                     <input type="text" class="form-control" id="username" name="username" required>
@@ -45,7 +54,7 @@
                     <label for="password"><i class="fas fa-lock"></i> 密码</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-sign-in-alt"></i> 登录</button>
+                <button type="submit" class="btn btn-primary btn-block btn-hover-effect"><i class="fas fa-sign-in-alt"></i> 登录</button>
             </form>
             
             <div class="login-footer">
@@ -62,5 +71,13 @@
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/main.js"></script> <!-- 引入客户端主脚本 -->
     <script src="/js/client/login.js"></script>
+    <script>
+        // 页面加载完成后隐藏加载动画
+        $(window).on('load', function() {
+            setTimeout(function() {
+                $('#page-loader').fadeOut('slow');
+            }, 500);
+        });
+    </script>
 </body>
 </html>

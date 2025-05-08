@@ -1,0 +1,229 @@
+/* 动画效果CSS文件 */
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* 从上方淡入动画 */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 从下方淡入动画 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 从右侧淡入动画 */
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 从左侧淡入动画 */
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 宽度展开动画 */
+@keyframes expandWidth {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+/* 旋转动画 */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 下滑动画 */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 页面加载动画 */
+.page-transition {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* 导航栏动画 */
+.navbar {
+    animation: slideDown 0.5s ease;
+}
+
+.navbar .nav-item {
+    opacity: 0;
+    animation: fadeInRight 0.5s ease forwards;
+}
+
+.navbar .nav-item:nth-child(1) { animation-delay: 0.1s; }
+.navbar .nav-item:nth-child(2) { animation-delay: 0.2s; }
+.navbar .nav-item:nth-child(3) { animation-delay: 0.3s; }
+.navbar .nav-item:nth-child(4) { animation-delay: 0.4s; }
+
+.navbar-nav:last-child {
+    opacity: 0;
+    animation: fadeIn 0.5s ease 0.5s forwards;
+}
+
+/* 内容区域动画 */
+.content-container {
+    opacity: 0;
+    animation: fadeInUp 0.8s ease forwards;
+    animation-delay: 0.3s;
+}
+
+/* 卡片动画效果 */
+.card-animate {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-animate:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* 按钮悬停效果 */
+.btn-hover-effect {
+    transition: all 0.3s ease;
+}
+
+.btn-hover-effect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* 页脚动画 */
+footer h5 {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+footer .col-md-6 h5 { animation-delay: 0.1s; }
+footer .col-md-3:nth-of-type(1) h5 { animation-delay: 0.2s; }
+footer .col-md-3:nth-of-type(2) h5 { animation-delay: 0.3s; }
+
+footer ul, footer p {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.4s;
+}
+
+footer hr {
+    width: 0;
+    animation: expandWidth 1s ease forwards;
+    animation-delay: 0.6s;
+}
+
+footer .text-center p {
+    opacity: 0;
+    animation-delay: 0.8s;
+}
+
+/* 表单元素动画 */
+.form-animate .form-group {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.form-animate .form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-animate .form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-animate .form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-animate .form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-animate .form-group:nth-child(5) { animation-delay: 0.5s; }
+
+.form-animate button[type="submit"] {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.6s;
+}
+
+/* 加载中动画 */
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* 页面加载遮罩 */
+.page-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.loader-content {
+    text-align: center;
+}
+
+.loader-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loader-text {
+    margin-top: 15px;
+    font-size: 18px;
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in-out 0.3s forwards;
+}

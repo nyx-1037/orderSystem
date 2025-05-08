@@ -2,6 +2,7 @@ package com.ordersystem.dao;
 
 import com.ordersystem.entity.Order;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 订单DAO接口
@@ -99,6 +100,13 @@ public interface OrderDao {
      * @return 订单列表
      */
     List<Order> getOrdersByUserIdAndStatus(Integer userId, Integer status);
+    
+    /**
+     * 根据筛选条件查询订单
+     * @param filters 筛选条件，支持keyword(订单号模糊搜索)、status、startDate、endDate等
+     * @return 订单列表
+     */
+    List<Order> getOrdersByFilters(Map<String, Object> filters);
 }
 //    /**
 //     * 分页查询订单列表
