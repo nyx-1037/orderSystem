@@ -1,11 +1,13 @@
 package com.ordersystem.controller;
 
+import io.swagger.annotations.Api;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  * 首页控制器
  */
+@Api(tags = "首页控制器", description = "首页控制器")
 @Controller
 public class HomeController {
     

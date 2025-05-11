@@ -1,5 +1,7 @@
 package com.ordersystem.controller;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.Map;
  * 商品分类控制器
  * 提供商品分类相关的RESTful API
  */
+@Api(tags = "商品分类管理", description = "商品分类的增删改查接口")
 @RestController
 public class CategoryController {
 
@@ -25,6 +28,7 @@ public class CategoryController {
      * 
      * @return 分类列表
      */
+    @ApiOperation(value = "获取所有商品分类", notes = "返回系统中所有可用的商品分类列表")
     @GetMapping("/api/categories")
     public ResponseEntity<?> getAllCategories() {
         log.info("获取所有商品分类");
@@ -36,6 +40,7 @@ public class CategoryController {
      * 
      * @return 分类列表
      */
+    @ApiOperation(value = "获取所有商品分类(备用路径)", notes = "通过备用API路径返回系统中所有可用的商品分类列表")
     @GetMapping("/api/category/list")
     public ResponseEntity<?> getCategoryList() {
         log.info("通过备用API路径获取所有商品分类");

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>订单详情(管理员) - 在线商城后台管理端</title>
+    <title>订单管理 - 订单管理系统</title>
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
@@ -17,7 +17,7 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <a class="nav-link" href="/pages/admin/order-list.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
                     </li>
                     <li class="nav-item">
@@ -46,65 +46,12 @@
         </div>
     </nav>
 
-    <div class="container mt-3">
-        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
-            <i class="fas fa-arrow-left"></i> 返回上一页
-        </a>
-        <h2 class="mb-4"><i class="fas fa-file-invoice"></i> 订单详情</h2>
-
-        <div class="container order-container">
-            <div class="order-header">
-                <h2>订单详情(管理员视图)</h2>
-            </div>
-            
-            <div class="alert alert-success" id="success-message" style="display: none;"></div>
-            <div class="alert alert-danger" id="error-message" style="display: none;"></div>
-            
-            <div id="order-detail-container">
-                <!-- 订单详情将通过JavaScript动态加载 -->
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">加载中...</span>
-                    </div>
-                    <p>正在加载订单详情...</p>
-                </div>
-            </div>
-            
-            <div id="order-actions" class="mt-4 text-right">
-                <!-- 订单操作按钮将通过JavaScript动态加载 -->
-            </div>
-        </div>
-    </div>
-
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
     <script src="/js/res/all.min.js"></script>
-
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
-    <script src="/js/admin/main.js"></script> <!-- 引入管理员端主脚本 -->
-    <script src="/js/image-loader.js"></script>
-    <script src="/js/admin/order-detail.js"></script>
-    
-    <!-- 确认操作Modal -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmModalLabel">确认操作</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmMessage"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-primary" id="confirmActionBtn">确认</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script src="/js/admin/main.js"></script>
+
 </body>
 </html>

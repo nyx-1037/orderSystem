@@ -4,6 +4,11 @@ import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.SysLog;
 import com.ordersystem.service.SysLogService;
 import com.ordersystem.aspect.LogAspect;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +23,7 @@ import java.util.HashMap;
  * 系统日志控制器
  * 提供系统日志相关的RESTful API
  */
+@Api(tags = "系统日志管理", description = "系统日志的查询、删除和同步接口")
 @RestController
 @RequestMapping("/api/system-logs")
 public class SysLogController {
@@ -43,6 +49,17 @@ public class SysLogController {
      * @param endTime 结束时间（可选）
      * @return 分页日志数据
      */
+    @ApiOperation(value = "获取日志列表", notes = "支持分页和多条件筛选")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "username", value = "用户名", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "operation", value = "操作类型", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "statusCode", value = "状态码", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "ip", value = "IP地址", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "startTime", value = "开始时间", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "endTime", value = "结束时间", paramType = "query", dataType = "string")
+    })
     @GetMapping
     public ResponseEntity<?> getSystemLogs(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -76,6 +93,12 @@ public class SysLogController {
      * @param pageSize 每页数量，默认为10
      * @return 分页日志数据
      */
+    @ApiOperation(value = "根据用户ID获取日志", notes = "获取指定用户的所有操作日志")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "userId", value = "用户ID", required = true, paramType = "path", dataType = "int"),
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int")
+    })
     @GetMapping("/by-user-id/{userId}")
     public ResponseEntity<?> getLogsByUserId(
             @PathVariable("userId") Integer userId,
@@ -91,6 +114,8 @@ public class SysLogController {
      * @param logId 日志ID
      * @return 日志详情
      */
+    @ApiOperation(value = "根据日志ID获取日志详情", notes = "获取单条日志的详细信息")
+    @ApiImplicitParam(name = "logId", value = "日志ID", required = true, paramType = "path", dataType = "int")
     @GetMapping("/by-id/{logId}")
     public ResponseEntity<?> getLogById(@PathVariable("logId") Integer logId) {
         log.info("查询日志详情，ID: {}", logId);
@@ -109,6 +134,12 @@ public class SysLogController {
      * @param pageSize 每页数量，默认为10
      * @return 分页日志数据
      */
+    @ApiOperation(value = "根据用户名获取日志", notes = "获取指定用户名的所有操作日志")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "username", value = "用户名", required = true, paramType = "path", dataType = "string"),
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int")
+    })
     @GetMapping("/by-username/{username}")
     public ResponseEntity<?> getLogsByUsername(
             @PathVariable("username") String username,
@@ -126,6 +157,12 @@ public class SysLogController {
      * @param pageSize 每页数量，默认为10
      * @return 分页日志数据
      */
+    @ApiOperation(value = "根据操作类型获取日志", notes = "获取指定操作类型的所有日志")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "operation", value = "操作类型", required = true, paramType = "path", dataType = "string"),
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int")
+    })
     @GetMapping("/by-operation/{operation}")
     public ResponseEntity<?> getLogsByOperation(
             @PathVariable("operation") String operation,
@@ -137,7 +174,12 @@ public class SysLogController {
 
     /**
      * 删除日志
+     * 
+     * @param logId 日志ID
+     * @return 操作结果
      */
+    @ApiOperation(value = "删除日志", notes = "根据ID删除单条日志记录")
+    @ApiImplicitParam(name = "logId", value = "日志ID", required = true, paramType = "path", dataType = "int")
     @DeleteMapping("/{logId}")
     public ResponseEntity<?> deleteLog(@PathVariable("logId") Integer logId) {
         boolean success = sysLogService.deleteLog(logId);
@@ -151,6 +193,8 @@ public class SysLogController {
      * @param request HTTP请求
      * @return 操作结果
      */
+    @ApiOperation(value = "强制用户登出", notes = "管理员强制指定用户下线")
+    @ApiImplicitParam(name = "userId", value = "用户ID", required = true, paramType = "path", dataType = "int")
     @PostMapping("/users/{userId}/force-logout")
     public ResponseEntity<?> forceLogout(@PathVariable("userId") Integer userId, HttpServletRequest request) {
         // 记录操作者信息
@@ -171,6 +215,7 @@ public class SysLogController {
      * @param logIds 日志ID列表
      * @return 操作结果
      */
+    @ApiOperation(value = "批量删除日志", notes = "根据ID列表批量删除多条日志记录")
     @DeleteMapping("/batch")
     public ResponseEntity<?> batchDelete(@RequestBody List<Integer> logIds) {
         log.info("批量删除日志，ID列表: {}", logIds);
@@ -197,6 +242,7 @@ public class SysLogController {
      * 
      * @return 同步结果
      */
+    @ApiOperation(value = "同步日志", notes = "手动将Redis缓存中的日志同步到MySQL数据库")
     @PostMapping("/synchronize")
     public ResponseEntity<?> syncLogs() {
         log.info("手动触发日志同步操作");

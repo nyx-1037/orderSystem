@@ -5,6 +5,11 @@ import com.ordersystem.entity.Order;
 import com.ordersystem.entity.User;
 import com.ordersystem.service.OrderService;
 import com.ordersystem.util.UUIDGenerater;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +25,7 @@ import java.util.Map;
  * 客户端订单控制器
  * 提供客户端订单相关的RESTful API
  */
+@Api(tags = "客户端订单管理", description = "客户端订单的查询和操作接口")
 @RestController
 @RequestMapping("/api/client/orders")
 public class ClientOrderController {
@@ -39,6 +45,13 @@ public class ClientOrderController {
      * @param request HTTP请求
      * @return 分页订单数据
      */
+    @ApiOperation(value = "获取客户端订单列表", notes = "支持分页和状态筛选")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "page", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "size", value = "每页数量", defaultValue = "5", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "status", value = "订单状态", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "keyword", value = "搜索关键词", paramType = "query", dataType = "string")
+    })
     @GetMapping
     public ResponseEntity<?> getClientOrders(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
@@ -101,6 +114,8 @@ public class ClientOrderController {
      * @param request HTTP请求
      * @return 订单详情
      */
+    @ApiOperation(value = "获取订单详情", notes = "根据订单UUID获取订单详细信息")
+    @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
     @GetMapping("/{uuid}")
     public ResponseEntity<?> getOrderByUuid(
             @PathVariable String uuid,
@@ -155,6 +170,8 @@ public class ClientOrderController {
      * @param request HTTP请求
      * @return 取消结果
      */
+    @ApiOperation(value = "取消订单", notes = "客户取消未发货的订单")
+    @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
     @PostMapping("/{uuid}/cancel")
     public ResponseEntity<?> cancelOrder(
             @PathVariable String uuid,
@@ -218,6 +235,8 @@ public class ClientOrderController {
      * @param request HTTP请求
      * @return 确认结果
      */
+    @ApiOperation(value = "确认收货", notes = "客户确认已收到商品")
+    @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
     @PostMapping("/{uuid}/confirm")
     public ResponseEntity<?> confirmOrder(
             @PathVariable String uuid,
@@ -281,6 +300,8 @@ public class ClientOrderController {
      * @param request HTTP请求
      * @return 支付结果
      */
+    @ApiOperation(value = "支付订单", notes = "客户支付订单")
+    @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
     @PostMapping("/{uuid}/pay")
     public ResponseEntity<?> payOrder(
             @PathVariable String uuid,

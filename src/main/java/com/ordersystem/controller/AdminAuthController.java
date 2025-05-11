@@ -4,6 +4,10 @@ import com.ordersystem.entity.User;
 import com.ordersystem.service.RedisService;
 import com.ordersystem.service.UserService;
 import com.ordersystem.util.JwtTokenUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +22,7 @@ import java.util.Map;
  * 管理员认证控制器
  * 提供管理员登录相关的RESTful API
  */
+@Api(tags = "管理员认证", description = "管理员登录认证接口")
 @RestController
 @RequestMapping("/api/admin/auth")
 public class AdminAuthController {
@@ -37,6 +42,10 @@ public class AdminAuthController {
      * @param loginUser 登录信息
      * @return 登录结果
      */
+    @ApiOperation(value = "管理员登录", notes = "验证管理员身份并返回JWT令牌")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "loginUser", value = "登录信息", required = true, dataType = "User", paramType = "body")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginUser) {
         // 调用service层的login方法进行用户验证

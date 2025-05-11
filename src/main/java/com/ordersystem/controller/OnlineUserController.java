@@ -4,6 +4,11 @@ import com.ordersystem.entity.User;
 import com.ordersystem.service.RedisService;
 import com.ordersystem.service.UserService;
 import com.ordersystem.service.SysLogService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +24,7 @@ import org.slf4j.LoggerFactory;
  * 在线用户控制器
  * 提供在线用户相关的RESTful API
  */
+@Api(tags = "在线用户管理", description = "在线用户查询和强制登出接口")
 @RestController
 @RequestMapping("/api/online-users")
 public class OnlineUserController {
@@ -40,6 +46,7 @@ public class OnlineUserController {
      * @param request HTTP请求
      * @return 在线用户列表
      */
+    @ApiOperation(value = "获取所有在线用户", notes = "获取当前系统中所有在线用户的列表")
     @GetMapping
     public ResponseEntity<?> getOnlineUsers(HttpServletRequest request) {
         // 从Redis中获取所有在线用户的Token
@@ -81,6 +88,8 @@ public class OnlineUserController {
      * @param request HTTP请求
      * @return 操作结果
      */
+    @ApiOperation(value = "强制用户登出", notes = "管理员强制指定用户下线")
+    @ApiImplicitParam(name = "userId", value = "用户ID", required = true, paramType = "path", dataType = "int")
     @PostMapping("/{userId}/force-logout")
     public ResponseEntity<?> forceLogout(@PathVariable("userId") Integer userId, HttpServletRequest request) {
         // 记录操作者信息

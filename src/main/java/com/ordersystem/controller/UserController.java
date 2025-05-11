@@ -9,6 +9,11 @@ import com.ordersystem.util.MD5Util;
 import com.ordersystem.util.UUIDGenerater;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,6 +33,7 @@ import java.util.*;
  * 用户控制器
  * 提供用户相关的RESTful API
  */
+@Api(tags = "用户管理", description = "用户的增删改查接口")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -48,9 +54,18 @@ public class UserController {
      * @param pageSize 每页数量
      * @param username 用户名（可选）
      * @param role 角色（可选）
+     *
      * @param status 状态（可选）
      * @return 用户列表分页信息
      */
+    @ApiOperation(value = "获取用户列表", notes = "支持分页和筛选的用户列表查询")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "username", value = "用户名", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "role", value = "用户角色", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "status", value = "用户状态", paramType = "query", dataType = "int")
+    })
     @GetMapping
     public ResponseEntity<?> getAllUsers(
             @RequestParam(defaultValue = "1") int pageNum,

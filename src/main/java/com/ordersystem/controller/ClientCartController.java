@@ -3,6 +3,11 @@ package com.ordersystem.controller;
 import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Cart;
 import com.ordersystem.service.CartService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +24,7 @@ import java.util.Map;
  * 客户端购物车控制器
  * 提供客户端购物车相关的RESTful API
  */
+@Api(tags = "客户端购物车", description = "客户购物车操作接口")
 @RestController
 @RequestMapping("/api/client/cart")
 public class ClientCartController {
@@ -36,6 +42,11 @@ public class ClientCartController {
      * @param request  HTTP请求
      * @return 分页购物车数据
      */
+    @ApiOperation(value = "获取购物车列表", notes = "获取当前用户的购物车商品列表，支持分页")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "10", paramType = "query", dataType = "int")
+    })
     @GetMapping
     public ResponseEntity<?> getCartList(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -84,6 +95,11 @@ public class ClientCartController {
      * @param request   HTTP请求
      * @return 添加结果
      */
+    @ApiOperation(value = "添加商品到购物车", notes = "将指定商品添加到当前用户的购物车中")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "quantity", value = "数量", defaultValue = "1", paramType = "query", dataType = "int")
+    })
     @PostMapping
     public ResponseEntity<?> addToCart(
             @RequestParam("productId") Integer productId,
@@ -142,6 +158,11 @@ public class ClientCartController {
      * @param request  HTTP请求
      * @return 更新结果
      */
+    @ApiOperation(value = "更新购物车商品数量", notes = "修改购物车中指定商品的数量")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "cartId", value = "购物车ID", required = true, paramType = "path", dataType = "int"),
+        @ApiImplicitParam(name = "quantity", value = "数量", required = true, paramType = "query", dataType = "int")
+    })
     @PutMapping("/{cartId}/quantity")
     public ResponseEntity<?> updateCartQuantity(
             @PathVariable Integer cartId,
@@ -211,6 +232,11 @@ public class ClientCartController {
      * @param request  HTTP请求
      * @return 更新结果
      */
+    @ApiOperation(value = "更新购物车商品选中状态", notes = "修改购物车中指定商品的选中状态")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "cartId", value = "购物车ID", required = true, paramType = "path", dataType = "int"),
+        @ApiImplicitParam(name = "selected", value = "选中状态：0-未选中，1-已选中", required = true, paramType = "query", dataType = "int")
+    })
     @PutMapping("/{cartId}/selected")
     public ResponseEntity<?> updateCartSelected(
             @PathVariable Integer cartId,
@@ -279,6 +305,8 @@ public class ClientCartController {
      * @param request  HTTP请求
      * @return 更新结果
      */
+    @ApiOperation(value = "全选/取消全选购物车商品", notes = "修改购物车中所有商品的选中状态")
+    @ApiImplicitParam(name = "selected", value = "选中状态：0-未选中，1-已选中", required = true, paramType = "query", dataType = "int")
     @PutMapping("/selected/all")
     public ResponseEntity<?> selectAllCart(
             @RequestParam("selected") Integer selected,
@@ -333,6 +361,8 @@ public class ClientCartController {
      * @param request HTTP请求
      * @return 删除结果
      */
+    @ApiOperation(value = "删除购物车商品", notes = "从购物车中删除指定商品")
+    @ApiImplicitParam(name = "cartId", value = "购物车ID", required = true, paramType = "path", dataType = "int")
     @DeleteMapping("/{cartId}")
     public ResponseEntity<?> deleteCart(
             @PathVariable Integer cartId,
@@ -393,6 +423,7 @@ public class ClientCartController {
      * @param request HTTP请求
      * @return 清空结果
      */
+    @ApiOperation(value = "清空购物车", notes = "清空当前用户的购物车中所有商品")
     @DeleteMapping
     public ResponseEntity<?> clearCart(HttpServletRequest request) {
 
@@ -436,6 +467,7 @@ public class ClientCartController {
      * @param request HTTP请求
      * @return 购物车商品数量
      */
+    @ApiOperation(value = "获取购物车商品数量", notes = "获取当前用户购物车中的商品总数量")
     @GetMapping("/count")
     public ResponseEntity<?> getCartCount(HttpServletRequest request) {
 
@@ -473,6 +505,7 @@ public class ClientCartController {
      * @param request HTTP请求
      * @return 已选中的购物车商品列表
      */
+    @ApiOperation(value = "获取已选中的购物车商品列表", notes = "获取当前用户购物车中已选中的商品列表")
     @GetMapping("/selected")
     public ResponseEntity<?> getSelectedCartList(HttpServletRequest request) {
 

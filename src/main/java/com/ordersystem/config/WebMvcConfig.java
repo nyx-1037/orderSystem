@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -41,7 +42,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     "/api/users/register", 
                     "/api/admin/auth/login",
                     "/api/products",
-                    "/api/products/**"
+                    "/api/products/**",
+                    "/swagger-resources/**",
+                    "/swagger-ui.html",
+                    "/v2/api-docs",
+                    "/webjars/**"
                 );
+    }
+    
+    /**
+     * 配置静态资源处理
+     * 添加Swagger UI资源映射
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 }

@@ -5,6 +5,11 @@ import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Product;
 import com.ordersystem.service.ProductService;
 import com.ordersystem.util.UUIDGenerater;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +31,7 @@ import java.util.Map;
  * 商品控制器
  * 提供商品相关的RESTful API
  */
+@Api(tags = "商品管理", description = "商品的增删改查接口")
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
@@ -44,6 +50,16 @@ public class ProductController {
      * @param status 商品状态（可选）
      * @return 分页商品数据
      */
+    @ApiOperation(value = "获取商品列表", notes = "支持分页、筛选和排序")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "pageNum", value = "页码", defaultValue = "1", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "pageSize", value = "每页数量", defaultValue = "8", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "name", value = "商品名称", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "category", value = "商品分类ID", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "status", value = "商品状态", paramType = "query", dataType = "int"),
+        @ApiImplicitParam(name = "sort", value = "排序字段", paramType = "query", dataType = "string"),
+        @ApiImplicitParam(name = "order", value = "排序方向(asc/desc)", paramType = "query", dataType = "string")
+    })
     @GetMapping
     public ResponseEntity<?> getAllProducts(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
@@ -116,6 +132,8 @@ public class ProductController {
      * @param productId 商品ID
      * @return 商品数据
      */
+    @ApiOperation(value = "根据ID获取商品", notes = "获取单个商品的详细信息")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @GetMapping("/{productId}")
     public ResponseEntity<?> getProductById(@PathVariable Integer productId) {
         Product product = productService.getProductById(productId);
@@ -132,6 +150,8 @@ public class ProductController {
      * @param productId 商品ID
      * @return 商品数据
      */
+    @ApiOperation(value = "根据ID获取商品(内部使用)", notes = "系统内部使用的商品查询接口")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @GetMapping("/internal/{productId}")
     public ResponseEntity<Product> getProductByIdInternal(@PathVariable Integer productId) {
         Product product = productService.getProductById(productId);
@@ -148,6 +168,7 @@ public class ProductController {
      * @param product 商品信息
      * @return 操作结果
      */
+    @ApiOperation(value = "添加商品", notes = "创建新商品")
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody Product product) {
         // 初始化商品信息
@@ -191,6 +212,8 @@ public class ProductController {
      * @param product 商品信息
      * @return 操作结果
      */
+    @ApiOperation(value = "更新商品信息", notes = "修改已有商品的信息")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @PutMapping("/{productId}")
     public ResponseEntity<?> updateProduct(@PathVariable Integer productId, @RequestBody Product product) {
         // 查找商品
@@ -228,6 +251,8 @@ public class ProductController {
      * @param productId 商品ID
      * @return 操作结果
      */
+    @ApiOperation(value = "删除商品", notes = "根据ID删除商品")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @DeleteMapping("/{productId}")
     public ResponseEntity<?> deleteProduct(@PathVariable Integer productId) {
         try {
@@ -272,6 +297,8 @@ public class ProductController {
      * @param productName 商品名称
      * @return 商品列表
      */
+    @ApiOperation(value = "根据名称搜索商品", notes = "搜索名称包含指定关键词的商品")
+    @ApiImplicitParam(name = "name", value = "商品名称关键词", required = true, paramType = "query", dataType = "string")
     @GetMapping("/search")
     public ResponseEntity<?> searchProducts(@RequestParam("name") String productName) {
         List<Product> products = productService.getProductsByName(productName);
@@ -294,6 +321,11 @@ public class ProductController {
      * @param stock 库存变化量（正数增加，负数减少）
      * @return 操作结果
      */
+    @ApiOperation(value = "更新商品库存", notes = "增加或减少商品库存数量")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int"),
+        @ApiImplicitParam(name = "stock", value = "库存变化量（正数增加，负数减少）", required = true, paramType = "query", dataType = "int")
+    })
     @PutMapping("/{productId}/stock")
     public ResponseEntity<?> updateStock(
             @PathVariable Integer productId,
@@ -333,6 +365,11 @@ public class ProductController {
      * @param file 图片文件
      * @return 操作结果
      */
+    @ApiOperation(value = "上传商品图片", notes = "为指定商品上传图片")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int"),
+        @ApiImplicitParam(name = "file", value = "图片文件", required = true, paramType = "form", dataType = "file")
+    })
     @PostMapping("/{productId}/image")
     public ResponseEntity<?> uploadImage(
             @PathVariable Integer productId,
@@ -385,6 +422,8 @@ public class ProductController {
      * @param productId 商品ID
      * @return 图片数据
      */
+    @ApiOperation(value = "获取商品图片", notes = "获取指定商品的图片数据")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @GetMapping("/{productId}/image")
     public ResponseEntity<?> getImage(@PathVariable Integer productId) {
         try {
@@ -429,6 +468,8 @@ public class ProductController {
      * @param productId 商品ID
      * @return 操作结果
      */
+    @ApiOperation(value = "删除商品图片", notes = "删除指定商品的图片")
+    @ApiImplicitParam(name = "productId", value = "商品ID", required = true, paramType = "path", dataType = "int")
     @DeleteMapping("/{productId}/image")
     public ResponseEntity<?> deleteProductImage(@PathVariable Integer productId) {
         try {
