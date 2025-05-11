@@ -10,6 +10,7 @@
 - AOP实现操作日志追踪
 - PageHelper分页查询/前端界面懒加载
 - MD5密码加密
+- swagger-ui接口文档
 
 ## 技术栈
 - **核心框架**: Spring Boot 2.7.0
@@ -19,6 +20,7 @@
 - **连接池**: Druid 1.2.8
 - **分页插件**: PageHelper 1.4.2
 - **日志系统**: SLF4J 1.7.36 + Logback 1.2.11
+- **api文档**: Swagger 2.9.2
 - **前端**: HTML5 + CSS3 + JavaScript + Bootstrap 4.6.1 响应式布局
 
 ## 环境要求
@@ -28,6 +30,8 @@
 - Maven 3.6+
 
 ## 快速开始
+启动后api文档访问：[http://localhost:8087/swagger-ui.html](http://localhost:8087/swagger-ui.html)
+
 ```bash
 # 1. 克隆项目
 git clone https://github.com/nyx-1037/orderSystem.git
