@@ -47,7 +47,7 @@ async function login() {
         
         // 管理员登录成功后跳转到管理员首页
         setTimeout(() => {
-            window.location.href = '/pages/admin/user-list.html';
+            window.location.href = '/pages/admin/index.html';
         }, 1500);
     } catch (error) {
         console.error('登录失败:', error);

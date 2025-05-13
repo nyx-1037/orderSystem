@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>创建订单(管理员) - 在线商城后台管理端</title>
+    <link rel="stylesheet" href="/css/res/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/res/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/admin-animations.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 在线商城后台管理端</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/pages/admin/order-list.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/admin/product-list.html"><i class="fas fa-box"></i> 商品管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/admin/user-list.html"><i class="fas fa-users"></i> 用户管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pages/admin/syslog-console.html"><i class="fas fa-clipboard-list"></i> 系统日志</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1030;">
+                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container order-container">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left"></i> 返回订单列表
+        </a>
+        <div class="order-header">
+            <h2>创建新订单</h2>
+        </div>
+        
+        <div class="alert alert-success" id="success-message" style="display: none;"></div>
+        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <h4 class="mb-3">选择商品</h4>
+                
+                <div id="products-container">
+                    <!-- 商品列表将通过JavaScript动态加载 -->
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p>正在加载商品数据...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="cart-summary">
+                    <h4 class="mb-3">订单信息</h4>
+                    <form id="order-form">
+                        <div class="form-group">
+                            <label for="receiver">收货人</label>
+                            <input type="text" class="form-control" id="receiver" name="receiver" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="receiverPhone">联系电话</label>
+                            <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">收货地址</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="remark">订单备注</label>
+                            <textarea class="form-control" id="remark" name="remark" rows="2"></textarea>
+                        </div>
+                        
+                        <hr class="mb-4">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>商品总数：</span>
+                            <span id="total-quantity">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>订单总金额：</span>
+                            <span id="total-amount" class="font-weight-bold">¥0.00</span>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit-btn" disabled>提交订单</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 商品项模板 -->
+    <template id="product-item-template">
+        <div class="product-item" data-id="">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5 class="product-name"></h5>
+                    <p class="text-muted product-desc"></p>
+                    <p class="product-price"></p>
+                    <p class="text-muted">库存: <span class="product-stock"></span></p>
+                </div>
+                <div class="col-md-4 text-right">
+                    <div class="form-group">
+                        <label for="quantity">数量</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-secondary decrease-btn" type="button">-</button>
+                            </div>
+                            <input type="number" class="form-control text-center quantity-input" value="0" min="0" max="100">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary increase-btn" type="button">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="/js/res/jquery.min.js"></script>
+    <script src="/js/res/popper.min.js"></script>
+    <script src="/js/res/bootstrap.min.js"></script>
+    <script src="/js/res/all.min.js"></script>
+
+    <!-- 添加搜索框 -->
+    <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="searchModalLabel">搜索商品</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="search-form">
+                        <div class="form-group">
+                            <label for="search-name">商品名称</label>
+                            <input type="text" class="form-control" id="search-name">
+                        </div>
+                        <div class="form-group">
+                            <label for="search-category">商品分类</label>
+                            <select class="form-control" id="search-category">
+                                <option value="">全部分类</option>
+                                <!-- 分类选项将通过JavaScript动态加载 -->
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="search-btn">搜索</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPage = 1;
+        const pageSize = 8;
+        let totalPages = 0;
+        let isLoading = false;
+        let hasNextPage = true;
+        let searchParams = {};
+        let selectedProducts = [];
+        
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 初始化页面
+            initPage();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 加载商品数据
+            loadProducts();
+        });
+        
+        /**
+         * 初始化页面
+         */
+        function initPage() {
+            // 在商品容器上方添加搜索按钮和重置按钮
+            $("#products-container").before(
+                `<div class="d-flex justify-content-start align-items-center mb-3">
+                    <div>
+                        <button class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#searchModal">
+                            <i class="fas fa-search"></i> 搜索商品
+                        </button>
+                        <button id="reset-search-btn" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> 重置
+                        </button>
+                    </div>
+                </div>`
+            );
+        }
+        
+        /**
+         * 绑定事件处理函数
+         */
+        function bindEvents() {
+            // 窗口滚动事件，实现自动加载更多
+            $(window).on('scroll', function() {
+                // 如果正在加载或没有下一页，则不处理
+                if (isLoading || !hasNextPage) return;
+                
+                // 计算滚动位置
+                const scrollTop = $(window).scrollTop();
+                const windowHeight = $(window).height();
+                const documentHeight = $(document).height();
+                
+                // 当滚动到距离底部100px时，加载下一页数据
+                if (scrollTop + windowHeight > documentHeight - 100) {
+                    currentPage++;
+                    loadProducts();
+                }
+            });
+            
+            // 保留加载更多按钮点击事件作为备选方案
+            $(document).on('click', '#load-more-btn', function() {
+                if (!isLoading && hasNextPage) {
+                    currentPage++;
+                    loadProducts();
+                }
+            });
+            
+            // 搜索按钮点击事件
+            $(document).on('click', '#search-btn', function() {
+                // 获取搜索参数
+                searchParams = {
+                    name: $('#search-name').val(),
+                    category: $('#search-category').val() || null
+                };
+                
+                // 重置分页参数
+                currentPage = 1;
+                hasNextPage = true;
+                
+                // 清空商品列表
+                $('#products-container').empty();
+                
+                // 加载商品数据
+                loadProducts();
+                
+                // 关闭搜索模态框
+                $('#searchModal').modal('hide');
+            });
+            
+            // 重置按钮点击事件
+            $(document).on('click', '#reset-search-btn', function() {
+                // 清空搜索参数
+                searchParams = {};
+                
+                // 清空搜索表单
+                $('#search-name').val('');
+                $('#search-category').val('');
+                
+                // 重置分页参数
+                currentPage = 1;
+                hasNextPage = true;
+                
+                // 清空商品列表
+                $('#products-container').empty();
+                
+                // 重新加载商品数据
+                loadProducts();
+            });
+            
+            // 增加商品数量按钮点击事件
+            $(document).on('click', '.increase-btn', function() {
+                const $input = $(this).closest('.input-group').find('.quantity-input');
+                const currentValue = parseInt($input.val());
+                const maxValue = parseInt($input.attr('max'));
+                
+                if (currentValue < maxValue) {
+                    $input.val(currentValue + 1);
+                    $input.trigger('change');
+                }
+            });
+            
+            // 减少商品数量按钮点击事件
+            $(document).on('click', '.decrease-btn', function() {
+                const $input = $(this).closest('.input-group').find('.quantity-input');
+                const currentValue = parseInt($input.val());
+                
+                if (currentValue > 0) {
+                    $input.val(currentValue - 1);
+                    $input.trigger('change');
+                }
+            });
+            
+            // 商品数量输入框变化事件
+            $(document).on('change', '.quantity-input', function() {
+                updateSelectedProducts();
+                updateOrderSummary();
+            });
+            
+            // 订单表单提交事件
+            $('#order-form').on('submit', function(e) {
+                e.preventDefault();
+                submitOrder();
+            });
+        }
+        
+        /**
+         * 加载商品数据
+         */
+        function loadProducts() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            
+            // 如果是第一页，显示加载中提示
+            if (currentPage === 1) {
+                $('#products-container').html(
+                    `<div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p>正在加载商品数据...</p>
+                    </div>`
+                );
+            } else {
+                // 否则在列表底部添加加载提示
+                $('#products-container').append(
+                    `<div id="loading-indicator" class="text-center mt-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <span class="ml-2">加载中...</span>
+                    </div>`
+                );
+            }
+            
+            // 构建请求参数
+            const params = {
+                pageNum: currentPage,
+                pageSize: pageSize
+            };
+            
+            // 添加搜索参数
+            if (searchParams.name) params.name = searchParams.name;
+            if (searchParams.category) params.category = searchParams.category;
+            
+            // 发送AJAX请求获取商品数据
+            $.ajax({
+                url: '/api/products',
+                type: 'GET',
+                data: params,
+                success: function(response) {
+                    // 移除加载提示
+                    if (currentPage === 1) {
+                        $('#products-container').empty();
+                    } else {
+                        $('#loading-indicator').remove();
+                    }
+                    
+                    // 更新分页信息
+                    totalPages = response.pages;
+                    hasNextPage = response.hasNextPage;
+                    
+                    // 如果没有商品数据
+                    if (response.list.length === 0) {
+                        $('#products-container').html(
+                            `<div class="alert alert-info">没有找到符合条件的商品</div>`
+                        );
+                        return;
+                    }
+                    
+                    // 渲染商品列表
+                    renderProducts(response.list);
+                },
+                error: function(xhr, status, error) {
+                    console.error('加载商品数据失败:', error);
+                    
+                    // 显示错误提示
+                    if (currentPage === 1) {
+                        $('#products-container').html(
+                            `<div class="alert alert-danger">加载商品数据失败，请刷新页面重试</div>`
+                        );
+                    } else {
+                        $('#loading-indicator').remove();
+                        $('#products-container').append(
+                            `<div class="alert alert-danger mt-3">加载更多商品失败，请重试</div>`
+                        );
+                    }
+                },
+                complete: function() {
+                    isLoading = false;
+                }
+            });
+        }
+        
+        /**
+         * 渲染商品列表
+         * @param {Array} products 商品数据数组
+         */
+        function renderProducts(products) {
+            // 获取商品项模板
+            const template = document.getElementById('product-item-template');
+            
+            // 创建文档片段，提高性能
+            const fragment = document.createDocumentFragment();
+            
+            // 遍历商品数据
+            products.forEach(function(product) {
+                // 克隆模板
+                const clone = document.importNode(template.content, true);
+                
+                // 设置商品ID
+                const productItem = clone.querySelector('.product-item');
+                productItem.setAttribute('data-id', product.productId);
+                
+                // 设置商品名称
+                const nameElement = clone.querySelector('.product-name');
+                nameElement.textContent = product.productName || product.name || '未命名商品';
+                
+                // 设置商品描述
+                const descElement = clone.querySelector('.product-desc');
+                descElement.textContent = product.description || '暂无描述';
+                
+                // 设置商品价格
+                const priceElement = clone.querySelector('.product-price');
+                priceElement.textContent = `¥${product.price.toFixed(2)}`;
+                
+                // 设置商品库存
+                const stockElement = clone.querySelector('.product-stock');
+                stockElement.textContent = product.stock;
+                
+                // 设置数量输入框最大值
+                const quantityInput = clone.querySelector('.quantity-input');
+                quantityInput.setAttribute('max', product.stock);
+                
+                // 如果商品已经被选中，设置数量
+                const selectedProduct = selectedProducts.find(p => p.productId === product.productId);
+                if (selectedProduct) {
+                    quantityInput.value = selectedProduct.quantity;
+                }
+                
+                // 添加到文档片段
+                fragment.appendChild(clone);
+            });
+            
+            // 如果是第一页，替换商品容器内容
+            if (currentPage === 1) {
+                $('#products-container').empty();
+            }
+            
+            // 将文档片段添加到商品容器
+            document.getElementById('products-container').appendChild(fragment);
+            
+            // 添加分隔线
+            $('#products-container .product-item').not(':last-child').after('<hr>');
+            
+            // 移除旧的加载更多按钮（如果存在）
+            $('#load-more-btn-container').remove();
+            
+            // 如果有下一页，在商品列表底部添加加载更多按钮（作为备选方案）
+            if (hasNextPage) {
+                $('#products-container').append(
+                    `<div id="load-more-btn-container" class="text-center mt-3 mb-3">
+                        <button id="load-more-btn" class="btn btn-outline-secondary">
+                            <i class="fas fa-sync"></i> 加载更多
+                        </button>
+                        <p class="text-muted small mt-1">继续滚动页面也可自动加载更多商品</p>
+                    </div>`
+                );
+            }
+        }
+        
+        /**
+         * 更新已选商品列表
+         */
+        function updateSelectedProducts() {
+            selectedProducts = [];
+            
+            // 遍历所有商品项
+            $('.product-item').each(function() {
+                const $item = $(this);
+                const productId = parseInt($item.attr('data-id'));
+                const quantity = parseInt($item.find('.quantity-input').val());
+                
+                // 如果数量大于0，添加到已选商品列表
+                if (quantity > 0) {
+                    selectedProducts.push({
+                        productId: productId,
+                        quantity: quantity,
+                        name: $item.find('.product-name').text(),
+                        price: parseFloat($item.find('.product-price').text().replace('¥', ''))
+                    });
+                }
+            });
+            
+            // 启用或禁用提交按钮
+            $('#submit-btn').prop('disabled', selectedProducts.length === 0);
+        }
+        
+        /**
+         * 更新订单摘要信息
+         */
+        function updateOrderSummary() {
+            let totalQuantity = 0;
+            let totalAmount = 0;
+            
+            // 计算总数量和总金额
+            selectedProducts.forEach(function(product) {
+                totalQuantity += product.quantity;
+                totalAmount += product.price * product.quantity;
+            });
+            
+            // 更新显示
+            $('#total-quantity').text(totalQuantity);
+            $('#total-amount').text(`¥${totalAmount.toFixed(2)}`);
+        }
+        
+        /**
+         * 提交订单
+         */
+        function submitOrder() {
+            // 如果没有选择商品，不提交
+            if (selectedProducts.length === 0) {
+                showErrorMessage('请至少选择一件商品');
+                return;
+            }
+            
+            // 获取订单信息
+            const orderData = {
+                receiver: $('#receiver').val(),
+                receiverPhone: $('#receiverPhone').val(),
+                address: $('#address').val(),
+                remark: $('#remark').val(),
+                items: selectedProducts.map(function(product) {
+                    return {
+                        productId: product.productId,
+                        quantity: product.quantity
+                    };
+                })
+            };
+            
+            // 禁用提交按钮，防止重复提交
+            $('#submit-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...');
+            
+            // 发送AJAX请求创建订单
+            $.ajax({
+                url: '/api/orders',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(orderData),
+                success: function(response) {
+                    if (response.success) {
+                        // 显示成功消息
+                        showSuccessMessage('订单创建成功！');
+                        
+                        // 清空表单
+                        $('#order-form')[0].reset();
+                        
+                        // 清空已选商品
+                        $('.quantity-input').val(0);
+                        updateSelectedProducts();
+                        updateOrderSummary();
+                        
+                        // 3秒后跳转到订单详情页
+                        setTimeout(function() {
+                            window.location.href = '/pages/admin/order-detail.html?id=' + response.orderId;
+                        }, 3000);
+                    } else {
+                        showErrorMessage(response.message || '订单创建失败');
+                        // 恢复提交按钮
+                        $('#submit-btn').prop('disabled', false).text('提交订单');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMsg = '订单创建失败';
+                    
+                    // 尝试解析错误信息
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.message || errorMsg;
+                    } catch (e) {
+                        console.error('解析错误响应失败:', e);
+                    }
+                    
+                    showErrorMessage(errorMsg);
+                    
+                    // 恢复提交按钮
+                    $('#submit-btn').prop('disabled', false).text('提交订单');
+                }
+            });
+        }
+        
+        /**
+         * 显示成功消息
+         * @param {string} message 消息内容
+         */
+        function showSuccessMessage(message) {
+            $('#success-message').text(message).slideDown();
+            $('#error-message').slideUp();
+            
+            // 5秒后自动隐藏
+            setTimeout(function() {
+                $('#success-message').slideUp();
+            }, 5000);
+        }
+        
+        /**
+         * 显示错误消息
+         * @param {string} message 消息内容
+         */
+        function showErrorMessage(message) {
+            $('#error-message').text(message).slideDown();
+            $('#success-message').slideUp();
+            
+            // 5秒后自动隐藏
+            setTimeout(function() {
+                $('#error-message').slideUp();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

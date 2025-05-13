@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
-
+    
     private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
@@ -52,6 +53,56 @@ public class OrderController {
     private OrderItemService orderItemService;
 	@Autowired
 	private UserServiceImpl userServiceImpl;
+
+
+    /**
+     * 获取仪表盘数据
+     * 包括订单总数和近期订单统计
+     * 
+     * @param days 统计天数，默认15天
+     * @param request HTTP请求
+     * @return 仪表盘数据
+     */
+    @ApiOperation(value = "获取仪表盘数据", notes = "获取订单总数和近期订单统计数据")
+    @ApiImplicitParam(name = "days", value = "统计天数", defaultValue = "15", paramType = "query", dataType = "int")
+    @GetMapping("/dashboard")
+    public ResponseEntity<?> getDashboardData(
+            @RequestParam(value = "days", defaultValue = "15") Integer days,
+            HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        User user = userService.getUserById(userId);
+        
+        // 验证用户权限（只有管理员可以访问）
+        if (userId == null || user == null || user.getRole() != 1) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "无权访问仪表盘数据");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        
+        try {
+            // 获取订单总数
+            Integer totalOrders = orderService.getOrderCount();
+            
+            // 获取近期订单统计
+            List<Map<String, Object>> recentOrders = orderService.getRecentOrdersCount(days);
+            
+            // 构建响应数据
+            Map<String, Object> dashboardData = new HashMap<>();
+            dashboardData.put("totalOrders", totalOrders);
+            dashboardData.put("recentOrders", recentOrders);
+            
+            return ResponseEntity.ok(dashboardData);
+        } catch (Exception e) {
+            log.error("获取仪表盘数据失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取仪表盘数据失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
 
     /**
      * 获取订单列表（支持分页）
@@ -394,8 +445,11 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         
-        // 验证当前用户是否有权限操作该订单
-        if (userId.equals(order.getUserId())) {
+        // 获取用户信息
+        User admin = userService.getUserById(userId);
+        
+        // 验证当前用户是否有权限操作该订单（管理员或订单所有者）
+        if (admin.getRole() == 1 || userId.equals(order.getUserId())) {
             boolean success = orderService.payOrder(order.getOrderId());
             
             Map<String, Object> response = new HashMap<>();

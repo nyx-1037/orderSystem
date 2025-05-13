@@ -220,6 +220,7 @@ function renderOrderActions(order) {
     // 根据订单状态添加不同的操作按钮
     switch (parseInt(order.status)) {
         case 0: // 待付款
+            buttonsHtml += `<button class="btn btn-success pay-btn mr-2" data-id="${orderId}" data-uuid="${uuid}">支付订单</button>`;
             buttonsHtml += `<button class="btn btn-danger cancel-btn mr-2" data-id="${orderId}" data-uuid="${uuid}">取消订单</button>`;
             break;
         case 1: // 已付款
@@ -239,6 +240,12 @@ function renderOrderActions(order) {
 
 // 绑定操作按钮事件
 function bindActionButtons(orderId, uuid) {
+    // 支付订单
+    $('.pay-btn').click(function() {
+        const btnUuid = $(this).data('uuid');
+        payOrder(orderId, btnUuid || uuid);
+    });
+
     // 取消订单
     $('.cancel-btn').click(function() {
         const btnUuid = $(this).data('uuid');
@@ -286,6 +293,22 @@ async function shipOrder(orderId, uuid) {
         } catch (error) {
             console.error('发货失败:', error);
             showErrorMessage('发货失败: ' + error.message);
+        }
+    });
+}
+
+// 支付订单
+async function payOrder(orderId, uuid) {
+    showConfirmModal('确定要将此订单标记为已支付吗？', async () => {
+        try {
+            // 调用支付订单API
+            await fetchAPI(`/api/orders/${orderId}/pay`, { method: 'POST' });
+            showSuccessMessage('订单已标记为已支付');
+            // 刷新页面或重新加载数据
+            loadOrderDetail(orderUuid);
+        } catch (error) {
+            console.error('支付订单失败:', error);
+            showErrorMessage('支付订单失败: ' + error.message);
         }
     });
 }

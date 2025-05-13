@@ -7,6 +7,54 @@
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
+    <style>
+        .dashboard-container {
+            padding: 20px;
+        }
+        .stat-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-card .stat-label {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .chart-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 400px;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+        .loading i {
+            font-size: 3rem;
+            color: #007bff;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -46,12 +94,934 @@
         </div>
     </nav>
 
+    <!-- 仪表盘内容 -->
+    <div class="container dashboard-container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="text-dark"><i class="fas fa-tachometer-alt"></i> 系统仪表盘</h2>
+                <hr>
+            </div>
+        </div>
+        
+        <!-- 新增统计卡片：近一周、昨日、今日订单量 -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    <div class="stat-value" id="weekly-orders">--</div>
+                    <div class="stat-label">近一周订单量</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-value" id="yesterday-orders">--</div>
+                    <div class="stat-label">昨日订单量</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-value" id="today-orders">--</div>
+                    <div class="stat-label">今日订单量</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="stat-value" id="total-orders">--</div>
+                    <div class="stat-label">订单总量</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-value" id="recent-orders">--</div>
+                    <div class="stat-label">近15天订单量</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value" id="avg-daily-orders">--</div>
+                    <div class="stat-label">日均订单量</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 图表 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <h4 class="mb-3">近15天订单量趋势</h4>
+                    <div id="orders-chart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新增图表 -->
+        <div class="row mt-4">
+            <!-- 订单金额统计 -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 class="mb-3">近15天订单金额统计</h4>
+                    <div id="order-amount-chart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+            <!-- 订单状态分布 -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 class="mb-3">订单状态分布</h4>
+                    <div id="order-status-chart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <!-- 商品类别分布 -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 class="mb-3">商品类别销售分布</h4>
+                    <div id="product-category-chart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+            <!-- 支付方式分布 -->
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h4 class="mb-3">支付方式分布</h4>
+                    <div id="payment-method-chart" style="width: 100%; height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
     <script src="/js/res/all.min.js"></script>
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/admin/main.js"></script>
-
+    <!-- 动态加载ECharts库 -->
+    <script>
+        // 动态加载ECharts的函数
+        function loadECharts(callback) {
+            // 尝试检查是否已经加载
+            if (window.echarts) {
+                console.log('ECharts已经加载，直接使用');
+                callback && callback();
+                return;
+            }
+            
+            // 定义可能的CDN源
+            const sources = [
+                'https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js',
+                'https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js',
+                '/js/res/echarts.min.js' // 本地备份（如果存在）
+            ];
+            
+            // 尝试从不同源加载
+            function tryLoad(index) {
+                if (index >= sources.length) {
+                    console.error('所有ECharts源都加载失败');
+                    callback && callback();
+                    return;
+                }
+                
+                console.log('尝试从源加载ECharts:', sources[index]);
+                const script = document.createElement('script');
+                script.src = sources[index];
+                script.onload = function() {
+                    console.log('ECharts加载成功:', sources[index]);
+                    callback && callback();
+                };
+                script.onerror = function() {
+                    console.warn('从源加载失败:', sources[index]);
+                    // 尝试下一个源
+                    tryLoad(index + 1);
+                };
+                document.head.appendChild(script);
+            }
+            
+            // 开始尝试加载
+            tryLoad(0);
+        }
+        
+        // 页面加载完成后加载ECharts
+        $(document).ready(function() {
+            loadECharts(function() {
+                // ECharts加载完成后的回调
+                console.log('ECharts加载过程完成，状态:', typeof echarts !== 'undefined' ? '成功' : '失败');
+            });
+        });
+    </script>
+    
+    <script>
+        $(document).ready(function() {
+            // 检查登录状态
+            checkLoginStatus();
+            
+            // 先加载ECharts库，然后再加载仪表盘数据
+            loadECharts(function() {
+                // 无论ECharts加载成功与否，都加载仪表盘数据
+                // 如果加载失败，会使用备用的表格显示
+                loadDashboardData();
+            });
+        });
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/pages/admin/login.html';
+                return;
+            }
+            
+            // 设置当前用户名
+            const username = localStorage.getItem('username');
+            if (username) {
+                $('#current-username').text(username);
+            }
+            
+            // 退出登录
+            $('#logout-btn').click(function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('userId');
+                window.location.href = '/pages/admin/login.html';
+            });
+        }
+        
+        // 加载仪表盘数据
+        function loadDashboardData() {
+            const token = localStorage.getItem('token');
+            
+            // 显示加载中状态
+            $('#orders-chart').html('<div class="loading"><i class="fas fa-spinner fa-spin"></i></div>');
+            $('#total-orders').text('--');
+            $('#recent-orders').text('--');
+            $('#avg-daily-orders').text('--');
+            $('#weekly-orders').text('--');
+            $('#yesterday-orders').text('--');
+            $('#today-orders').text('--');
+            
+            console.log('开始请求仪表盘数据...');
+            
+            $.ajax({
+                url: '/api/orders/dashboard',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('获取仪表盘数据成功:', response);
+                    
+                    // 检查响应数据结构
+                    if (!response) {
+                        console.error('响应数据为空');
+                        $('#orders-chart').html('<div class="alert alert-danger">服务器返回数据为空</div>');
+                        return;
+                    }
+                    
+                    // 检查是否包含必要的字段
+                    if (response.totalOrders === undefined) {
+                        console.warn('响应中缺少totalOrders字段');
+                    }
+                    
+                    if (!response.recentOrders) {
+                        console.error('响应中缺少recentOrders字段');
+                        $('#orders-chart').html('<div class="alert alert-warning">近期订单数据不可用</div>');
+                        // 仍然更新其他统计数据
+                        updateDashboardStats(response);
+                        return;
+                    }
+                    
+                    // 检查recentOrders是否为空数组
+                    if (!Array.isArray(response.recentOrders)) {
+                        console.error('recentOrders不是数组类型:', response.recentOrders);
+                        $('#orders-chart').html('<div class="alert alert-warning">订单数据格式错误</div>');
+                        updateDashboardStats(response);
+                        return;
+                    }
+                    
+                    if (response.recentOrders.length === 0) {
+                        console.warn('recentOrders数组为空');
+                        $('#orders-chart').html('<div class="alert alert-warning">暂无订单数据</div>');
+                        updateDashboardStats(response);
+                        return;
+                    }
+                    
+                    // 检查第一条数据的格式，确保包含必要的字段
+                    const firstItem = response.recentOrders[0];
+                    if (!firstItem || !firstItem.orderDate || firstItem.orderCount === undefined) {
+                        console.error('订单数据格式不正确:', firstItem);
+                        // 尝试修复数据格式
+                        const fixedData = response.recentOrders.map(item => {
+                            // 如果是字符串，尝试解析为对象
+                            if (typeof item === 'string') {
+                                try {
+                                    return JSON.parse(item);
+                                } catch (e) {
+                                    return { orderDate: '未知日期', orderCount: 0 };
+                                }
+                            }
+                            // 确保返回的对象包含必要的字段
+                            return {
+                                orderDate: item.orderDate || '未知日期',
+                                orderCount: item.orderCount !== undefined ? item.orderCount : 0
+                            };
+                        });
+                        
+                        console.log('修复后的数据:', fixedData);
+                        // 更新统计数据和图表
+                        updateDashboardStats({...response, recentOrders: fixedData});
+                        initOrdersChart(fixedData);
+                        
+                        // 初始化其他图表
+                        initOrderAmountChart(fixedData);
+                        initOrderStatusChart();
+                        initProductCategoryChart();
+                        initPaymentMethodChart();
+                        return;
+                    }
+                    
+                    // 数据格式正确，更新统计数据和图表
+                    updateDashboardStats(response);
+                    initOrdersChart(response.recentOrders);
+                    
+                    // 初始化其他图表
+                    initOrderAmountChart(response.recentOrders);
+                    initOrderStatusChart();
+                    initProductCategoryChart();
+                    initPaymentMethodChart();
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取仪表盘数据失败:', status, error);
+                    console.error('响应内容:', xhr.responseText);
+                    
+                    let errorMsg = '获取数据失败';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMsg = xhr.responseJSON.message;
+                    } else if (xhr.status === 0) {
+                        errorMsg = '网络连接失败或服务器未响应';
+                    } else if (xhr.status === 401) {
+                        errorMsg = '未授权，请重新登录';
+                        // 可能需要重定向到登录页面
+                        setTimeout(function() {
+                            window.location.href = '/pages/admin/login.html';
+                        }, 2000);
+                    } else if (xhr.status === 404) {
+                        errorMsg = 'API接口不存在';
+                    } else if (xhr.status >= 500) {
+                        errorMsg = '服务器内部错误';
+                    }
+                    
+                    // 显示错误信息
+                    $('#orders-chart').html(`<div class="alert alert-danger">${errorMsg}</div>`);
+                    
+                    // 清空统计数据
+                    $('#total-orders').text('--');
+                    $('#recent-orders').text('--');
+                    $('#avg-daily-orders').text('--');
+                }
+            });
+        }
+        
+        // 更新仪表盘统计数据
+        function updateDashboardStats(data) {
+            console.log('更新仪表盘统计数据:', data);
+            
+            try {
+                // 更新订单总量
+                if (data.totalOrders !== undefined) {
+                    $('#total-orders').text(data.totalOrders || 0);
+                } else {
+                    console.warn('缺少totalOrders数据');
+                    $('#total-orders').text('--');
+                }
+                
+                // 计算近15天订单总量
+                let recentTotal = 0;
+                let validOrderCount = 0;
+                
+                // 新增：计算近一周、昨日和今日订单量
+                let weeklyTotal = 0;
+                let yesterdayTotal = 0;
+                let todayTotal = 0;
+                
+                if (data.recentOrders && Array.isArray(data.recentOrders) && data.recentOrders.length > 0) {
+                    // 获取当前日期
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // 设置为今天的开始时间
+                    
+                    // 获取昨天日期
+                    const yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    // 获取一周前日期
+                    const oneWeekAgo = new Date(today);
+                    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                    
+                    // 格式化日期为字符串，用于比较 - 修正日期格式化方式
+                    // 使用与后端一致的格式 YYYY-MM-DD
+                    const todayStr = formatDate(today);
+                    const yesterdayStr = formatDate(yesterday);
+                    
+                    // 添加日期格式化函数
+                    function formatDate(date) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    }
+                    
+                    data.recentOrders.forEach((item, index) => {
+                        if (item && item.orderCount !== undefined) {
+                            // 确保orderCount是数字
+                            const count = parseInt(item.orderCount) || 0;
+                            recentTotal += count;
+                            validOrderCount++;
+                            
+                            // 解析订单日期
+                            const orderDate = new Date(item.orderDate);
+                            const orderDateStr = item.orderDate.split(' ')[0]; // 假设日期格式为 'YYYY-MM-DD HH:MM:SS' 或 'YYYY-MM-DD'
+                            
+                            // 检查是否为今日订单
+                            if (orderDateStr === todayStr) {
+                                todayTotal += count;
+                            }
+                            
+                            // 检查是否为昨日订单
+                            if (orderDateStr === yesterdayStr) {
+                                yesterdayTotal += count;
+                            }
+                            
+                            // 检查是否为近一周订单
+                            if (orderDate >= oneWeekAgo) {
+                                weeklyTotal += count;
+                            }
+                            
+                            console.log(`第${index+1}条订单数据: 日期=${item.orderDate}, 数量=${count}`);
+                        } else {
+                            console.warn(`第${index+1}条订单数据缺少orderCount属性:`, item);
+                        }
+                    });
+                } else {
+                    console.warn('缺少recentOrders数据或格式不正确');
+                }
+                
+                $('#recent-orders').text(recentTotal);
+                $('#weekly-orders').text(weeklyTotal);
+                $('#yesterday-orders').text(yesterdayTotal);
+                $('#today-orders').text(todayTotal);
+                
+                // 计算日均订单量
+                // 使用有效的订单数据天数或默认15天
+                const days = validOrderCount > 0 ? validOrderCount : (data.recentOrders ? data.recentOrders.length : 15);
+                const avgDaily = days > 0 ? (recentTotal / days).toFixed(1) : 0;
+                $('#avg-daily-orders').text(avgDaily);
+                
+                console.log(`统计结果: 总订单=${data.totalOrders || 0}, 近期订单=${recentTotal}, 日均=${avgDaily}, 近一周=${weeklyTotal}, 昨日=${yesterdayTotal}, 今日=${todayTotal}`);
+            } catch (error) {
+                console.error('更新统计数据时出错:', error);
+                // 出错时显示默认值
+                $('#total-orders').text('--');
+                $('#recent-orders').text('--');
+                $('#avg-daily-orders').text('--');
+                $('#weekly-orders').text('--');
+                $('#yesterday-orders').text('--');
+                $('#today-orders').text('--');
+            }
+        }
+        
+        // 初始化订单图表
+        function initOrdersChart(recentOrders) {
+            // 添加调试信息
+            console.log('初始化图表，接收到的数据:', recentOrders);
+            
+            // 检查数据是否存在且格式正确
+            if (!recentOrders) {
+                console.error('订单数据为空');
+                $('#orders-chart').html('<div class="alert alert-warning">暂无订单数据</div>');
+                return;
+            }
+            
+            // 确保recentOrders是数组
+            if (!Array.isArray(recentOrders)) {
+                console.error('订单数据格式错误，应为数组:', recentOrders);
+                $('#orders-chart').html('<div class="alert alert-danger">数据格式错误</div>');
+                return;
+            }
+            
+            // 检查数组是否为空
+            if (recentOrders.length === 0) {
+                console.log('订单数组为空');
+                $('#orders-chart').html('<div class="alert alert-warning">暂无订单数据</div>');
+                return;
+            }
+            
+            // 准备图表数据
+            const dates = [];
+            const counts = [];
+            
+            // 检查数据格式并提取
+            try {
+                recentOrders.forEach((item, index) => {
+                    console.log(`处理第${index+1}条数据:`, item);
+                    
+                    // 检查必要的属性是否存在
+                    if (!item.orderDate) {
+                        console.warn(`第${index+1}条数据缺少orderDate属性:`, item);
+                        // 使用索引作为替代
+                        dates.push(`日期${index+1}`);
+                    } else {
+                        dates.push(item.orderDate);
+                    }
+                    
+                    if (item.orderCount === undefined || item.orderCount === null) {
+                        console.warn(`第${index+1}条数据缺少orderCount属性:`, item);
+                        // 使用0作为默认值
+                        counts.push(0);
+                    } else {
+                        // 确保orderCount是数字
+                        counts.push(parseInt(item.orderCount) || 0);
+                    }
+                });
+            } catch (error) {
+                console.error('处理订单数据时出错:', error);
+                $('#orders-chart').html(`<div class="alert alert-danger">处理数据时出错: ${error.message}</div>`);
+                return;
+            }
+            
+            console.log('处理后的图表数据 - 日期:', dates);
+            console.log('处理后的图表数据 - 数量:', counts);
+            
+            // 检查处理后的数据是否为空
+            if (dates.length === 0 || counts.length === 0) {
+                $('#orders-chart').html('<div class="alert alert-warning">处理后的数据为空</div>');
+                return;
+            }
+            
+            // 检查ECharts是否成功加载
+            if (typeof echarts === 'undefined') {
+                console.error('ECharts库未能成功加载，使用备用方案显示数据...');
+                // 使用简单的HTML表格作为备用显示方式
+                let tableHtml = '<div class="alert alert-warning">图表库加载失败，显示备用数据表格</div>';
+                tableHtml += '<table class="table table-striped table-bordered">';
+                tableHtml += '<thead><tr><th>日期</th><th>订单数量</th></tr></thead>';
+                tableHtml += '<tbody>';
+                
+                // 添加数据行
+                for (let i = 0; i < dates.length; i++) {
+                    tableHtml += `<tr><td>${dates[i]}</td><td>${counts[i]}</td></tr>`;
+                }
+                
+                tableHtml += '</tbody></table>';
+                $('#orders-chart').html(tableHtml);
+                return;
+            }
+            
+            // 初始化ECharts实例
+            try {
+                const chartDom = document.getElementById('orders-chart');
+                if (!chartDom) {
+                    console.error('找不到图表DOM元素');
+                    return;
+                }
+                
+                console.log('ECharts库已成功加载，开始初始化图表...');
+                const myChart = echarts.init(chartDom);
+                
+                // 图表配置
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        minInterval: 1
+                    },
+                    series: [{
+                        name: '订单数量',
+                        type: 'bar',
+                        data: counts,
+                        itemStyle: {
+                            color: '#007bff'
+                        },
+                        emphasis: {
+                            itemStyle: {
+                                color: '#0056b3'
+                            }
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    }]
+                };
+                
+                // 渲染图表
+                myChart.setOption(option);
+                
+                // 窗口大小变化时自动调整图表大小
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+                
+                console.log('图表渲染完成');
+            } catch (error) {
+                console.error('渲染图表时出错:', error);
+                $('#orders-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+            }
+        }
+        
+        // 初始化订单金额统计图表
+        function initOrderAmountChart(recentOrders) {
+            // 检查数据是否存在且格式正确
+            if (!recentOrders || !Array.isArray(recentOrders) || recentOrders.length === 0) {
+                $('#order-amount-chart').html('<div class="alert alert-warning">暂无订单金额数据</div>');
+                return;
+            }
+            
+            // 准备图表数据
+            const dates = [];
+            const amounts = [];
+            
+            // 模拟订单金额数据（实际项目中应从后端获取）
+            recentOrders.forEach((item, index) => {
+                // 使用订单日期
+                dates.push(item.orderDate || `日期${index+1}`);
+                
+                // 模拟订单金额（实际项目中应从后端获取真实数据）
+                // 这里假设每个订单的平均金额在100-500之间
+                const orderCount = parseInt(item.orderCount) || 0;
+                const avgOrderAmount = Math.floor(Math.random() * 400) + 100;
+                const totalAmount = orderCount * avgOrderAmount;
+                amounts.push(totalAmount);
+            });
+            
+            // 检查ECharts是否成功加载
+            if (typeof echarts === 'undefined') {
+                $('#order-amount-chart').html('<div class="alert alert-warning">图表库加载失败</div>');
+                return;
+            }
+            
+            // 初始化ECharts实例
+            try {
+                const chartDom = document.getElementById('order-amount-chart');
+                const myChart = echarts.init(chartDom);
+                
+                // 图表配置
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: '{b}<br/>{a}: {c} 元'
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: dates,
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '金额 (元)'
+                    },
+                    series: [{
+                        name: '订单金额',
+                        type: 'line',
+                        data: amounts,
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        itemStyle: {
+                            color: '#28a745'
+                        },
+                        lineStyle: {
+                            width: 3,
+                            color: '#28a745'
+                        },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(40, 167, 69, 0.5)' },
+                                { offset: 1, color: 'rgba(40, 167, 69, 0.1)' }
+                            ])
+                        }
+                    }]
+                };
+                
+                // 渲染图表
+                myChart.setOption(option);
+                
+                // 窗口大小变化时自动调整图表大小
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+            } catch (error) {
+                console.error('渲染订单金额图表时出错:', error);
+                $('#order-amount-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+            }
+        }
+        
+        // 初始化订单状态分布图表
+        function initOrderStatusChart() {
+            // 模拟订单状态数据（实际项目中应从后端获取）
+            const statusData = [
+                { value: 35, name: '已完成' },
+                { value: 20, name: '待发货' },
+                { value: 15, name: '已发货' },
+                { value: 10, name: '待付款' },
+                { value: 5, name: '已取消' }
+            ];
+            
+            // 检查ECharts是否成功加载
+            if (typeof echarts === 'undefined') {
+                $('#order-status-chart').html('<div class="alert alert-warning">图表库加载失败</div>');
+                return;
+            }
+            
+            // 初始化ECharts实例
+            try {
+                const chartDom = document.getElementById('order-status-chart');
+                const myChart = echarts.init(chartDom);
+                
+                // 图表配置
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'vertical',
+                        right: 10,
+                        top: 'center',
+                        data: statusData.map(item => item.name)
+                    },
+                    series: [{
+                        name: '订单状态',
+                        type: 'pie',
+                        radius: ['50%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: statusData,
+                        // 设置不同状态的颜色
+                        color: ['#28a745', '#17a2b8', '#007bff', '#ffc107', '#dc3545']
+                    }]
+                };
+                
+                // 渲染图表
+                myChart.setOption(option);
+                
+                // 窗口大小变化时自动调整图表大小
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+            } catch (error) {
+                console.error('渲染订单状态图表时出错:', error);
+                $('#order-status-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+            }
+        }
+        
+        // 初始化商品类别销售分布图表
+        function initProductCategoryChart() {
+            // 模拟商品类别数据（实际项目中应从后端获取）
+            const categoryData = [
+                { value: 40, name: '电子产品' },
+                { value: 25, name: '服装鞋帽' },
+                { value: 15, name: '食品饮料' },
+                { value: 10, name: '家居用品' },
+                { value: 10, name: '其他' }
+            ];
+            
+            // 检查ECharts是否成功加载
+            if (typeof echarts === 'undefined') {
+                $('#product-category-chart').html('<div class="alert alert-warning">图表库加载失败</div>');
+                return;
+            }
+            
+            // 初始化ECharts实例
+            try {
+                const chartDom = document.getElementById('product-category-chart');
+                const myChart = echarts.init(chartDom);
+                
+                // 图表配置
+                const option = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b}: {c} ({d}%)'
+                    },
+                    legend: {
+                        orient: 'horizontal',
+                        bottom: 'bottom',
+                        data: categoryData.map(item => item.name)
+                    },
+                    series: [{
+                        name: '商品类别',
+                        type: 'pie',
+                        radius: '55%',
+                        center: ['50%', '45%'],
+                        data: categoryData,
+                        // 设置不同类别的颜色
+                        color: ['#007bff', '#fd7e14', '#20c997', '#6f42c1', '#6c757d'],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        label: {
+                            formatter: '{b}: {d}%'
+                        }
+                    }]
+                };
+                
+                // 渲染图表
+                myChart.setOption(option);
+                
+                // 窗口大小变化时自动调整图表大小
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+            } catch (error) {
+                console.error('渲染商品类别图表时出错:', error);
+                $('#product-category-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+            }
+        }
+        
+        // 初始化支付方式分布图表
+        function initPaymentMethodChart() {
+            // 模拟支付方式数据（实际项目中应从后端获取）
+            const paymentData = [
+                { value: 60, name: '微信支付' },
+                { value: 30, name: '支付宝' },
+                { value: 5, name: '银行卡' },
+                { value: 5, name: '其他' }
+            ];
+            
+            // 检查ECharts是否成功加载
+            if (typeof echarts === 'undefined') {
+                $('#payment-method-chart').html('<div class="alert alert-warning">图表库加载失败</div>');
+                return;
+            }
+            
+            // 初始化ECharts实例
+            try {
+                const chartDom = document.getElementById('payment-method-chart');
+                const myChart = echarts.init(chartDom);
+                
+                // 图表配置 - 使用柱状图展示
+                const option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: paymentData.map(item => item.name)
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '订单数量'
+                    },
+                    series: [{
+                        name: '支付方式',
+                        type: 'bar',
+                        data: paymentData.map(item => item.value),
+                        itemStyle: {
+                            color: function(params) {
+                                // 为不同支付方式设置不同颜色
+                                const colorList = ['#07c160', '#1890ff', '#fa8c16', '#8c8c8c'];
+                                return colorList[params.dataIndex];
+                            }
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}'
+                        }
+                    }]
+                };
+                
+                // 渲染图表
+                myChart.setOption(option);
+                
+                // 窗口大小变化时自动调整图表大小
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+            } catch (error) {
+                console.error('渲染支付方式图表时出错:', error);
+                $('#payment-method-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+            }
+        }
+    </script>
 </body>
 </html>

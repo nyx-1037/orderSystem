@@ -107,6 +107,19 @@ public interface OrderDao {
      * @return 订单列表
      */
     List<Order> getOrdersByFilters(Map<String, Object> filters);
+    
+    /**
+     * 获取订单总数
+     * @return 订单总数
+     */
+    Integer getOrderCount();
+    
+    /**
+     * 获取近期订单数量统计
+     * @param params 包含startDate和endDate的参数Map
+     * @return 按日期分组的订单数量统计
+     */
+    List<Map<String, Object>> getRecentOrdersCount(Map<String, Object> params);
 }
 //    /**
 //     * 分页查询订单列表

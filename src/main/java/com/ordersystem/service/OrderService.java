@@ -150,5 +150,16 @@ public interface OrderService {
      */
     boolean cancelOrder(Integer orderId);
     
-
+    /**
+     * 获取订单总数
+     * @return 订单总数
+     */
+    Integer getOrderCount();
+    
+    /**
+     * 获取近期订单数量统计
+     * @param days 天数，如获取最近15天的数据
+     * @return 按日期分组的订单数量统计
+     */
+    List<Map<String, Object>> getRecentOrdersCount(Integer days);
 }

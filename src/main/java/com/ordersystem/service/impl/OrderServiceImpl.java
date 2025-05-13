@@ -19,11 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * 订单服务实现类
@@ -362,6 +358,127 @@ public class OrderServiceImpl implements OrderService, CommandLineRunner {
             return orderDao.updateOrder(order) > 0;
         }
         return false;
+    }
+    
+    @Override
+    public Integer getOrderCount() {
+        try {
+            // 尝试从Redis缓存获取
+            Object cachedCount = redisTemplate.opsForValue().get("orderCount");
+            if (cachedCount != null) {
+                return (Integer) cachedCount;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取订单总数失败", e);
+            // 继续从数据库获取
+        }
+        
+        // 从数据库获取订单总数
+        Integer count = orderDao.getOrderCount();
+        
+        try {
+            // 缓存订单总数，设置5分钟过期
+            redisTemplate.opsForValue().set("orderCount", count, 5, java.util.concurrent.TimeUnit.MINUTES);
+        } catch (Exception e) {
+            logger.error("缓存订单总数失败", e);
+            // 缓存失败不影响业务
+        }
+        
+        return count;
+    }
+    
+    @Override
+    public List<Map<String, Object>> getRecentOrdersCount(Integer days) {
+        if (days == null || days <= 0) {
+            days = 15; // 默认获取最近15天的数据
+        }
+        
+        String cacheKey = "recentOrdersCount:" + days;
+        
+        try {
+            // 尝试从Redis缓存获取
+            Object cachedData = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedData != null) {
+                return (List<Map<String, Object>>) cachedData;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取近期订单统计失败", e);
+            // 继续从数据库获取
+        }
+        
+        // 计算日期范围
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        java.util.Date endDate = calendar.getTime(); // 当前日期
+        
+        calendar.add(java.util.Calendar.DAY_OF_MONTH, -days + 1); // 减去天数（加1是为了包含今天）
+        java.util.Date startDate = calendar.getTime();
+        
+        // 格式化日期
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        String startDateStr = sdf.format(startDate) + " 00:00:00";
+        String endDateStr = sdf.format(endDate) + " 23:59:59";
+        
+        // 构建查询参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("startDate", startDateStr);
+        params.put("endDate", endDateStr);
+        
+        // 从数据库获取数据
+        List<Map<String, Object>> result = orderDao.getRecentOrdersCount(params);
+        
+        // 确保每一天都有数据，如果某天没有订单，则添加0
+        Map<String, Object> filledResult = fillMissingDates(result, startDate, endDate);
+        // 使用流操作进行类型转换，确保类型安全
+        List<Map<String, Object>> sortedResult = filledResult.values().stream()
+                .map(obj -> (Map<String, Object>) obj)
+                .collect(java.util.stream.Collectors.toList());
+        
+        // 按日期排序
+        sortedResult.sort((a, b) -> a.get("orderDate").toString().compareTo(b.get("orderDate").toString()));
+        
+        try {
+            // 缓存结果，设置1小时过期
+            redisTemplate.opsForValue().set(cacheKey, sortedResult, 1, java.util.concurrent.TimeUnit.HOURS);
+        } catch (Exception e) {
+            logger.error("缓存近期订单统计失败", e);
+            // 缓存失败不影响业务
+        }
+        
+        return sortedResult;
+    }
+    
+    /**
+     * 填充缺失的日期数据
+     * @param data 原始数据
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 填充后的数据
+     */
+    private Map<String, Object> fillMissingDates(List<Map<String, Object>> data, java.util.Date startDate, java.util.Date endDate) {
+        Map<String, Object> result = new HashMap<>();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        
+        // 将原始数据转换为Map，以日期为键
+        for (Map<String, Object> item : data) {
+            result.put(item.get("orderDate").toString(), item);
+        }
+        
+        // 填充缺失的日期
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        calendar.setTime(startDate);
+        
+        while (!calendar.getTime().after(endDate)) {
+            String dateStr = sdf.format(calendar.getTime());
+            if (!result.containsKey(dateStr)) {
+                Map<String, Object> emptyData = new HashMap<>();
+                emptyData.put("orderDate", dateStr);
+                emptyData.put("orderCount", 0);
+                result.put(dateStr, emptyData);
+            }
+            calendar.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        }
+        
+        return result;
     }
     
     /**

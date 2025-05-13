@@ -1,5 +1,7 @@
 # 在线商城系统&后台订单管理系统
 
+最近修订日期：2025/05/13
+
 ## 项目简介
 基于Spring Boot 2.7构建的分布式小电商平台，带有后台订单管理，集成MyBatis+MySQL数据持久化方案，提供完整的订单生命周期管理功能。
 
@@ -11,6 +13,7 @@
 - PageHelper分页查询/前端界面懒加载
 - MD5密码加密
 - swagger-ui接口文档
+- echarts 数据可视化
 
 ## 技术栈
 - **核心框架**: Spring Boot 2.7.0
@@ -22,6 +25,7 @@
 - **日志系统**: SLF4J 1.7.36 + Logback 1.2.11
 - **api文档**: Swagger 2.9.2
 - **前端**: HTML5 + CSS3 + JavaScript + Bootstrap 4.6.1 响应式布局
+- **图表**：Apache ECharts 5.0.0
 
 ## 环境要求
 - JDK 1.8+

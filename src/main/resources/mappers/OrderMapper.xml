@@ -215,4 +215,20 @@
         </where>
         ORDER BY o.create_time DESC
     </select>
+    
+    <!-- 获取订单总数 -->
+    <select id="getOrderCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM `order`
+    </select>
+    
+    <!-- 获取近期订单数量统计 -->
+    <select id="getRecentOrdersCount" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT 
+            DATE(create_time) as orderDate, 
+            COUNT(*) as orderCount
+        FROM `order`
+        WHERE create_time BETWEEN #{startDate} AND #{endDate}
+        GROUP BY DATE(create_time)
+        ORDER BY orderDate ASC
+    </select>
 </mapper>
