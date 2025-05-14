@@ -6,6 +6,7 @@ import com.ordersystem.entity.OrderItem;
 import com.ordersystem.entity.User;
 import com.ordersystem.service.OrderItemService;
 import com.ordersystem.service.OrderService;
+import com.ordersystem.service.ProductService;
 import com.ordersystem.service.UserService;
 import com.ordersystem.service.impl.UserServiceImpl;
 import com.ordersystem.util.UUIDGenerater;
@@ -49,6 +50,8 @@ public class OrderController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ProductService productService;
     @Autowired
     private OrderItemService orderItemService;
 	@Autowired
@@ -320,15 +323,182 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
         
-        // 设置用户ID
-        order.setUserId(userId);
-        log.info("为用户 {} 创建订单", userId);
+        // 如果前端没有指定用户ID，则使用当前登录用户的ID
+        if (order.getUserId() == null) {
+            order.setUserId(userId);
+            log.info("为用户 {} 创建订单", userId);
+        } else {
+            // 如果指定了用户ID，检查当前用户是否为管理员
+            User currentUser = userService.getUserById(userId);
+            if (currentUser == null || currentUser.getRole() != 1) {
+                // 非管理员不能为其他用户创建订单
+                log.warn("非管理员用户 {} 尝试为用户 {} 创建订单", userId, order.getUserId());
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "您无权为其他用户创建订单");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            // 验证指定的用户是否存在
+            User targetUser = userService.getUserById(order.getUserId());
+            if (targetUser == null) {
+                log.error("指定的用户不存在，用户ID: {}", order.getUserId());
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "指定的用户不存在");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            
+            log.info("管理员 {} 为用户 {} 创建订单", userId, order.getUserId());
+        }
+        
+        // 处理订单项，确保每个订单项都有商品名称
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            for (OrderItem item : order.getItems()) {
+                // 如果商品名称为空，则从数据库获取
+                if (item.getProductName() == null || item.getProductName().trim().isEmpty()) {
+                    // 获取商品信息
+                    com.ordersystem.entity.Product product = productService.getProductById(item.getProductId());
+                    if (product != null) {
+                        // 设置商品名称
+                        item.setProductName(product.getProductName());
+                        log.info("为订单项设置商品名称: {}", product.getProductName());
+                    } else {
+                        log.error("无法获取商品信息，商品ID: {}", item.getProductId());
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("success", false);
+                        response.put("message", "订单创建失败: 无法获取商品信息");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+                }
+            }
+        }
         
         // 创建订单
         try {
             boolean success = orderService.createOrder(order);
             if (success) {
                 log.info("订单创建成功, 订单ID: {}", order.getOrderId());
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "订单创建成功");
+                response.put("orderId", order.getOrderId());
+                response.put("order", order);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            } else {
+                log.error("订单服务未能成功创建订单");
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "订单创建失败");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+        } catch (Exception e) {
+            log.error("创建订单时发生异常", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "订单创建失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    /**
+     * 管理员为指定用户创建订单
+     * 
+     * @param order 订单信息
+     * @param bindingResult 验证结果
+     * @param request HTTP请求
+     * @return 创建结果
+     */
+    @ApiOperation(value = "管理员为指定用户创建订单", notes = "管理员创建订单时可以指定用户ID")
+    @PostMapping("/admin/create")
+    public ResponseEntity<?> adminCreateOrder(
+            @Valid @RequestBody Order order,
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+        log.info("接收到管理员创建订单请求数据: {}", order);
+        log.info("订单明细项数据: {}", order.getItems() != null ? order.getItems() : "null");
+
+        // 检查验证错误
+        if (bindingResult.hasErrors()) {
+            String errorMsg = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.joining(", "));
+            log.error("订单数据验证失败: {}", errorMsg);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "订单信息有误: " + errorMsg);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+
+        // 从请求属性中获取用户ID（由TokenInterceptor设置）
+        Integer adminId = (Integer) request.getAttribute("userId");
+        if (adminId == null) {
+            log.warn("用户未登录，无法创建订单");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录，无法创建订单");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        // 验证当前用户是否为管理员
+        User admin = userService.getUserById(adminId);
+        if (admin == null || admin.getRole() != 1) {
+            log.warn("非管理员用户 {} 尝试使用管理员接口创建订单", adminId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "您无权使用此接口");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+        
+        // 验证指定的用户ID是否存在
+        if (order.getUserId() == null) {
+            log.error("未指定用户ID");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "请指定用户ID");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        
+        User targetUser = userService.getUserById(order.getUserId());
+        if (targetUser == null) {
+            log.error("指定的用户不存在，用户ID: {}", order.getUserId());
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "指定的用户不存在");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        
+        log.info("管理员 {} 为用户 {} 创建订单", adminId, order.getUserId());
+        
+        // 处理订单项，确保每个订单项都有商品名称
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            for (OrderItem item : order.getItems()) {
+                // 如果商品名称为空，则从数据库获取
+                if (item.getProductName() == null || item.getProductName().trim().isEmpty()) {
+                    // 获取商品信息
+                    com.ordersystem.entity.Product product = productService.getProductById(item.getProductId());
+                    if (product != null) {
+                        // 设置商品名称
+                        item.setProductName(product.getProductName());
+                        log.info("为订单项设置商品名称: {}", product.getProductName());
+                    } else {
+                        log.error("无法获取商品信息，商品ID: {}", item.getProductId());
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("success", false);
+                        response.put("message", "订单创建失败: 无法获取商品信息");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+                }
+            }
+        }
+        
+        // 创建订单
+        try {
+            boolean success = orderService.createOrder(order);
+            if (success) {
+                log.info("管理员创建订单成功, 订单ID: {}", order.getOrderId());
                 
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);

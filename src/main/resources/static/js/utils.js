@@ -90,12 +90,17 @@ async function fetchAPI(url, options = {}) {
     
     // 从localStorage获取token并添加到请求头
     const token = localStorage.getItem('token');
-    if (token) {
-        defaultOptions.headers['Authorization'] = `Bearer ${token}`;
-    }
     
-    // 合并选项
+    // 合并选项，但保留headers分开处理
     const fetchOptions = { ...defaultOptions, ...options };
+    
+    // 确保headers被正确合并，特别是Authorization头
+    fetchOptions.headers = { ...defaultOptions.headers, ...options.headers || {} };
+    
+    // 确保token被添加到合并后的headers中
+    if (token) {
+        fetchOptions.headers['Authorization'] = `Bearer ${token}`;
+    }
     
     try {
         console.log(`发送${fetchOptions.method}请求到:`, url);
@@ -111,20 +116,26 @@ async function fetchAPI(url, options = {}) {
                 errorData = { message: response.statusText };
             }
             
-            // 如果是未授权错误 (401)，根据当前页面决定跳转
+            // 如果是未授权错误 (401)，显示token过期提示并延迟3秒后重定向
             if (response.status === 401) {
+                // 显示token过期提示
+                showErrorMessage('登录已过期，请重新登录');
+                
+                // 根据当前页面决定跳转
                 const currentPath = window.location.pathname;
-                if (currentPath.includes('/admin/')) {
-                     // 只有在非管理员登录页面才跳转
-                    if (!currentPath.includes('/admin/login.html')) {
-                        window.location.href = '/pages/admin/login.html';
+                setTimeout(() => {
+                    if (currentPath.includes('/admin/')) {
+                        // 只有在非管理员登录页面才跳转
+                        if (!currentPath.includes('/admin/login.html')) {
+                            window.location.href = '/pages/admin/login.html';
+                        }
+                    } else {
+                        // 客户端页面跳转到客户端登录
+                        if (!currentPath.includes('/client/login.html')) {
+                            window.location.href = '/pages/client/login.html';
+                        }
                     }
-                } else {
-                    // 客户端页面跳转到客户端登录
-                     if (!currentPath.includes('/client/login.html')) {
-                         window.location.href = '/pages/client/login.html';
-                     }
-                }
+                }, 3000); // 延迟3秒后重定向
             }
             
             // 抛出错误

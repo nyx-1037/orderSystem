@@ -65,12 +65,30 @@ async function loadImageWithAuth(url, imgElement) {
         
         if (!response.ok) {
             console.error(`Image load failed with status: ${response.status}`); // 添加日志
-            // 如果是401，尝试刷新token或重定向
+            // 如果是401，显示token过期提示并延迟3秒后重定向
             if (response.status === 401) {
                 console.error('Image load failed due to unauthorized access (401).');
-                // 可以选择触发登录流程或显示特定错误
-                // 这里暂时还是设置为默认图片
+                // 显示token过期提示
+                showErrorMessage('登录已过期，请重新登录');
+                
+                // 设置默认图片
                 imgElement.attr('src', '/images/default-product.jpg');
+                
+                // 根据当前页面决定跳转
+                const currentPath = window.location.pathname;
+                setTimeout(() => {
+                    if (currentPath.includes('/admin/')) {
+                        // 只有在非管理员登录页面才跳转
+                        if (!currentPath.includes('/admin/login.html')) {
+                            window.location.href = '/pages/admin/login.html';
+                        }
+                    } else {
+                        // 客户端页面跳转到客户端登录
+                        if (!currentPath.includes('/client/login.html')) {
+                            window.location.href = '/pages/client/login.html';
+                        }
+                    }
+                }, 3000); // 延迟3秒后重定向
                 return;
             }
             throw new Error(`图片加载失败: ${response.status}`);

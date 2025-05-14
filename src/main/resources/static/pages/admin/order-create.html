@@ -2,16 +2,70 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>创建订单(管理员) - 在线商城后台管理端</title>
+    <title>创建订单(管理员) - 七洛商城后台管理端</title>
+    <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
+    <style>
+        /* 自定义样式 */
+        .order-container {
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        
+        .order-header {
+            margin-bottom: 30px;
+        }
+        
+        .product-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .product-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .cart-summary {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        /* 用户选择模态框样式 */
+        .user-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .user-list-container table {
+            margin-bottom: 0;
+        }
+        
+        .user-list-container th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
+        }
+        
+        #selected-user-display {
+            background-color: #f8f9fa;
+            cursor: default;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 在线商城后台管理端</a>
+            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 七洛商城后台管理端</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -76,6 +130,19 @@
                 <div class="cart-summary">
                     <h4 class="mb-3">订单信息</h4>
                     <form id="order-form">
+                        <div class="form-group">
+                            <label for="userId">选择用户</label>
+                            <div class="input-group">
+                                <input type="hidden" id="userId" name="userId" required>
+                                <input type="text" class="form-control" id="selected-user-display" placeholder="未选择用户" readonly>
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button" id="select-user-btn" data-toggle="modal" data-target="#userSelectModal">
+                                        <i class="fas fa-user-plus"></i> 选择用户
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">选择要为其创建订单的用户</small>
+                        </div>
                         <div class="form-group">
                             <label for="receiver">收货人</label>
                             <input type="text" class="form-control" id="receiver" name="receiver" required>
@@ -142,8 +209,9 @@
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
     <script src="/js/res/all.min.js"></script>
+    <script src="/js/utils.js"></script>
 
-    <!-- 添加搜索框 -->
+    <!-- 商品搜索模态框 -->
     <div class="modal fade" id="searchModal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -175,6 +243,59 @@
             </div>
         </div>
     </div>
+    
+    <!-- 用户选择模态框 -->
+    <div class="modal fade" id="userSelectModal" tabindex="-1" role="dialog" aria-labelledby="userSelectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userSelectModalLabel">选择用户</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="user-search" placeholder="搜索用户名或昵称...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-primary" type="button" id="search-users-btn">
+                                    <i class="fas fa-search"></i> 搜索
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="refresh-users-btn">
+                                    <i class="fas fa-sync-alt"></i> 刷新
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-list-container">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>用户ID</th>
+                                        <th>用户名</th>
+                                        <th>昵称</th>
+                                        <th>联系电话</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-list">
+                                    <tr>
+                                        <td colspan="5" class="text-center">加载中...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 全局变量
@@ -196,6 +317,9 @@
             
             // 加载商品数据
             loadProducts();
+            
+            // 加载用户列表
+            loadUsers();
         });
         
         /**
@@ -247,7 +371,7 @@
             });
             
             // 搜索按钮点击事件
-            $(document).on('click', '#search-btn', function() {
+            $('#search-btn').on('click', function() {
                 // 获取搜索参数
                 searchParams = {
                     name: $('#search-name').val(),
@@ -266,6 +390,14 @@
                 
                 // 关闭搜索模态框
                 $('#searchModal').modal('hide');
+            });
+            
+            // 搜索表单回车事件
+            $('#search-form').on('keypress', function(e) {
+                if (e.which === 13) { // 回车键
+                    e.preventDefault();
+                    $('#search-btn').click();
+                }
             });
             
             // 重置按钮点击事件
@@ -322,12 +454,66 @@
                 e.preventDefault();
                 submitOrder();
             });
+            
+            // 模态框显示时加载用户列表
+            $('#userSelectModal').on('shown.bs.modal', function() {
+                loadUsers();
+            });
+            
+            // 刷新用户列表按钮点击事件
+            $('#refresh-users-btn').on('click', function() {
+                $('#user-search').val(''); // 清空搜索框
+                loadUsers();
+            });
+            
+            // 搜索用户按钮点击事件
+            $('#search-users-btn').on('click', function() {
+                const keyword = $('#user-search').val().trim();
+                loadUsers(keyword);
+            });
+            
+            // 搜索框回车事件
+            $('#user-search').on('keypress', function(e) {
+                if (e.which === 13) { // 回车键
+                    e.preventDefault();
+                    const keyword = $(this).val().trim();
+                    loadUsers(keyword);
+                }
+            });
+            
+            // 用户选择按钮点击事件（使用事件委托，因为按钮是动态生成的）
+            $(document).on('click', '.select-user-btn', function() {
+                const userId = $(this).data('user-id');
+                const username = $(this).data('username');
+                const nickname = $(this).data('nickname');
+                
+                // 设置隐藏的用户ID输入框
+                $('#userId').val(userId);
+                
+                // 设置显示的用户名
+                const displayName = nickname ? `${username} (${nickname})` : username;
+                $('#selected-user-display').val(displayName);
+                
+                // 获取选中用户的收货信息
+                fetchUserInfo(userId);
+                
+                // 关闭模态框
+                $('#userSelectModal').modal('hide');
+                
+                // 启用提交按钮（如果已选择商品）
+                updateSubmitButtonState();
+            });
+            
+            // 选择用户按钮点击事件
+            $('#select-user-btn').on('click', function() {
+                // 模态框会自动显示，因为已经设置了data-toggle和data-target属性
+            });
         }
         
         /**
          * 加载商品数据
          */
-        function loadProducts() {
+        async function loadProducts() {
             if (isLoading) return;
             
             isLoading = true;
@@ -364,53 +550,48 @@
             if (searchParams.name) params.name = searchParams.name;
             if (searchParams.category) params.category = searchParams.category;
             
-            // 发送AJAX请求获取商品数据
-            $.ajax({
-                url: '/api/products',
-                type: 'GET',
-                data: params,
-                success: function(response) {
-                    // 移除加载提示
-                    if (currentPage === 1) {
-                        $('#products-container').empty();
-                    } else {
-                        $('#loading-indicator').remove();
-                    }
-                    
-                    // 更新分页信息
-                    totalPages = response.pages;
-                    hasNextPage = response.hasNextPage;
-                    
-                    // 如果没有商品数据
-                    if (response.list.length === 0) {
-                        $('#products-container').html(
-                            `<div class="alert alert-info">没有找到符合条件的商品</div>`
-                        );
-                        return;
-                    }
-                    
-                    // 渲染商品列表
-                    renderProducts(response.list);
-                },
-                error: function(xhr, status, error) {
-                    console.error('加载商品数据失败:', error);
-                    
-                    // 显示错误提示
-                    if (currentPage === 1) {
-                        $('#products-container').html(
-                            `<div class="alert alert-danger">加载商品数据失败，请刷新页面重试</div>`
-                        );
-                    } else {
-                        $('#loading-indicator').remove();
-                        $('#products-container').append(
-                            `<div class="alert alert-danger mt-3">加载更多商品失败，请重试</div>`
-                        );
-                    }
-                },
-                complete: function() {
-                    isLoading = false;
+            try {
+                // 使用fetchAPI获取商品数据
+                const response = await fetchAPI('/api/products?' + new URLSearchParams(params).toString());
+                
+                // 移除加载提示
+                if (currentPage === 1) {
+                    $('#products-container').empty();
+                } else {
+                    $('#loading-indicator').remove();
                 }
-            });
+                
+                // 更新分页信息
+                totalPages = response.pages;
+                hasNextPage = response.hasNextPage;
+                
+                // 如果没有商品数据
+                if (response.list.length === 0) {
+                    $('#products-container').html(
+                        `<div class="alert alert-info">没有找到符合条件的商品</div>`
+                    );
+                    return;
+                }
+                
+                // 渲染商品列表
+                renderProducts(response.list);
+            } catch (error) {
+                console.error('加载商品数据失败:', error);
+                
+                // 显示错误提示
+                if (currentPage === 1) {
+                    $('#products-container').html(
+                        `<div class="alert alert-danger">加载商品数据失败，请刷新页面重试</div>`
+                    );
+                } else {
+                    $('#loading-indicator').remove();
+                    $('#products-container').append(
+                        `<div class="alert alert-danger mt-3">加载更多商品失败，请重试</div>`
+                    );
+                }
+            } finally {
+                isLoading = false;
+            }
         }
         
         /**
@@ -439,7 +620,7 @@
                 
                 // 设置商品描述
                 const descElement = clone.querySelector('.product-desc');
-                descElement.textContent = product.description || '暂无描述';
+                descElement.textContent = product.productDesc || product.description || '暂无描述';
                 
                 // 设置商品价格
                 const priceElement = clone.querySelector('.product-price');
@@ -449,9 +630,38 @@
                 const stockElement = clone.querySelector('.product-stock');
                 stockElement.textContent = product.stock;
                 
+                // 添加库存状态显示
+                const stockStatus = document.createElement('span');
+                stockStatus.className = 'ml-2 badge';
+                stockStatus.style.color = 'white';
+                
+                if (product.stock > 10) {
+                    stockStatus.textContent = '库存充足';
+                    stockStatus.style.backgroundColor = '#28a745'; // 绿色
+                } else if (product.stock > 0) {
+                    stockStatus.textContent = '库存紧张';
+                    stockStatus.style.backgroundColor = '#ffc107'; // 黄色
+                } else {
+                    stockStatus.textContent = '库存不足';
+                    stockStatus.style.backgroundColor = '#dc3545'; // 红色
+                }
+                
+                stockElement.parentNode.appendChild(stockStatus);
+                
                 // 设置数量输入框最大值
                 const quantityInput = clone.querySelector('.quantity-input');
                 quantityInput.setAttribute('max', product.stock);
+                
+                // 当库存为0时，禁用增减按钮
+                const increaseBtn = clone.querySelector('.increase-btn');
+                const decreaseBtn = clone.querySelector('.decrease-btn');
+                
+                if (product.stock <= 0) {
+                    increaseBtn.disabled = true;
+                    decreaseBtn.disabled = true;
+                    increaseBtn.classList.add('disabled');
+                    decreaseBtn.classList.add('disabled');
+                }
                 
                 // 如果商品已经被选中，设置数量
                 const selectedProduct = selectedProducts.find(p => p.productId === product.productId);
@@ -513,8 +723,20 @@
                 }
             });
             
-            // 启用或禁用提交按钮
-            $('#submit-btn').prop('disabled', selectedProducts.length === 0);
+            // 更新提交按钮状态
+            updateSubmitButtonState();
+        }
+        
+        /**
+         * 更新提交按钮状态
+         */
+        function updateSubmitButtonState() {
+            // 检查是否选择了用户和商品
+            const hasUser = $('#userId').val() !== '';
+            const hasProducts = selectedProducts.length > 0;
+            
+            // 只有同时选择了用户和商品，才启用提交按钮
+            $('#submit-btn').prop('disabled', !hasUser || !hasProducts);
         }
         
         /**
@@ -538,7 +760,14 @@
         /**
          * 提交订单
          */
-        function submitOrder() {
+        async function submitOrder() {
+            // 验证用户选择
+            const userId = $('#userId').val();
+            if (!userId) {
+                showErrorMessage('请选择要为其创建订单的用户');
+                return;
+            }
+            
             // 如果没有选择商品，不提交
             if (selectedProducts.length === 0) {
                 showErrorMessage('请至少选择一件商品');
@@ -547,6 +776,7 @@
             
             // 获取订单信息
             const orderData = {
+                userId: $('#userId').val(), // 添加用户ID
                 receiver: $('#receiver').val(),
                 receiverPhone: $('#receiverPhone').val(),
                 address: $('#address').val(),
@@ -554,7 +784,8 @@
                 items: selectedProducts.map(function(product) {
                     return {
                         productId: product.productId,
-                        quantity: product.quantity
+                        quantity: product.quantity,
+                        productPrice: product.price
                     };
                 })
             };
@@ -562,53 +793,43 @@
             // 禁用提交按钮，防止重复提交
             $('#submit-btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 提交中...');
             
-            // 发送AJAX请求创建订单
-            $.ajax({
-                url: '/api/orders',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(orderData),
-                success: function(response) {
-                    if (response.success) {
-                        // 显示成功消息
-                        showSuccessMessage('订单创建成功！');
-                        
-                        // 清空表单
-                        $('#order-form')[0].reset();
-                        
-                        // 清空已选商品
-                        $('.quantity-input').val(0);
-                        updateSelectedProducts();
-                        updateOrderSummary();
-                        
-                        // 3秒后跳转到订单详情页
-                        setTimeout(function() {
-                            window.location.href = '/pages/admin/order-detail.html?id=' + response.orderId;
-                        }, 3000);
-                    } else {
-                        showErrorMessage(response.message || '订单创建失败');
-                        // 恢复提交按钮
-                        $('#submit-btn').prop('disabled', false).text('提交订单');
-                    }
-                },
-                error: function(xhr, status, error) {
-                    let errorMsg = '订单创建失败';
-                    
-                    // 尝试解析错误信息
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        errorMsg = response.message || errorMsg;
-                    } catch (e) {
-                        console.error('解析错误响应失败:', e);
-                    }
-                    
-                    showErrorMessage(errorMsg);
-                    
-                    // 恢复提交按钮
-                    $('#submit-btn').prop('disabled', false).text('提交订单');
-                }
-            });
+            try {
+                // 使用fetchAPI发送请求，它会自动添加Authorization头部
+                // 使用管理员创建订单的API
+                const response = await fetchAPI('/api/orders/admin/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                // 显示成功消息
+                showSuccessMessage('订单创建成功！');
+                
+                // 清空表单
+                $('#order-form')[0].reset();
+                
+                // 清空已选商品
+                $('.quantity-input').val(0);
+                updateSelectedProducts();
+                updateOrderSummary();
+                
+                // 3秒后跳转到订单详情页，使用uuid参数
+                setTimeout(function() {
+                    window.location.href = '/pages/admin/order-detail.html?uuid=' + (response.orderUuid || response.order.orderUuid);
+                }, 3000);
+                
+            } catch (error) {
+                console.error('创建订单失败:', error);
+                let errorMsg = error.message || '订单创建失败';
+                showErrorMessage(errorMsg);
+                
+                // 恢复提交按钮
+                $('#submit-btn').prop('disabled', false).text('提交订单');
+            }
         }
+        
         
         /**
          * 显示成功消息
@@ -637,6 +858,107 @@
                 $('#error-message').slideUp();
             }, 5000);
         }
+        
+        /**
+         * 加载用户列表
+         * @param {string} keyword 搜索关键词，可选
+         */
+        async function loadUsers(keyword) {
+            try {
+                // 显示加载中状态
+                const $userList = $('#user-list');
+                $userList.html('<tr><td colspan="5" class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> 加载中...</td></tr>');
+                
+                // 构建API请求URL
+                let url = '/api/users';
+                if (keyword) {
+                    url += `?username=${encodeURIComponent(keyword)}`;
+                }
+                
+                // 获取用户列表
+                const response = await fetchAPI(url);
+                
+                // 清空用户列表
+                $userList.empty();
+                
+                // 添加用户选项
+                if (response && response.list && response.list.length > 0) {
+                    response.list.forEach(function(user) {
+                        // 只添加状态正常的用户
+                        if (user.status === 1) {
+                            const userRow = `
+                                <tr data-user-id="${user.userId}">
+                                    <td>${user.userId}</td>
+                                    <td>${user.username}</td>
+                                    <td>${user.nickname || '-'}</td>
+                                    <td>${user.phone || '-'}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary select-user-btn" data-user-id="${user.userId}" 
+                                            data-username="${user.username}" data-nickname="${user.nickname || ''}">
+                                            <i class="fas fa-check"></i> 选择
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            $userList.append(userRow);
+                        }
+                    });
+                    
+                    // 如果是搜索结果，显示匹配数量
+                    if (keyword) {
+                        showSuccessMessage(`找到 ${response.list.length} 个匹配的用户`);
+                    }
+                } else {
+                    if (keyword) {
+                        $userList.html('<tr><td colspan="5" class="text-center">没有找到匹配的用户</td></tr>');
+                        showErrorMessage(`没有找到与 "${keyword}" 匹配的用户`);
+                    } else {
+                        $userList.html('<tr><td colspan="5" class="text-center">没有可用的用户</td></tr>');
+                    }
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+                $('#user-list').html('<tr><td colspan="5" class="text-center text-danger">加载用户失败</td></tr>');
+                showErrorMessage('加载用户列表失败: ' + (error.message || '未知错误'));
+            }
+        }
+        
+        /**
+         * 获取用户信息
+         * @param {number} userId 用户ID
+         */
+        async function fetchUserInfo(userId) {
+            try {
+                // 获取用户详细信息
+                const user = await fetchAPI(`/api/users/${userId}`);
+                
+                // 如果用户有收货信息，自动填充表单
+                if (user) {
+                    // 填充收货人信息
+                    if (user.realName) {
+                        $('#receiver').val(user.realName);
+                    } else if (user.nickname) {
+                        $('#receiver').val(user.nickname);
+                    } else {
+                        $('#receiver').val(user.username);
+                    }
+                    
+                    // 填充联系电话
+                    if (user.phone) {
+                        $('#receiverPhone').val(user.phone);
+                    }
+                    
+                    // 填充收货地址
+                    if (user.address) {
+                        $('#address').val(user.address);
+                    }
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+                // 不显示错误消息，避免干扰用户体验
+            }
+        }
     </script>
+<p>© 2024 七洛商城后台管理. 保留所有权利.</p>
 </body>
 </html>

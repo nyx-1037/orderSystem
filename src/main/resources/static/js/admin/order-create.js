@@ -422,12 +422,20 @@ async function submitOrder() {
         console.log('发送POST请求到: /api/orders');
         console.log('请求数据:', orderData);
         
+        // 获取token并设置请求头
+        const token = localStorage.getItem('token');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         // 发送创建订单请求
         const response = await fetchAPI('/api/orders', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: headers,
             body: JSON.stringify(orderData)
         });
         
