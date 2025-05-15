@@ -157,12 +157,15 @@ public class UserController {
      * @return 登录结果
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginUser) {
+    public ResponseEntity<?> login(@RequestBody User loginUser, HttpServletRequest request) {
         // 调用service层的login方法进行用户验证
         String username = loginUser.getUsername();
         String password = loginUser.getPassword();
 
         try {
+            // 验证码验证在前端完成，这里不再重复验证
+            // 前端会先调用/api/captcha/verify接口验证验证码，验证通过后再调用登录接口
+            
             User user = userService.login(username, password);
             
             // 用户登录成功
@@ -223,7 +226,10 @@ public class UserController {
      * @return 注册结果
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody User user, HttpServletRequest request) {
+        // 验证码验证在前端完成，这里不再重复验证
+        // 前端会先调用/api/captcha/verify接口验证验证码，验证通过后再调用注册接口
+        
         // 检查用户名是否已存在
         User existingUser = userService.getUserByUsername(user.getUsername());
         if (existingUser != null) {

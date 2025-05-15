@@ -55,10 +55,10 @@ public class SwaggerConfig implements WebMvcConfigurer {
      */
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("订单管理系统API文档")
-                .description("提供订单管理系统的所有API接口说明")
-                .contact(new Contact("nyx1037", "http://www.nyx-1037.github.io", "dev@example.com"))
-                .version("2.0.20250511")
+                .title("七洛商城系统API文档")
+                .description("提供七洛商城系统的所有API接口说明")
+                .contact(new Contact("nyx1037", "http://www.nyx-1037.github.io", "1037678078@qq.com"))
+                .version("2.0.20250515")
                 .build();
     }
 

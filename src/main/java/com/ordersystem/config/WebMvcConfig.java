@@ -34,7 +34,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 添加Token拦截器，拦截所有API请求，但排除登录和注册接口
+        // 添加Token拦截器，拦截所有API请求，但排除登录、注册和验证码接口
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
@@ -43,6 +43,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     "/api/admin/auth/login",
                     "/api/products",
                     "/api/products/**",
+                    "/api/captcha/**",
                     "/swagger-resources/**",
                     "/swagger-ui.html",
                     "/v2/api-docs",

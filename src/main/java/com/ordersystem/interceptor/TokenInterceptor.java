@@ -18,7 +18,8 @@ import java.util.Map;
  * 用于验证请求中的Token是否有效
  */
 @Component
-public class TokenInterceptor implements HandlerInterceptor {
+public class
+TokenInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
