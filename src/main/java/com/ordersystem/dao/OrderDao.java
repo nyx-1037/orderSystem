@@ -115,11 +115,29 @@ public interface OrderDao {
     Integer getOrderCount();
     
     /**
-     * 获取近期订单数量统计
-     * @param params 包含startDate和endDate的参数Map
-     * @return 按日期分组的订单数量统计
+     * 获取近期订单数量和金额统计
+     * @param params 参数，包含开始日期和结束日期
+     * @return 按日期分组的订单数量和金额统计
      */
     List<Map<String, Object>> getRecentOrdersCount(Map<String, Object> params);
+    
+    /**
+     * 获取订单状态分布
+     * @return 订单状态分布统计
+     */
+    List<Map<String, Object>> getOrderStatusDistribution();
+    
+    /**
+     * 获取商品类别销售分布
+     * @return 商品类别销售分布统计
+     */
+    List<Map<String, Object>> getProductCategoryDistribution();
+    
+    /**
+     * 获取支付方式分布
+     * @return 支付方式分布统计
+     */
+    List<Map<String, Object>> getPaymentMethodDistribution();
 }
 //    /**
 //     * 分页查询订单列表

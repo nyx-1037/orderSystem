@@ -157,9 +157,27 @@ public interface OrderService {
     Integer getOrderCount();
     
     /**
-     * 获取近期订单数量统计
+     * 获取近期订单数量和金额统计
      * @param days 天数，如获取最近15天的数据
-     * @return 按日期分组的订单数量统计
+     * @return 按日期分组的订单数量和金额统计
      */
     List<Map<String, Object>> getRecentOrdersCount(Integer days);
+    
+    /**
+     * 获取订单状态分布
+     * @return 订单状态分布统计
+     */
+    List<Map<String, Object>> getOrderStatusDistribution();
+    
+    /**
+     * 获取商品类别销售分布
+     * @return 商品类别销售分布统计
+     */
+    List<Map<String, Object>> getProductCategoryDistribution();
+    
+    /**
+     * 获取支付方式分布
+     * @return 支付方式分布统计
+     */
+    List<Map<String, Object>> getPaymentMethodDistribution();
 }

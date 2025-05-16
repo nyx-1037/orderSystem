@@ -91,10 +91,22 @@ public class OrderController {
             // 获取近期订单统计
             List<Map<String, Object>> recentOrders = orderService.getRecentOrdersCount(days);
             
+            // 获取订单状态分布
+            List<Map<String, Object>> orderStatusDistribution = orderService.getOrderStatusDistribution();
+            
+            // 获取商品类别销售分布
+            List<Map<String, Object>> productCategoryDistribution = orderService.getProductCategoryDistribution();
+            
+            // 获取支付方式分布
+            List<Map<String, Object>> paymentMethodDistribution = orderService.getPaymentMethodDistribution();
+            
             // 构建响应数据
             Map<String, Object> dashboardData = new HashMap<>();
             dashboardData.put("totalOrders", totalOrders);
             dashboardData.put("recentOrders", recentOrders);
+            dashboardData.put("orderStatusDistribution", orderStatusDistribution);
+            dashboardData.put("productCategoryDistribution", productCategoryDistribution);
+            dashboardData.put("paymentMethodDistribution", paymentMethodDistribution);
             
             return ResponseEntity.ok(dashboardData);
         } catch (Exception e) {
@@ -582,9 +594,64 @@ public class OrderController {
     }
     
     /**
+     * 跳转到支付页面
+     * 
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 支付页面URL
+     */
+    @ApiOperation(value = "跳转到支付页面", notes = "跳转到支付选择页面")
+    @ApiImplicitParam(name = "orderId", value = "订单ID", required = true, paramType = "path", dataType = "int")
+    @GetMapping("/{orderId}/payment")
+    public ResponseEntity<?> goToPayment(
+            @PathVariable Integer orderId,
+            HttpServletRequest request) {
+        // 从请求属性中获取用户ID和用户信息（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        User user = (User) request.getAttribute("user");
+        
+        if (userId == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录，无法操作订单");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        // 获取订单信息
+        Order order = orderService.getOrderById(orderId);
+        
+        if (order == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "订单不存在或已被删除");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        // 验证当前用户是否有权限操作该订单（管理员或订单所有者）
+        User admin = userService.getUserById(userId);
+        if (admin.getRole() == 1 || userId.equals(order.getUserId())) {
+            // 构建支付页面URL
+            String paymentUrl = "/pages/payment.html?orderId=" + orderId + "&isAdmin=" + (admin.getRole() == 1);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("paymentUrl", paymentUrl);
+            return ResponseEntity.ok(response);
+        } else {
+            // 用户无权限操作该订单
+            log.warn("用户 {} 尝试支付不属于他的订单 {}", userId, orderId);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "您无权操作此订单");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+    }
+    
+    /**
      * 支付订单
      * 
      * @param orderId 订单ID
+     * @param paymentData 支付数据，包含支付方式
      * @param request HTTP请求
      * @return 支付结果
      */
@@ -593,6 +660,7 @@ public class OrderController {
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<?> payOrder(
             @PathVariable Integer orderId,
+            @RequestBody Map<String, Object> paymentData,
             HttpServletRequest request) {
         // 从请求属性中获取用户ID和用户信息（由拦截器设置）
         Integer userId = (Integer) request.getAttribute("userId");
@@ -618,10 +686,26 @@ public class OrderController {
         // 获取用户信息
         User admin = userService.getUserById(userId);
         
+        // 获取支付方式
+        Integer paymentMethod = 0; // 默认为其他支付方式
+        if (paymentData != null && paymentData.containsKey("paymentMethod")) {
+            try {
+                paymentMethod = Integer.parseInt(paymentData.get("paymentMethod").toString());
+            } catch (NumberFormatException e) {
+                log.warn("支付方式格式错误: {}", paymentData.get("paymentMethod"));
+            }
+        }
+        
         // 验证当前用户是否有权限操作该订单（管理员或订单所有者）
         if (admin.getRole() == 1 || userId.equals(order.getUserId())) {
+            // 设置支付方式
+            order.setPaymentMethod(paymentMethod);
+
+
+            // 更新订单信息（包括支付方式）
+            orderService.updateOrder(order);
+            // 支付订单
             boolean success = orderService.payOrder(order.getOrderId());
-            
             Map<String, Object> response = new HashMap<>();
             if (success) {
                 response.put("success", true);

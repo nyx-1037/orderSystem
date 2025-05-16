@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
+    <link rel="stylesheet" href="/css/float-buttons.css">
     <style>
         .dashboard-container {
             padding: 20px;
@@ -218,6 +219,7 @@
     <script src="/js/res/all.min.js"></script>
     <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
     <script src="/js/admin/main.js"></script>
+    <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮功能 -->
     <!-- 动态加载ECharts库 -->
     <script>
         // 动态加载ECharts的函数
@@ -300,13 +302,10 @@
                 $('#current-username').text(username);
             }
             
-            // 退出登录
+            // 退出登录 - 使用utils.js中的logout函数显示确认模态框
             $('#logout-btn').click(function(e) {
                 e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('username');
-                localStorage.removeItem('userId');
-                window.location.href = '/pages/admin/login.html';
+                logout(); // 调用utils.js中的logout函数，显示确认模态框
             });
         }
         
@@ -722,16 +721,14 @@
             const dates = [];
             const amounts = [];
             
-            // 模拟订单金额数据（实际项目中应从后端获取）
+            // 使用后端提供的真实订单金额数据
             recentOrders.forEach((item, index) => {
                 // 使用订单日期
                 dates.push(item.orderDate || `日期${index+1}`);
                 
-                // 模拟订单金额（实际项目中应从后端获取真实数据）
-                // 这里假设每个订单的平均金额在100-500之间
-                const orderCount = parseInt(item.orderCount) || 0;
-                const avgOrderAmount = Math.floor(Math.random() * 400) + 100;
-                const totalAmount = orderCount * avgOrderAmount;
+                // 使用真实订单金额数据
+                // 如果订单金额存在则使用，否则使用0
+                const totalAmount = parseFloat(item.totalAmount) || 0;
                 amounts.push(totalAmount);
             });
             
@@ -807,14 +804,8 @@
         
         // 初始化订单状态分布图表
         function initOrderStatusChart() {
-            // 模拟订单状态数据（实际项目中应从后端获取）
-            const statusData = [
-                { value: 35, name: '已完成' },
-                { value: 20, name: '待发货' },
-                { value: 15, name: '已发货' },
-                { value: 10, name: '待付款' },
-                { value: 5, name: '已取消' }
-            ];
+            // 显示加载中状态
+            $('#order-status-chart').html('<div class="loading"><i class="fas fa-spinner fa-spin"></i></div>');
             
             // 检查ECharts是否成功加载
             if (typeof echarts === 'undefined') {
@@ -822,76 +813,104 @@
                 return;
             }
             
-            // 初始化ECharts实例
-            try {
-                const chartDom = document.getElementById('order-status-chart');
-                const myChart = echarts.init(chartDom);
-                
-                // 图表配置
-                const option = {
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c} ({d}%)'
-                    },
-                    legend: {
-                        orient: 'vertical',
-                        right: 10,
-                        top: 'center',
-                        data: statusData.map(item => item.name)
-                    },
-                    series: [{
-                        name: '订单状态',
-                        type: 'pie',
-                        radius: ['50%', '70%'],
-                        avoidLabelOverlap: false,
-                        itemStyle: {
-                            borderRadius: 10,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        },
-                        label: {
-                            show: false,
-                            position: 'center'
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                fontSize: '18',
-                                fontWeight: 'bold'
-                            }
-                        },
-                        labelLine: {
-                            show: false
-                        },
-                        data: statusData,
-                        // 设置不同状态的颜色
-                        color: ['#28a745', '#17a2b8', '#007bff', '#ffc107', '#dc3545']
-                    }]
-                };
-                
-                // 渲染图表
-                myChart.setOption(option);
-                
-                // 窗口大小变化时自动调整图表大小
-                window.addEventListener('resize', function() {
-                    myChart.resize();
-                });
-            } catch (error) {
-                console.error('渲染订单状态图表时出错:', error);
-                $('#order-status-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
-            }
+            // 从后端获取订单状态分布数据
+            const token = localStorage.getItem('token');
+            
+            $.ajax({
+                url: '/api/orders/dashboard',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // 检查响应数据结构
+                    if (!response || !response.orderStatusDistribution || !Array.isArray(response.orderStatusDistribution)) {
+                        $('#order-status-chart').html('<div class="alert alert-warning">订单状态数据不可用</div>');
+                        return;
+                    }
+                    
+                    // 转换数据格式
+                    const statusData = response.orderStatusDistribution.map(item => ({
+                        value: item.count,
+                        name: item.statusName || '未知状态'
+                    }));
+                    
+                    if (statusData.length === 0) {
+                        $('#order-status-chart').html('<div class="alert alert-warning">暂无订单状态数据</div>');
+                        return;
+                    }
+                    
+                    // 初始化ECharts实例
+                    try {
+                        const chartDom = document.getElementById('order-status-chart');
+                        const myChart = echarts.init(chartDom);
+                        
+                        // 图表配置
+                        const option = {
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: '{a} <br/>{b}: {c} ({d}%)'
+                            },
+                            legend: {
+                                orient: 'vertical',
+                                right: 10,
+                                top: 'center',
+                                data: statusData.map(item => item.name)
+                            },
+                            series: [{
+                                name: '订单状态',
+                                type: 'pie',
+                                radius: ['50%', '70%'],
+                                avoidLabelOverlap: false,
+                                itemStyle: {
+                                    borderRadius: 10,
+                                    borderColor: '#fff',
+                                    borderWidth: 2
+                                },
+                                label: {
+                                    show: false,
+                                    position: 'center'
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: true,
+                                        fontSize: '18',
+                                        fontWeight: 'bold'
+                                    }
+                                },
+                                labelLine: {
+                                    show: false
+                                },
+                                data: statusData,
+                                // 设置不同状态的颜色
+                                color: ['#28a745', '#17a2b8', '#007bff', '#ffc107', '#dc3545']
+                            }]
+                        };
+                        
+                        // 渲染图表
+                        myChart.setOption(option);
+                        
+                        // 窗口大小变化时自动调整图表大小
+                        window.addEventListener('resize', function() {
+                            myChart.resize();
+                        });
+                    } catch (error) {
+                        console.error('渲染订单状态图表时出错:', error);
+                        $('#order-status-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取订单状态数据失败:', status, error);
+                    $('#order-status-chart').html(`<div class="alert alert-danger">获取数据失败: ${error}</div>`);
+                }
+            });
         }
         
         // 初始化商品类别销售分布图表
         function initProductCategoryChart() {
-            // 模拟商品类别数据（实际项目中应从后端获取）
-            const categoryData = [
-                { value: 40, name: '电子产品' },
-                { value: 25, name: '服装鞋帽' },
-                { value: 15, name: '食品饮料' },
-                { value: 10, name: '家居用品' },
-                { value: 10, name: '其他' }
-            ];
+            // 显示加载中状态
+            $('#product-category-chart').html('<div class="loading"><i class="fas fa-spinner fa-spin"></i></div>');
             
             // 检查ECharts是否成功加载
             if (typeof echarts === 'undefined') {
@@ -899,65 +918,94 @@
                 return;
             }
             
-            // 初始化ECharts实例
-            try {
-                const chartDom = document.getElementById('product-category-chart');
-                const myChart = echarts.init(chartDom);
-                
-                // 图表配置
-                const option = {
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>{b}: {c} ({d}%)'
-                    },
-                    legend: {
-                        orient: 'horizontal',
-                        bottom: 'bottom',
-                        data: categoryData.map(item => item.name)
-                    },
-                    series: [{
-                        name: '商品类别',
-                        type: 'pie',
-                        radius: '55%',
-                        center: ['50%', '45%'],
-                        data: categoryData,
-                        // 设置不同类别的颜色
-                        color: ['#007bff', '#fd7e14', '#20c997', '#6f42c1', '#6c757d'],
-                        emphasis: {
-                            itemStyle: {
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
-                        },
-                        label: {
-                            formatter: '{b}: {d}%'
-                        }
-                    }]
-                };
-                
-                // 渲染图表
-                myChart.setOption(option);
-                
-                // 窗口大小变化时自动调整图表大小
-                window.addEventListener('resize', function() {
-                    myChart.resize();
-                });
-            } catch (error) {
-                console.error('渲染商品类别图表时出错:', error);
-                $('#product-category-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
-            }
+            // 从后端获取商品类别销售分布数据
+            const token = localStorage.getItem('token');
+            
+            $.ajax({
+                url: '/api/orders/dashboard',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // 检查响应数据结构
+                    if (!response || !response.productCategoryDistribution || !Array.isArray(response.productCategoryDistribution)) {
+                        $('#product-category-chart').html('<div class="alert alert-warning">商品类别数据不可用</div>');
+                        return;
+                    }
+                    
+                    // 转换数据格式
+                    const categoryData = response.productCategoryDistribution.map(item => ({
+                        value: item.count,
+                        name: item.categoryName || '未知类别'
+                    }));
+                    
+                    if (categoryData.length === 0) {
+                        $('#product-category-chart').html('<div class="alert alert-warning">暂无商品类别数据</div>');
+                        return;
+                    }
+                    
+                    // 初始化ECharts实例
+                    try {
+                        const chartDom = document.getElementById('product-category-chart');
+                        const myChart = echarts.init(chartDom);
+                        
+                        // 图表配置
+                        const option = {
+                            tooltip: {
+                                trigger: 'item',
+                                formatter: '{a} <br/>{b}: {c} ({d}%)'
+                            },
+                            legend: {
+                                orient: 'horizontal',
+                                bottom: 'bottom',
+                                data: categoryData.map(item => item.name)
+                            },
+                            series: [{
+                                name: '商品类别',
+                                type: 'pie',
+                                radius: '55%',
+                                center: ['50%', '45%'],
+                                data: categoryData,
+                                // 设置不同类别的颜色
+                                color: ['#007bff', '#fd7e14', '#20c997', '#6f42c1', '#6c757d'],
+                                emphasis: {
+                                    itemStyle: {
+                                        shadowBlur: 10,
+                                        shadowOffsetX: 0,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    }
+                                },
+                                label: {
+                                    formatter: '{b}: {d}%'
+                                }
+                            }]
+                        };
+                        
+                        // 渲染图表
+                        myChart.setOption(option);
+                        
+                        // 窗口大小变化时自动调整图表大小
+                        window.addEventListener('resize', function() {
+                            myChart.resize();
+                        });
+                    } catch (error) {
+                        console.error('渲染商品类别图表时出错:', error);
+                        $('#product-category-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取商品类别数据失败:', status, error);
+                    $('#product-category-chart').html(`<div class="alert alert-danger">获取数据失败: ${error}</div>`);
+                }
+            });
         }
         
         // 初始化支付方式分布图表
         function initPaymentMethodChart() {
-            // 模拟支付方式数据（实际项目中应从后端获取）
-            const paymentData = [
-                { value: 60, name: '微信支付' },
-                { value: 30, name: '支付宝' },
-                { value: 5, name: '银行卡' },
-                { value: 5, name: '其他' }
-            ];
+            // 显示加载中状态
+            $('#payment-method-chart').html('<div class="loading"><i class="fas fa-spinner fa-spin"></i></div>');
             
             // 检查ECharts是否成功加载
             if (typeof echarts === 'undefined') {
@@ -965,63 +1013,97 @@
                 return;
             }
             
-            // 初始化ECharts实例
-            try {
-                const chartDom = document.getElementById('payment-method-chart');
-                const myChart = echarts.init(chartDom);
-                
-                // 图表配置 - 使用柱状图展示
-                const option = {
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'shadow'
-                        }
-                    },
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                        containLabel: true
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: paymentData.map(item => item.name)
-                    },
-                    yAxis: {
-                        type: 'value',
-                        name: '订单数量'
-                    },
-                    series: [{
-                        name: '支付方式',
-                        type: 'bar',
-                        data: paymentData.map(item => item.value),
-                        itemStyle: {
-                            color: function(params) {
-                                // 为不同支付方式设置不同颜色
-                                const colorList = ['#07c160', '#1890ff', '#fa8c16', '#8c8c8c'];
-                                return colorList[params.dataIndex];
-                            }
-                        },
-                        label: {
-                            show: true,
-                            position: 'top',
-                            formatter: '{c}'
-                        }
-                    }]
-                };
-                
-                // 渲染图表
-                myChart.setOption(option);
-                
-                // 窗口大小变化时自动调整图表大小
-                window.addEventListener('resize', function() {
-                    myChart.resize();
-                });
-            } catch (error) {
-                console.error('渲染支付方式图表时出错:', error);
-                $('#payment-method-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
-            }
+            // 从后端获取支付方式分布数据
+            const token = localStorage.getItem('token');
+            
+            $.ajax({
+                url: '/api/orders/dashboard',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // 检查响应数据结构
+                    if (!response || !response.paymentMethodDistribution || !Array.isArray(response.paymentMethodDistribution)) {
+                        $('#payment-method-chart').html('<div class="alert alert-warning">支付方式数据不可用</div>');
+                        return;
+                    }
+                    
+                    // 转换数据格式
+                    const paymentData = response.paymentMethodDistribution.map(item => ({
+                        value: item.count,
+                        name: item.paymentMethod || '未知方式'
+                    }));
+                    
+                    if (paymentData.length === 0) {
+                        $('#payment-method-chart').html('<div class="alert alert-warning">暂无支付方式数据</div>');
+                        return;
+                    }
+                    
+                    // 初始化ECharts实例
+                    try {
+                        const chartDom = document.getElementById('payment-method-chart');
+                        const myChart = echarts.init(chartDom);
+                        
+                        // 图表配置 - 使用柱状图展示
+                        const option = {
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: {
+                                    type: 'shadow'
+                                }
+                            },
+                            grid: {
+                                left: '3%',
+                                right: '4%',
+                                bottom: '3%',
+                                containLabel: true
+                            },
+                            xAxis: {
+                                type: 'category',
+                                data: paymentData.map(item => item.name)
+                            },
+                            yAxis: {
+                                type: 'value',
+                                name: '订单数量'
+                            },
+                            series: [{
+                                name: '支付方式',
+                                type: 'bar',
+                                data: paymentData.map(item => item.value),
+                                itemStyle: {
+                                    color: function(params) {
+                                        // 为不同支付方式设置不同颜色
+                                        const colorList = ['#07c160', '#1890ff', '#fa8c16', '#8c8c8c'];
+                                        return colorList[params.dataIndex % colorList.length];
+                                    }
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: '{c}'
+                                }
+                            }]
+                        };
+                        
+                        // 渲染图表
+                        myChart.setOption(option);
+                        
+                        // 窗口大小变化时自动调整图表大小
+                        window.addEventListener('resize', function() {
+                            myChart.resize();
+                        });
+                    } catch (error) {
+                        console.error('渲染支付方式图表时出错:', error);
+                        $('#payment-method-chart').html(`<div class="alert alert-danger">渲染图表时出错: ${error.message}</div>`);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取支付方式数据失败:', status, error);
+                    $('#payment-method-chart').html(`<div class="alert alert-danger">获取数据失败: ${error}</div>`);
+                }
+            });
         }
     </script>
 </body>

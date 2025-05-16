@@ -48,6 +48,7 @@ CREATE TABLE `order`  (
   `user_id` int NOT NULL COMMENT '用户ID',
   `total_amount` decimal(10, 2) NOT NULL COMMENT '订单总金额',
   `status` tinyint NOT NULL DEFAULT 0 COMMENT '订单状态：0-待付款，1-已付款，2-已发货，3-已完成，4-已取消',
+  `payment_method` tinyint NULL DEFAULT 0 COMMENT '支付方式：0-其他，1-支付宝，2-微信，3-银行卡',
   `payment_time` datetime NULL DEFAULT NULL COMMENT '支付时间',
   `shipping_time` datetime NULL DEFAULT NULL COMMENT '发货时间',
   `complete_time` datetime NULL DEFAULT NULL COMMENT '完成时间',

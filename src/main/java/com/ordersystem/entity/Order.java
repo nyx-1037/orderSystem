@@ -19,6 +19,7 @@ public class Order {
     private Integer userId;         // 用户ID
     private BigDecimal totalAmount; // 订单总金额
     private Integer status;         // 订单状态：0-待付款，1-已付款，2-已发货，3-已完成，4-已取消
+    private Integer paymentMethod;  // 支付方式：0-其他，1-支付宝，2-微信，3-银行卡
     private Date paymentTime;       // 支付时间
     private Date shippingTime;      // 发货时间
     private Date completeTime;      // 完成时间
@@ -100,12 +101,21 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
+
     public Integer getStatus() {
         return status;
     }
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+    
+    public Integer getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(Integer paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 
     public Date getPaymentTime() {
@@ -204,6 +214,7 @@ public class Order {
                 ", userId=" + userId +
                 ", totalAmount=" + totalAmount +
                 ", status=" + status +
+                ", paymentMethod=" + paymentMethod +
                 ", paymentTime=" + paymentTime +
                 ", shippingTime=" + shippingTime +
                 ", completeTime=" + completeTime +

@@ -788,17 +788,15 @@ function bindOrderActionEvents() {
 
 // 支付订单
 async function payOrder(orderUuid) {
-    showConfirmModal('确定要支付此订单吗？', async () => {
-        try {
-            await fetchAPI(`/api/client/orders/${orderUuid}/pay`, { method: 'POST' });
-            showSuccessMessage('订单支付成功');
-            loadOrders(currentPage);
-        } catch (error) {
-            console.error('订单支付失败:', error);
-            showErrorMessage('订单支付失败: ' + error.message);
-        }
-    });
+    try {
+        // 跳转到支付收银台界面
+        window.location.href = `/pages/payment.html?orderUuid=${orderUuid}&isAdmin=false`;
+    } catch (error) {
+        console.error('跳转支付页面失败:', error);
+        showErrorMessage('跳转支付页面失败: ' + error.message);
+    }
 }
+
 
 // 取消订单
 async function cancelOrder(orderUuid) {

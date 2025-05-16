@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>订单支付 - 七洛商城</title>
+    <link rel="icon" href="/7L-icon.png" type="image/png">
+    <link rel="stylesheet" href="/css/res/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/res/all.min.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .payment-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .payment-method {
+            margin-bottom: 30px;
+        }
+        .payment-method-item {
+            display: block;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .payment-method-item:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.2);
+        }
+        .payment-method-item.active {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        .payment-method-item i {
+            font-size: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .payment-method-item .alipay {
+            color: #00a0e9;
+        }
+        .payment-method-item .wechat {
+            color: #09bb07;
+        }
+        .payment-method-item .bank {
+            color: #ff6600;
+        }
+        .payment-method-item .other {
+            color: #999;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn-pay {
+            padding: 10px 30px;
+            font-size: 18px;
+        }
+        .payment-success {
+            display: none;
+            text-align: center;
+            padding: 30px 0;
+        }
+        .payment-success i {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <button id="back-btn" class="btn btn-outline-secondary mb-3"><i class="fas fa-arrow-left"></i> 返回</button>
+    </div>
+
+    <div class="container payment-container">
+        <div class="payment-header">
+            <h2><i class="fas fa-credit-card"></i> 订单支付</h2>
+        </div>
+        
+        <div class="order-info">
+            <h4>订单信息</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>订单编号：</strong><span id="order-no"></span></p>
+                    <p><strong>收货人：</strong><span id="receiver"></span></p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>订单金额：</strong>￥<span id="total-amount"></span></p>
+                    <p><strong>下单时间：</strong><span id="create-time"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="payment-method">
+            <h4>选择支付方式</h4>
+            <div class="payment-method-list">
+                <label class="payment-method-item active">
+                    <input type="radio" name="paymentMethod" value="1" checked style="display: none;">
+                    <i class="fab fa-alipay alipay"></i> 支付宝
+                </label>
+                <label class="payment-method-item">
+                    <input type="radio" name="paymentMethod" value="2" style="display: none;">
+                    <i class="fab fa-weixin wechat"></i> 微信支付
+                </label>
+                <label class="payment-method-item">
+                    <input type="radio" name="paymentMethod" value="3" style="display: none;">
+                    <i class="fas fa-credit-card bank"></i> 银行卡支付
+                </label>
+                <label class="payment-method-item">
+                    <input type="radio" name="paymentMethod" value="0" style="display: none;">
+                    <i class="fas fa-wallet other"></i> 其他支付方式
+                </label>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <button id="pay-btn" class="btn btn-primary btn-pay"><i class="fas fa-check-circle"></i> 确认支付</button>
+        </div>
+        
+        <div class="payment-success" id="payment-success">
+            <i class="fas fa-check-circle"></i>
+            <h3>支付成功！</h3>
+            <p>您的订单已支付成功，我们将尽快为您发货。</p>
+            <div class="mt-4">
+                <a href="#" id="view-order-btn" class="btn btn-outline-primary mr-2">查看订单</a>
+                <a href="#" id="continue-shopping-btn" class="btn btn-outline-secondary">继续购物</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/res/jquery.min.js"></script>
+    <script src="/js/res/popper.min.js"></script>
+    <script src="/js/res/bootstrap.min.js"></script>
+    <script src="/js/res/all.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 检查登录状态
+            checkLoginStatus();
+            
+            // 获取URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderUuid = urlParams.get('orderUuid');
+            const isAdmin = urlParams.get('isAdmin') === 'true';
+            
+            if (!orderUuid) {
+                alert('订单参数错误，请返回重试');
+                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
+                return;
+            }
+            
+            // 加载订单信息
+            loadOrderInfo(orderUuid, isAdmin);
+            
+            // 支付方式选择
+            $('.payment-method-item').click(function() {
+                $('.payment-method-item').removeClass('active');
+                $(this).addClass('active');
+                $(this).find('input[type="radio"]').prop('checked', true);
+            });
+            
+            // 确认支付按钮点击事件
+            $('#pay-btn').click(function() {
+                const paymentMethod = $('input[name="paymentMethod"]:checked').val();
+                processPayment(orderUuid, paymentMethod, isAdmin);
+            });
+        });
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/pages/client/login.html';
+                return;
+            }
+            
+            // 设置当前用户名
+            const username = localStorage.getItem('username');
+            if (username) {
+                $('#current-username').text(username);
+                $('#user-dropdown-container').show();
+                $('#login-register-container').hide();
+            } else {
+                $('#user-dropdown-container').hide();
+                $('#login-register-container').show();
+            }
+            
+            // 返回按钮点击事件
+            $('#back-btn').click(function() {
+                window.history.back();
+            });
+        }
+        
+        // 加载订单信息
+        function loadOrderInfo(orderUuid, isAdmin) {
+            const token = localStorage.getItem('token');
+            let url;
+            
+            if (orderUuid) {
+                url = `/api/orders/by-uuid?uuid=${orderUuid}`;
+            } else {
+                alert('订单参数错误，请返回重试');
+                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                return;
+            }
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(response) {
+                    // 显示订单信息
+                    $('#order-no').text(response.orderNo);
+                    $('#receiver').text(response.receiver);
+                    $('#total-amount').text(response.totalAmount);
+                    $('#create-time').text(formatDateTime(response.createTime));
+                },
+                error: function(xhr) {
+                    console.error('获取订单信息失败', xhr);
+                    alert('获取订单信息失败，请返回重试');
+                    window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                }
+            });
+        }
+        
+        // 处理支付
+        function processPayment(orderUuid, paymentMethod, isAdmin) {
+            const token = localStorage.getItem('token');
+            let url;
+            let data = { paymentMethod: paymentMethod };
+            
+            if (orderUuid) {
+                url = isAdmin ? `/api/orders/${orderUuid}/pay` : `/api/client/orders/${orderUuid}/pay`;
+            } else {
+                alert('订单参数错误，请返回重试');
+                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                return;
+            }
+            
+            // 显示加载状态
+            $('#pay-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 处理中...');
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(data),
+                success: function(response) {
+                    console.log('支付成功', response);
+                    // 显示支付成功信息
+                    $('.payment-method, .order-info, #pay-btn').hide();
+                    $('#payment-success').fadeIn();
+                    
+                    // 设置查看订单按钮跳转链接
+                    $('#view-order-btn').attr('href', isAdmin ? 
+                        `/pages/admin/order-detail.html?uuid=${orderUuid}` : 
+                        `/pages/client/order-detail.html?uuid=${orderUuid}`);
+                    
+                    // 设置继续购物按钮跳转链接
+                    $('#continue-shopping-btn').attr('href', isAdmin ? 
+                        '/pages/admin/index.html' : 
+                        '/index.html');
+                },
+                error: function(xhr) {
+                    console.error('支付失败', xhr);
+                    alert('支付失败：' + (xhr.responseJSON ? xhr.responseJSON.message : '未知错误'));
+                    $('#pay-btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> 确认支付');
+                }
+            });
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '';
+            const date = new Date(dateTimeStr);
+            return date.getFullYear() + '-' + 
+                   padZero(date.getMonth() + 1) + '-' + 
+                   padZero(date.getDate()) + ' ' + 
+                   padZero(date.getHours()) + ':' + 
+                   padZero(date.getMinutes()) + ':' + 
+                   padZero(date.getSeconds());
+        }
+        
+        // 补零
+        function padZero(num) {
+            return num < 10 ? '0' + num : num;
+        }
+    </script>
+</body>
+</html>

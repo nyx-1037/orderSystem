@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>在线商城</title>
+    <title>七洛商城</title>
+    <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <style>
@@ -30,7 +31,7 @@
 <body class="bg-light">
     <div class="container">
         <div class="welcome-container">
-            <h1 class="display-4">欢迎使用在线商城系统</h1>
+            <h1 class="display-4">欢迎使用七洛商城系统</h1>
             <p class="lead mt-4">请选择您要进入的系统：</p>
             
             <div class="btn-container">
@@ -60,7 +61,7 @@
                         // 根据用户角色重定向到对应页面
                         if (user.role === 1) {
                             // 管理员角色，跳转到管理员首页
-                            window.location.href = '/pages/admin/user-list.html';
+                            window.location.href = '/pages/admin/index.html';
                         } else {
                             // 普通用户角色，跳转到客户端首页
                             window.location.href = '/pages/client/index.html';

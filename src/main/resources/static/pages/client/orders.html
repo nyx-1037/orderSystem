@@ -124,6 +124,77 @@
     </style>
 </head>
 <body>
+    <style>
+        /* 导航栏动画效果 */
+        .navbar {
+            animation: slideDown 0.5s ease;
+        }
+        
+        .navbar .nav-item {
+            opacity: 0;
+            animation: fadeInRight 0.5s ease forwards;
+        }
+        
+        .navbar .nav-item:nth-child(1) { animation-delay: 0.1s; }
+        .navbar .nav-item:nth-child(2) { animation-delay: 0.2s; }
+        .navbar .nav-item:nth-child(3) { animation-delay: 0.3s; }
+        .navbar .nav-item:nth-child(4) { animation-delay: 0.4s; }
+        
+        .navbar .form-inline {
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.5s forwards;
+        }
+        
+        .navbar .navbar-brand {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .navbar .navbar-brand:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: white;
+            transition: width 0.3s ease;
+        }
+        
+        .navbar .navbar-brand:hover:after {
+            width: 100%;
+        }
+        
+        .navbar .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar .nav-link:hover {
+            transform: translateY(-2px);
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
     <!-- 页面加载动画 -->
     <div class="page-loader" id="page-loader">
         <div class="loader-content">
@@ -134,7 +205,7 @@
     
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/pages/client/index.html"><i class="fas fa-store"></i> 七洛商城</a>
+            <a class="navbar-brand" href="/pages/client/index.html"><img src="/7L-icon.png" width="50" height="50"/> 七洛商城</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>

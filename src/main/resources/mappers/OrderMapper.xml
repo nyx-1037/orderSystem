@@ -54,17 +54,17 @@
     
     <!-- 公共列 -->
     <sql id="Base_Column_List">
-        order_id, order_no, order_uuid, user_id, total_amount, status, payment_time, shipping_time, complete_time, 
+        order_id, order_no, order_uuid, user_id, total_amount, status, payment_method, payment_time, shipping_time, complete_time, 
         address, receiver, receiver_phone, remark, create_time, update_time
     </sql>
     
     <!-- 添加订单 -->
     <insert id="insertOrder" parameterType="com.ordersystem.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
         INSERT INTO `order` (
-            order_no, order_uuid, user_id, total_amount, status, payment_time, shipping_time, complete_time,
+            order_no, order_uuid, user_id, total_amount, status, payment_method, payment_time, shipping_time, complete_time,
             address, receiver, receiver_phone, remark
         ) VALUES (
-            #{orderNo}, #{orderUuid}, #{userId}, #{totalAmount}, #{status}, #{paymentTime}, #{shippingTime}, #{completeTime},
+            #{orderNo}, #{orderUuid}, #{userId}, #{totalAmount}, #{status}, #{paymentMethod}, #{paymentTime}, #{shippingTime}, #{completeTime},
             #{address}, #{receiver}, #{receiverPhone}, #{remark}
         )
     </insert>
@@ -82,6 +82,7 @@
             <if test="userId != null">user_id = #{userId},</if>
             <if test="totalAmount != null">total_amount = #{totalAmount},</if>
             <if test="status != null">status = #{status},</if>
+            <if test="paymentMethod != null">payment_method = #{paymentMethod},</if>
             <if test="paymentTime != null">payment_time = #{paymentTime},</if>
             <if test="shippingTime != null">shipping_time = #{shippingTime},</if>
             <if test="completeTime != null">complete_time = #{completeTime},</if>
@@ -225,10 +226,57 @@
     <select id="getRecentOrdersCount" parameterType="java.util.Map" resultType="java.util.Map">
         SELECT 
             DATE(create_time) as orderDate, 
-            COUNT(*) as orderCount
+            COUNT(*) as orderCount,
+            SUM(total_amount) as totalAmount
         FROM `order`
         WHERE create_time BETWEEN #{startDate} AND #{endDate}
         GROUP BY DATE(create_time)
         ORDER BY orderDate ASC
+    </select>
+    
+    <!-- 获取订单状态分布 -->
+    <select id="getOrderStatusDistribution" resultType="java.util.Map">
+        SELECT 
+            status,
+            COUNT(*) as count
+        FROM `order`
+        GROUP BY status
+        ORDER BY status
+    </select>
+    
+    <!-- 获取商品类别销售分布 -->
+    <select id="getProductCategoryDistribution" resultType="java.util.Map">
+        SELECT 
+            p.category as categoryId,
+            CASE 
+                WHEN p.category = 1 THEN '电子产品'
+                WHEN p.category = 2 THEN '服装'
+                WHEN p.category = 3 THEN '食品'
+                WHEN p.category = 4 THEN '图书'
+                WHEN p.category = 5 THEN '家居'
+                ELSE '其他'
+            END as categoryName,
+            COUNT(oi.item_id) as count,
+            SUM(oi.total_price) as totalAmount
+        FROM order_item oi
+        JOIN product p ON oi.product_id = p.product_id
+        GROUP BY p.category
+        ORDER BY count DESC
+    </select>
+    
+    <!-- 获取支付方式分布 -->
+    <select id="getPaymentMethodDistribution" resultType="java.util.Map">
+        SELECT 
+            CASE 
+                WHEN payment_method = 1 THEN '支付宝'
+                WHEN payment_method = 2 THEN '微信支付'
+                WHEN payment_method = 3 THEN '银行卡'
+                ELSE '其他'
+            END as paymentMethod,
+            COUNT(*) as count
+        FROM `order`
+        WHERE status > 0  -- 只统计已支付的订单
+        GROUP BY payment_method
+        ORDER BY count DESC
     </select>
 </mapper>

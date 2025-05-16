@@ -299,19 +299,15 @@ async function shipOrder(orderId, uuid) {
 
 // 支付订单
 async function payOrder(orderId, uuid) {
-    showConfirmModal('确定要将此订单标记为已支付吗？', async () => {
-        try {
-            // 调用支付订单API
-            await fetchAPI(`/api/orders/${orderId}/pay`, { method: 'POST' });
-            showSuccessMessage('订单已标记为已支付');
-            // 刷新页面或重新加载数据
-            loadOrderDetail(orderUuid);
-        } catch (error) {
-            console.error('支付订单失败:', error);
-            showErrorMessage('支付订单失败: ' + error.message);
-        }
-    });
+    try {
+        // 跳转到支付收银台界面，只使用uuid参数
+        window.location.href = `/pages/payment.html?orderUuid=${uuid}&isAdmin=true`;
+    } catch (error) {
+        console.error('跳转支付页面失败:', error);
+        showErrorMessage('跳转支付页面失败: ' + error.message);
+    }
 }
+
 
 // 删除订单
 async function deleteOrder(orderId, uuid) {

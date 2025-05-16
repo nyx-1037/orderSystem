@@ -294,16 +294,16 @@ public class ClientOrderController {
     }
     
     /**
-     * 支付订单
+     * 跳转到支付页面
      * 
      * @param uuid 订单UUID
      * @param request HTTP请求
-     * @return 支付结果
+     * @return 支付页面URL
      */
-    @ApiOperation(value = "支付订单", notes = "客户支付订单")
+    @ApiOperation(value = "跳转到支付页面", notes = "跳转到支付选择页面")
     @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
-    @PostMapping("/{uuid}/pay")
-    public ResponseEntity<?> payOrder(
+    @GetMapping("/{uuid}/payment")
+    public ResponseEntity<?> goToPayment(
             @PathVariable String uuid,
             HttpServletRequest request) {
         // 从请求属性中获取用户ID（由拦截器设置）
@@ -336,8 +336,86 @@ public class ClientOrderController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
             
+            // 构建支付页面URL
+            String paymentUrl = "/pages/payment.html?orderUuid=" + uuid + "&isAdmin=false";
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("paymentUrl", paymentUrl);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("获取支付页面失败", e);
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "获取支付页面失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    /**
+     * 支付订单
+     * 
+     * @param uuid 订单UUID
+     * @param paymentData 支付数据，包含支付方式
+     * @param request HTTP请求
+     * @return 支付结果
+     */
+    @ApiOperation(value = "支付订单", notes = "客户支付订单")
+    @ApiImplicitParam(name = "uuid", value = "订单UUID", required = true, paramType = "path", dataType = "string")
+    @PostMapping("/{uuid}/pay")
+    public ResponseEntity<?> payOrder(
+            @PathVariable String uuid,
+            @RequestBody Map<String, Object> paymentData,
+            HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        
+        if (userId == null) {
+            // 用户未登录，返回错误
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "未登录，无法操作订单");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+        
+        try {
+            // 获取订单信息
+            Order order = orderService.getOrderDetailByUuid(uuid);
+            
+            if (order == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "订单不存在或已被删除");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            
+            // 验证订单所属用户
+            if (!userId.equals(order.getUserId())) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "您无权操作此订单");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+            
+            // 获取支付方式
+            Integer paymentMethod = 0; // 默认为其他支付方式
+            if (paymentData != null && paymentData.containsKey("paymentMethod")) {
+                try {
+                    paymentMethod = Integer.parseInt(paymentData.get("paymentMethod").toString());
+                } catch (NumberFormatException e) {
+                    log.warn("支付方式格式错误: {}", paymentData.get("paymentMethod"));
+                }
+            }
+            
+            // 设置支付方式
+            order.setPaymentMethod(paymentMethod);
+            
             // 支付订单
             boolean success = orderService.payOrder(order.getOrderId());
+            
+            // 更新订单信息（包括支付方式）
+            orderService.updateOrder(order);
             
             Map<String, Object> response = new HashMap<>();
             if (success) {

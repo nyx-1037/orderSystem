@@ -307,6 +307,10 @@ public class OrderServiceImpl implements OrderService, CommandLineRunner {
         if (order != null && order.getStatus() == 0) { // 待付款状态
             order.setStatus(1); // 已付款
             order.setPaymentTime(new Date());
+            // 如果没有设置支付方式，默认为0（其他）
+            if (order.getPaymentMethod() == null) {
+                order.setPaymentMethod(0);
+            }
             return orderDao.updateOrder(order) > 0;
         }
         return false;
@@ -445,6 +449,120 @@ public class OrderServiceImpl implements OrderService, CommandLineRunner {
         }
         
         return sortedResult;
+    }
+    
+    /**
+     * 获取订单状态分布
+     * @return 订单状态分布统计
+     */
+    @Override
+    public List<Map<String, Object>> getOrderStatusDistribution() {
+        String cacheKey = "orderStatusDistribution";
+        
+        try {
+            // 尝试从Redis缓存获取
+            Object cachedData = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedData != null) {
+                return (List<Map<String, Object>>) cachedData;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取订单状态分布失败", e);
+            // 继续从数据库获取
+        }
+        
+        // 从数据库获取数据
+        List<Map<String, Object>> result = orderDao.getOrderStatusDistribution();
+        
+        // 添加状态名称
+        for (Map<String, Object> item : result) {
+            int status = Integer.parseInt(item.get("status").toString());
+            String statusName = "";
+            switch (status) {
+                case 0: statusName = "待付款"; break;
+                case 1: statusName = "待发货"; break;
+                case 2: statusName = "已发货"; break;
+                case 3: statusName = "已完成"; break;
+                case 4: statusName = "已取消"; break;
+                default: statusName = "未知状态"; break;
+            }
+            item.put("statusName", statusName);
+        }
+        
+        try {
+            // 缓存结果，设置1小时过期
+            redisTemplate.opsForValue().set(cacheKey, result, 1, java.util.concurrent.TimeUnit.HOURS);
+        } catch (Exception e) {
+            logger.error("缓存订单状态分布失败", e);
+            // 缓存失败不影响业务
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取商品类别销售分布
+     * @return 商品类别销售分布统计
+     */
+    @Override
+    public List<Map<String, Object>> getProductCategoryDistribution() {
+        String cacheKey = "productCategoryDistribution";
+        
+        try {
+            // 尝试从Redis缓存获取
+            Object cachedData = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedData != null) {
+                return (List<Map<String, Object>>) cachedData;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取商品类别销售分布失败", e);
+            // 继续从数据库获取
+        }
+        
+        // 从数据库获取数据
+        List<Map<String, Object>> result = orderDao.getProductCategoryDistribution();
+        
+        try {
+            // 缓存结果，设置1小时过期
+            redisTemplate.opsForValue().set(cacheKey, result, 1, java.util.concurrent.TimeUnit.HOURS);
+        } catch (Exception e) {
+            logger.error("缓存商品类别销售分布失败", e);
+            // 缓存失败不影响业务
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取支付方式分布
+     * @return 支付方式分布统计
+     */
+    @Override
+    public List<Map<String, Object>> getPaymentMethodDistribution() {
+        String cacheKey = "paymentMethodDistribution";
+        
+        try {
+            // 尝试从Redis缓存获取
+            Object cachedData = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedData != null) {
+                return (List<Map<String, Object>>) cachedData;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取支付方式分布失败", e);
+            // 继续从数据库获取
+        }
+        
+        // 从数据库获取数据
+        List<Map<String, Object>> result = orderDao.getPaymentMethodDistribution();
+        
+        try {
+            // 缓存结果，设置1小时过期
+            redisTemplate.opsForValue().set(cacheKey, result, 1, java.util.concurrent.TimeUnit.HOURS);
+        } catch (Exception e) {
+            logger.error("缓存支付方式分布失败", e);
+            // 缓存失败不影响业务
+        }
+        
+        return result;
     }
     
     /**
