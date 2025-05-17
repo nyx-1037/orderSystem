@@ -149,7 +149,7 @@ public class ClientOrderController {
                 response.put("message", "您无权查看此订单");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            
+            System.out.println(order.toString());
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", order);

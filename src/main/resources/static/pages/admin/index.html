@@ -711,26 +711,31 @@
         
         // 初始化订单金额统计图表
         function initOrderAmountChart(recentOrders) {
+            console.log('初始化图表，接收到的数据:', recentOrders);
+
             // 检查数据是否存在且格式正确
             if (!recentOrders || !Array.isArray(recentOrders) || recentOrders.length === 0) {
                 $('#order-amount-chart').html('<div class="alert alert-warning">暂无订单金额数据</div>');
                 return;
             }
-            
+
             // 准备图表数据
             const dates = [];
             const amounts = [];
-            
-            // 使用后端提供的真实订单金额数据
+
+            // 使用后端返回的真实订单金额数据
             recentOrders.forEach((item, index) => {
                 // 使用订单日期
                 dates.push(item.orderDate || `日期${index+1}`);
-                
+
                 // 使用真实订单金额数据
-                // 如果订单金额存在则使用，否则使用0
-                const totalAmount = parseFloat(item.totalAmount) || 0;
+                // 如果有totalAmount字段则使用，否则默认为0
+                const totalAmount = item.totalAmount ? parseFloat(item.totalAmount) : 0;
                 amounts.push(totalAmount);
             });
+
+            console.log('处理后的图表数据 - 日期:', dates);
+            console.log('处理后的图表数据 - 金额:', amounts);
             
             // 检查ECharts是否成功加载
             if (typeof echarts === 'undefined') {

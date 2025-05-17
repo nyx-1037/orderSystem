@@ -700,12 +700,13 @@ public class OrderController {
         if (admin.getRole() == 1 || userId.equals(order.getUserId())) {
             // 设置支付方式
             order.setPaymentMethod(paymentMethod);
-
-
-            // 更新订单信息（包括支付方式）
-            orderService.updateOrder(order);
+            
             // 支付订单
             boolean success = orderService.payOrder(order.getOrderId());
+            
+            // 更新订单信息（包括支付方式）
+            orderService.updateOrder(order);
+            
             Map<String, Object> response = new HashMap<>();
             if (success) {
                 response.put("success", true);

@@ -89,6 +89,9 @@
     <div class="container payment-container">
         <div class="payment-header">
             <h2><i class="fas fa-credit-card"></i> 订单支付</h2>
+            <div class="text-center mt-3">
+                <h3 class="text-danger font-weight-bold">应付金额：￥<span id="total-amount-large"></span></h3>
+            </div>
         </div>
         
         <div class="order-info">
@@ -120,10 +123,7 @@
                     <input type="radio" name="paymentMethod" value="3" style="display: none;">
                     <i class="fas fa-credit-card bank"></i> 银行卡支付
                 </label>
-                <label class="payment-method-item">
-                    <input type="radio" name="paymentMethod" value="0" style="display: none;">
-                    <i class="fas fa-wallet other"></i> 其他支付方式
-                </label>
+                <!-- 其他支付方式已移除 -->
             </div>
         </div>
         
@@ -229,6 +229,7 @@
                     $('#order-no').text(response.orderNo);
                     $('#receiver').text(response.receiver);
                     $('#total-amount').text(response.totalAmount);
+                    $('#total-amount-large').text(response.totalAmount);
                     $('#create-time').text(formatDateTime(response.createTime));
                 },
                 error: function(xhr) {

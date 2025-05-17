@@ -56,6 +56,12 @@ async function loadOrderDetail(uuid) {
         
         try {
             order = await fetchAPI(apiPath);
+            
+            // 详细打印订单对象，查看所有字段
+            console.log('订单完整数据:', JSON.stringify(order, null, 2));
+            console.log('支付方式:', order.paymentMethod);
+            console.log('支付时间:', order.paymentTime);
+            console.log('订单状态:', order.status);
         } catch (error) {
             console.error('API请求失败:', error);
             throw error;
@@ -94,8 +100,8 @@ function renderOrderDetail(order) {
                 </div>
                 <div class="col-md-6">
                     <p><strong>订单金额：</strong>${formatCurrency(order.totalAmount)}</p>
-                    <p><strong>支付方式：</strong>${order.paymentMethod || '未支付'}</p>
-                    <p><strong>支付时间：</strong>${order.payTime ? formatDate(order.payTime) : '未支付'}</p>
+                    <p><strong>支付方式：</strong>${getPaymentMethodText(order.paymentMethod) || '未支付'}</p>
+                    <p><strong>支付时间：</strong>${order.paymentTime ? formatDate(order.paymentTime) : '未支付'}</p>
                 </div>
             </div>
         </div>
@@ -193,6 +199,34 @@ function renderOrderDetail(order) {
     container.append(orderInfoCard);
     container.append(addressCard);
     container.append(itemsCard);
+}
+
+// 获取支付方式文本
+function getPaymentMethodText(method) {
+    console.log('支付方式原始值:', method, '类型:', typeof method);
+    
+    if (method === undefined || method === null) {
+        console.log('支付方式为undefined或null，返回未支付');
+        return '未支付';
+    }
+    
+    // 尝试将method转换为整数
+    let methodInt;
+    try {
+        methodInt = parseInt(method);
+        console.log('支付方式转换为整数后:', methodInt);
+    } catch (e) {
+        console.log('支付方式转换整数失败:', e);
+        return '未知支付方式';
+    }
+    
+    switch (methodInt) {
+        case 0: return '其他';
+        case 1: return '支付宝';
+        case 2: return '微信';
+        case 3: return '银行卡';
+        default: return '未知支付方式(' + method + ')';
+    }
 }
 
 // 获取订单状态文本

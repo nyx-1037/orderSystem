@@ -19,7 +19,7 @@ public class Order {
     private Integer userId;         // 用户ID
     private BigDecimal totalAmount; // 订单总金额
     private Integer status;         // 订单状态：0-待付款，1-已付款，2-已发货，3-已完成，4-已取消
-    private Integer paymentMethod;  // 支付方式：0-其他，1-支付宝，2-微信，3-银行卡
+    private Integer paymentMethod;  // 支付方式：0-未支付，1-支付宝，2-微信，3-银行卡
     private Date paymentTime;       // 支付时间
     private Date shippingTime;      // 发货时间
     private Date completeTime;      // 完成时间

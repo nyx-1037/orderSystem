@@ -40,10 +40,19 @@ async function getCurrentUserInfo() {
 // 加载订单详情
 async function loadOrderDetail(uuid) {
     try {
-        // 使用查询参数方式请求，避免将UUID直接放在路径中
-        const apiPath = `/api/orders/by-uuid?uuid=${uuid}`;
+        // 使用RESTful风格的API路径
+        const apiPath = `/api/client/orders/${uuid}`;
         console.log('请求订单详情URL:', apiPath);
-        const order = await fetchAPI(apiPath);
+        const response = await fetchAPI(apiPath);
+        
+        // 获取订单数据，可能在response.data中
+        const order = response.data || response;
+        
+        // 详细打印订单对象，查看所有字段
+        console.log('订单完整数据:', JSON.stringify(order, null, 2));
+        console.log('支付方式:', order.paymentMethod);
+        console.log('支付时间:', order.paymentTime);
+        console.log('订单状态:', order.status);
         
         renderOrderDetail(order);
         renderOrderActions(order);
@@ -77,13 +86,13 @@ function renderOrderDetail(order) {
                 </div>
                 <div class="col-md-6">
                     <p><strong>订单金额：</strong>${formatCurrency(order.totalAmount)}</p>
-                    <p><strong>支付方式：</strong>${order.paymentMethod || '未支付'}</p>
-                    <p><strong>支付时间：</strong>${order.payTime ? formatDate(order.payTime) : '未支付'}</p>
+                    <p><strong>支付方式：</strong>${getPaymentMethodText(order.paymentMethod) || '未支付'}</p>
+                    <p><strong>支付时间：</strong>${order.paymentTime ? formatDate(order.paymentTime) : '未支付'}</p>
                 </div>
             </div>
         </div>
     `);
-    
+    console.log('订单:', order);
     // 构建收货信息卡片
     const addressCard = $('<div class="card mb-4"></div>');
     addressCard.html(`
@@ -220,6 +229,34 @@ function renderOrderDetail(order) {
     container.append(orderInfoCard);
     container.append(addressCard);
     container.append(itemsCard);
+}
+
+// 获取支付方式文本
+function getPaymentMethodText(method) {
+    console.log('支付方式原始值:', method, '类型:', typeof method);
+    
+    if (method === undefined || method === null) {
+        console.log('支付方式为undefined或null，返回未支付');
+        return '未支付';
+    }
+    
+    // 尝试将method转换为整数
+    let methodInt;
+    try {
+        methodInt = parseInt(method);
+        console.log('支付方式转换为整数后:', methodInt);
+    } catch (e) {
+        console.log('支付方式转换整数失败:', e);
+        return '未知支付方式';
+    }
+    
+    switch (methodInt) {
+        case 0: return '其他';
+        case 1: return '支付宝';
+        case 2: return '微信';
+        case 3: return '银行卡';
+        default: return '未知支付方式(' + method + ')';
+    }
 }
 
 // 获取订单状态文本
