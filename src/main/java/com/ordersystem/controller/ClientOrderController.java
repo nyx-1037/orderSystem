@@ -4,7 +4,6 @@ import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Order;
 import com.ordersystem.entity.User;
 import com.ordersystem.service.OrderService;
-import com.ordersystem.service.impl.UserServiceImpl;
 import com.ordersystem.util.UUIDGenerater;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -35,9 +34,7 @@ public class ClientOrderController {
 
     @Autowired
     private OrderService orderService;
-	@Autowired
-	private UserServiceImpl userServiceImpl;
-
+    
     /**
      * 获取客户端订单列表（支持分页和状态筛选）
      * 
@@ -152,7 +149,7 @@ public class ClientOrderController {
                 response.put("message", "您无权查看此订单");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            System.out.println(order.toString());
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("data", order);
@@ -386,10 +383,10 @@ public class ClientOrderController {
             // 获取订单信息
             Order order = orderService.getOrderDetailByUuid(uuid);
             
-            if (order == null  || order.getStatus() != 0) {
+            if (order == null || order.getStatus() != 0) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "订单不存在，可能已被删除或已经支付");
+                response.put("message", "订单不存在，可能已被删除或已支付");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             
@@ -398,7 +395,7 @@ public class ClientOrderController {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "您无权操作此订单");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response)  ;
             }
             
             // 获取支付方式
@@ -413,12 +410,13 @@ public class ClientOrderController {
             
             // 设置支付方式
             order.setPaymentMethod(paymentMethod);
-            
-            // 支付订单
-            boolean success = orderService.payOrder(order.getOrderId());
-            
+
             // 更新订单信息（包括支付方式）
             orderService.updateOrder(order);
+
+            // 支付订单
+            boolean success = orderService.payOrder(order.getOrderId());
+
             
             Map<String, Object> response = new HashMap<>();
             if (success) {
