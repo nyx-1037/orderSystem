@@ -214,7 +214,7 @@
                 url = `/api/orders/by-uuid?uuid=${orderUuid}`;
             } else {
                 alert('订单参数错误，请返回重试');
-                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
                 return;
             }
             
@@ -235,7 +235,7 @@
                 error: function(xhr) {
                     console.error('获取订单信息失败', xhr);
                     alert('获取订单信息失败，请返回重试');
-                    window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                    window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
                 }
             });
         }
@@ -250,7 +250,7 @@
                 url = isAdmin ? `/api/orders/${orderUuid}/pay` : `/api/client/orders/${orderUuid}/pay`;
             } else {
                 alert('订单参数错误，请返回重试');
-                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/orders.html';
+                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
                 return;
             }
             

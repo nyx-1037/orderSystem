@@ -4,6 +4,7 @@ import com.github.pagehelper.PageInfo;
 import com.ordersystem.entity.Order;
 import com.ordersystem.entity.User;
 import com.ordersystem.service.OrderService;
+import com.ordersystem.service.impl.UserServiceImpl;
 import com.ordersystem.util.UUIDGenerater;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -34,7 +35,9 @@ public class ClientOrderController {
 
     @Autowired
     private OrderService orderService;
-    
+	@Autowired
+	private UserServiceImpl userServiceImpl;
+
     /**
      * 获取客户端订单列表（支持分页和状态筛选）
      * 
@@ -383,10 +386,10 @@ public class ClientOrderController {
             // 获取订单信息
             Order order = orderService.getOrderDetailByUuid(uuid);
             
-            if (order == null) {
+            if (order == null  || order.getStatus() != 0) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "订单不存在或已被删除");
+                response.put("message", "订单不存在，可能已被删除或已经支付");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             
