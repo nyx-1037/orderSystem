@@ -419,6 +419,12 @@ public class LogAspect {
         return finalProcessedCount;
     }
     
+    /**
+     * 获取方法的文字描述
+     * @param className 类名
+     * @param methodName 方法名
+     * @return 方法描述
+     */
     private String getMethodDescription(String className, String methodName) {
         // 用户控制器
         if ("UserController".equals(className)) {
@@ -470,6 +476,30 @@ public class LogAspect {
             if ("receive".equals(methodName)) return "确认收货";
             if ("comment".equals(methodName)) return "评价订单";
         }
+        // 客户端订单控制器
+        else if ("ClientOrderController".equals(className)) {
+            if ("list".equals(methodName)) return "获取客户订单列表";
+            if ("getById".equals(methodName)) return "获取客户订单详情";
+            if ("create".equals(methodName)) return "创建客户订单";
+            if ("cancel".equals(methodName)) return "取消客户订单";
+            if ("pay".equals(methodName)) return "支付客户订单";
+            if ("confirm".equals(methodName)) return "确认客户订单";
+            if ("comment".equals(methodName)) return "评价客户订单";
+            if ("getOrdersByStatus".equals(methodName)) return "按状态获取客户订单";
+            if ("getOrderCount".equals(methodName)) return "获取客户订单数量";
+            if ("getRecentOrders".equals(methodName)) return "获取最近客户订单";
+        }
+        // 客户端购物车控制器
+        else if ("ClientCartController".equals(className)) {
+            if ("list".equals(methodName)) return "获取购物车列表";
+            if ("add".equals(methodName)) return "添加商品到购物车";
+            if ("update".equals(methodName)) return "更新购物车商品";
+            if ("delete".equals(methodName)) return "从购物车删除商品";
+            if ("clear".equals(methodName)) return "清空购物车";
+            if ("getCartCount".equals(methodName)) return "获取购物车商品数量";
+            if ("checkout".equals(methodName)) return "购物车结算";
+            if ("getCartTotal".equals(methodName)) return "获取购物车总价";
+        }
         // 商品控制器
         else if ("ProductController".equals(className)) {
             if ("list".equals(methodName)) return "获取商品列表";
@@ -490,6 +520,38 @@ public class LogAspect {
             if ("getHotProducts".equals(methodName)) return "获取热门商品";
             if ("getNewProducts".equals(methodName)) return "获取新品";
             if ("getRecommendProducts".equals(methodName)) return "获取推荐商品";
+        }
+        // 分类控制器
+        else if ("CategoryController".equals(className)) {
+            if ("list".equals(methodName)) return "获取分类列表";
+            if ("getById".equals(methodName)) return "获取分类详情";
+            if ("create".equals(methodName)) return "创建分类";
+            if ("update".equals(methodName)) return "更新分类";
+            if ("delete".equals(methodName)) return "删除分类";
+            if ("getParentCategories".equals(methodName)) return "获取父级分类";
+            if ("getChildCategories".equals(methodName)) return "获取子级分类";
+            if ("getCategoryTree".equals(methodName)) return "获取分类树";
+            if ("getCategoryByName".equals(methodName)) return "按名称获取分类";
+            if ("uploadCategoryImage".equals(methodName)) return "上传分类图片";
+            if ("getCategoryImage".equals(methodName)) return "获取分类图片";
+        }
+        // 验证码控制器
+        else if ("CaptchaController".equals(className)) {
+            if ("generateCaptcha".equals(methodName)) return "生成验证码";
+            if ("verifyCaptcha".equals(methodName)) return "验证验证码";
+            if ("refreshCaptcha".equals(methodName)) return "刷新验证码";
+            if ("getCaptchaImage".equals(methodName)) return "获取验证码图片";
+        }
+        // 管理员认证控制器
+        else if ("AdminAuthController".equals(className)) {
+            if ("login".equals(methodName)) return "管理员登录";
+            if ("logout".equals(methodName)) return "管理员退出登录";
+            if ("getAdminInfo".equals(methodName)) return "获取管理员信息";
+            if ("updatePassword".equals(methodName)) return "更新管理员密码";
+            if ("resetPassword".equals(methodName)) return "重置管理员密码";
+            if ("getPermissions".equals(methodName)) return "获取管理员权限";
+            if ("getRoles".equals(methodName)) return "获取管理员角色";
+            if ("checkPermission".equals(methodName)) return "检查管理员权限";
         }
         // 日志控制器
         else if ("SysLogController".equals(className)) {
