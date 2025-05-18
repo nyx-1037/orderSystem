@@ -31,7 +31,7 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1)) // 设置缓存有效期为1小时
+                .entryTtl(Duration.ofMinutes(10)) // 设置缓存有效期为1小时
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
                 .disableCachingNullValues(); // 不缓存空值

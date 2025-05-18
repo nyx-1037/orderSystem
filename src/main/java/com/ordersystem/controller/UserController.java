@@ -461,11 +461,13 @@ public class UserController {
             response.put("message", "密码参数不完整");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-    
+
+        System.out.println("旧密码" + currentPassword +" 新密码：" +  newPassword);
 
         
         String oldPasswordEncrypted = MD5Util.encode(currentPassword);
         if (!oldPasswordEncrypted.equals(user.getPassword())) {
+            System.out.println("旧密码" + oldPasswordEncrypted + " 数据库："  + user.getPassword()+ " 新密码：" + MD5Util.encode(newPassword));
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "旧密码不正确");

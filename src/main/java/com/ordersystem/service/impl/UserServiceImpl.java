@@ -43,8 +43,8 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
         logger.info("开始初始化用户数据到Redis缓存...");
         List<User> users = userDao.getAllUsers();
         for (User user : users) {
-            // 不缓存密码等敏感信息
-            user.setPassword(null);
+//            // 不缓存密码等敏感信息
+//            user.setPassword(null);
             String key = "user:" + user.getUserId();
             redisService.set(key, user, 24 * 60 * 60); // 缓存24小时
         }
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
                 // 不缓存密码等敏感信息
                 User cacheUser = userDao.getUserById(user.getUserId());
                 if (cacheUser != null) {
-                    cacheUser.setPassword(null);
+//                    cacheUser.setPassword(null);
                     // 更新Redis缓存
                     String key = "user:" + user.getUserId();
                     redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
                 // 获取更新后的用户信息，不包含密码
                 User updatedUser = userDao.getUserById(user.getUserId());
                 if (updatedUser != null) {
-                    updatedUser.setPassword(null); // 不缓存密码
+//                    updatedUser.setPassword(null); // 不缓存密码
                     
                     // 更新Redis缓存
                     String key = "user:" + user.getUserId();
@@ -159,7 +159,11 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
                 cacheUser.setCreateTime(user.getCreateTime());
                 cacheUser.setUpdateTime(user.getUpdateTime());
                 // 不缓存密码和头像数据
-                
+//                cacheUser.setPassword(null);
+//                cacheUser.setAvatarData(null);
+                cacheUser.setPassword(user.getPassword());
+                cacheUser.setAvatarData(user.getAvatarData());
+
                 // 放入缓存
                 redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
             } catch (Exception e) {
@@ -188,6 +192,7 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
         } catch (Exception e) {
             logger.error("从Redis获取用户名对应的用户数据失败，将从数据库获取, username={}", username, e);
             // Redis获取失败，继续从数据库获取
+
         }
         
         // 从数据库获取
@@ -212,7 +217,11 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
                 cacheUser.setCreateTime(user.getCreateTime());
                 cacheUser.setUpdateTime(user.getUpdateTime());
                 // 不缓存密码和头像数据
-                
+//                cacheUser.setPassword(null);
+//                cacheUser.setAvatarData(null);
+                cacheUser.setPassword(user.getPassword());
+                cacheUser.setAvatarData(user.getAvatarData());
+
                 redisService.set(key, cacheUser, 24 * 60 * 60); // 缓存24小时
             } catch (Exception e) {
                 logger.error("将用户名对应的用户数据放入Redis缓存失败, username={}", username, e);
@@ -261,7 +270,11 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
                     cacheUser.setCreateTime(user.getCreateTime());
                     cacheUser.setUpdateTime(user.getUpdateTime());
                     // 不缓存密码和头像数据
-                    
+//                    cacheUser.setPassword(null);
+//                    cacheUser.setAvatarData(null);
+                    cacheUser.setPassword(user.getPassword());
+                    cacheUser.setAvatarData(user.getAvatarData());
+
                     cacheUsers.add(cacheUser);
                     
                     // 单独缓存每个用户

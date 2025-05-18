@@ -147,43 +147,89 @@ public class LogAspect {
             
             // 根据URI和请求方法确定操作类型
             String operation = "";
-            if (requestURI.contains("/user/login")) {
-                operation = "登录";
-            } else if (requestURI.contains("/user/register")) {
-                operation = "注册";
-            } else if (requestURI.contains("/user/logout")) {
-                operation = "退出登录";
-            } else if (requestURI.contains("/user/profile")) {
-                operation = "个人资料";
-            } else if (requestURI.contains("/user/password")) {
-                operation = "密码管理";
-            } else if (requestURI.contains("/user/avatar")) {
-                operation = "头像管理";
-            } else if (requestURI.contains("/order")) {
+            if (requestURI.contains("/api/admin/auth/login")) {
+                operation = "管理员登录";
+            } else if (requestURI.contains("/api/captcha/image")) {
+                operation = "获取验证码图片";
+            } else if (requestURI.contains("/api/captcha/verify")) {
+                operation = "验证验证码";
+            } else if (requestURI.contains("/api/categories") || requestURI.contains("/api/category/list")) {
+                operation = "获取所有商品分类";
+            } else if (requestURI.contains("/api/client/cart")) {
                 if (requestMethod.equals("GET")) {
-                    operation = "查询订单";
+                    operation = "获取购物车列表";
                 } else if (requestMethod.equals("POST")) {
-                    operation = "新增订单";
+                    operation = "添加商品到购物车";
                 } else if (requestMethod.equals("PUT")) {
-                    operation = "修改订单";
+                    operation = "更新购物车商品数量";
+                } else if (requestMethod.equals("DELETE")) {
+                    operation = "从购物车删除商品";
+                }
+            } else if (requestURI.contains("/api/client/orders")) {
+                if (requestMethod.equals("GET")) {
+                    operation = "获取客户端订单列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/cancel")) {
+                    operation = "取消订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/pay")) {
+                    operation = "支付订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/confirm")) {
+                    operation = "确认订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/comment")) {
+                    operation = "评价订单";
+                }
+            } else if (requestURI.contains("/api/online-users")) {
+                if (requestMethod.equals("GET")) {
+                    operation = "获取在线用户列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/force-logout")) {
+                    operation = "强制用户登出";
+                }
+            } else if (requestURI.contains("/api/orders/dashboard")) {
+                operation = "获取仪表盘数据";
+            } else if (requestURI.contains("/api/orders")) {
+                if (requestMethod.equals("GET")) {
+                    operation = "获取订单列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/login")) {
+                    operation = "用户登录";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/captcha/image")) {
+                    operation = "获取验证码图片";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/captcha/verify")) {
+                    operation = "验证验证码";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/categories")) {
+                    operation = "获取商品分类列表";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/cart")) {
+                    operation = "获取购物车列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/cart")) {
+                    operation = "添加商品到购物车";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/cart")) {
+                    operation = "更新购物车商品数量";
+                } else if (requestMethod.equals("DELETE") && requestURI.contains("/cart")) {
+                    operation = "从购物车删除商品";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/client/orders")) {
+                    operation = "获取客户端订单列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/cancel")) {
+                    operation = "取消订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/pay")) {
+                    operation = "支付订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/confirm")) {
+                    operation = "确认订单";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/online-users")) {
+                    operation = "获取在线用户列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/force-logout")) {
+                    operation = "强制用户登出";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/orders/dashboard")) {
+                    operation = "获取仪表盘数据";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/orders")) {
+                    operation = "获取订单列表";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/ship")) {
+                    operation = "订单发货";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/pay")) {
+                    operation = "订单支付";
+                } else if (requestMethod.equals("POST")) {
+                    operation = "创建订单";
+                } else if (requestMethod.equals("PUT")) {
+                    operation = "更新订单";
                 } else if (requestMethod.equals("DELETE")) {
                     operation = "删除订单";
-                }
-            } else if (requestURI.contains("/product")) {
-                if (requestMethod.equals("GET")) {
-                    operation = "查询商品";
-                } else if (requestMethod.equals("POST")) {
-                    operation = "新增商品";
-                } else if (requestMethod.equals("PUT")) {
-                    operation = "修改商品";
-                } else if (requestMethod.equals("DELETE")) {
-                    operation = "删除商品";
-                }
-            } else if (requestURI.contains("/syslog")) {
-                if (requestMethod.equals("GET")) {
-                    operation = "查询日志";
-                } else if (requestMethod.equals("DELETE")) {
-                    operation = "删除日志";
                 }
             } else {
                 // 默认使用URI最后一段作为操作类型
@@ -434,7 +480,7 @@ public class LogAspect {
             if ("registerPage".equals(methodName)) return "访问注册页面";
             if ("getUserInfo".equals(methodName)) return "获取用户信息";
             if ("updateUserInfo".equals(methodName)) return "更新用户信息";
-            if ("changePassword".equals(methodName)) return "修改密码";
+            if ("changePassword".equals(methodName)) return "管理员重置密码";
             if ("logout".equals(methodName)) return "用户退出登录";
             if ("getCurrentUser".equals(methodName)) return "获取当前用户信息";
             if ("uploadAvatar".equals(methodName)) return "上传用户头像";
