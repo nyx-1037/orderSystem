@@ -149,6 +149,8 @@ public class LogAspect {
             String operation = "";
             if (requestURI.contains("/api/admin/auth/login")) {
                 operation = "管理员登录";
+            } else if (requestURI.contains("/api/captcha/image") && requestURI.contains("/base64")) {
+                operation = "获取Base64编码的验证码图片";
             } else if (requestURI.contains("/api/captcha/image")) {
                 operation = "获取验证码图片";
             } else if (requestURI.contains("/api/captcha/verify")) {
@@ -156,24 +158,40 @@ public class LogAspect {
             } else if (requestURI.contains("/api/categories") || requestURI.contains("/api/category/list")) {
                 operation = "获取所有商品分类";
             } else if (requestURI.contains("/api/client/cart")) {
-                if (requestMethod.equals("GET")) {
+                if (requestMethod.equals("GET") && requestURI.contains("/count")) {
+                    operation = "获取购物车商品数量";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/selected")) {
+                    operation = "获取购物车已选商品";
+                } else if (requestMethod.equals("GET")) {
                     operation = "获取购物车列表";
                 } else if (requestMethod.equals("POST")) {
                     operation = "添加商品到购物车";
-                } else if (requestMethod.equals("PUT")) {
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/quantity")) {
                     operation = "更新购物车商品数量";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/selected") && !requestURI.contains("/selected/all")) {
+                    operation = "更新购物车商品选中状态";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/selected/all")) {
+                    operation = "全选/取消全选购物车商品";
+                } else if (requestMethod.equals("DELETE") && requestURI.contains("/selected/clear")) {
+                    operation = "清空已选购物车商品";
+                } else if (requestMethod.equals("DELETE") && !requestURI.contains("/") || requestURI.endsWith("/api/client/cart")) {
+                    operation = "清空购物车";
                 } else if (requestMethod.equals("DELETE")) {
                     operation = "从购物车删除商品";
                 }
             } else if (requestURI.contains("/api/client/orders")) {
-                if (requestMethod.equals("GET")) {
+                if (requestMethod.equals("GET") && requestURI.contains("/payment")) {
+                    operation = "获取订单支付页面";
+                } else if (requestMethod.equals("GET") && !requestURI.contains("/") || requestURI.endsWith("/api/client/orders")) {
                     operation = "获取客户端订单列表";
+                } else if (requestMethod.equals("GET") && requestURI.matches(".*/api/client/orders/[^/]+$")) {
+                    operation = "获取订单详情";
                 } else if (requestMethod.equals("POST") && requestURI.contains("/cancel")) {
                     operation = "取消订单";
                 } else if (requestMethod.equals("POST") && requestURI.contains("/pay")) {
                     operation = "支付订单";
                 } else if (requestMethod.equals("POST") && requestURI.contains("/confirm")) {
-                    operation = "确认订单";
+                    operation = "确认收货";
                 } else if (requestMethod.equals("POST") && requestURI.contains("/comment")) {
                     operation = "评价订单";
                 }
@@ -183,54 +201,116 @@ public class LogAspect {
                 } else if (requestMethod.equals("POST") && requestURI.contains("/force-logout")) {
                     operation = "强制用户登出";
                 }
+            } else if (requestURI.contains("/api/products")) {
+                if (requestMethod.equals("GET") && requestURI.contains("/search")) {
+                    operation = "搜索商品";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/image")) {
+                    operation = "获取商品图片";
+                } else if (requestMethod.equals("GET") && !requestURI.contains("/") || requestURI.endsWith("/api/products")) {
+                    operation = "获取商品列表";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/internal/")) {
+                    operation = "根据ID获取商品(内部使用)";
+                } else if (requestMethod.equals("GET") && requestURI.matches(".*/api/products/[^/]+$")) {
+                    operation = "根据ID获取商品";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/image")) {
+                    operation = "上传商品图片";
+                } else if (requestMethod.equals("POST")) {
+                    operation = "添加商品";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/stock")) {
+                    operation = "更新商品库存";
+                } else if (requestMethod.equals("PUT")) {
+                    operation = "更新商品";
+                } else if (requestMethod.equals("DELETE") && requestURI.contains("/image")) {
+                    operation = "删除商品图片";
+                } else if (requestMethod.equals("DELETE")) {
+                    operation = "删除商品";
+                }
+            } else if (requestURI.contains("/api/system-logs")) {
+                if (requestMethod.equals("GET") && !requestURI.contains("/") || requestURI.endsWith("/api/system-logs")) {
+                    operation = "获取日志列表";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-user-id/")) {
+                    operation = "根据用户ID获取日志";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-id/")) {
+                    operation = "根据ID获取日志详情";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-username/")) {
+                    operation = "根据用户名获取日志";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-operation/")) {
+                    operation = "根据操作类型获取日志";
+                } else if (requestMethod.equals("DELETE") && requestURI.contains("/batch")) {
+                    operation = "批量删除日志";
+                } else if (requestMethod.equals("DELETE")) {
+                    operation = "删除日志";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/force-logout")) {
+                    operation = "强制用户登出";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/synchronize")) {
+                    operation = "同步日志到数据库";
+                }
             } else if (requestURI.contains("/api/orders/dashboard")) {
                 operation = "获取仪表盘数据";
             } else if (requestURI.contains("/api/orders")) {
-                if (requestMethod.equals("GET")) {
+                if (requestMethod.equals("GET") && !requestURI.contains("/") || requestURI.endsWith("/api/orders")) {
                     operation = "获取订单列表";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/login")) {
-                    operation = "用户登录";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/captcha/image")) {
-                    operation = "获取验证码图片";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/captcha/verify")) {
-                    operation = "验证验证码";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/categories")) {
-                    operation = "获取商品分类列表";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/cart")) {
-                    operation = "获取购物车列表";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/cart")) {
-                    operation = "添加商品到购物车";
-                } else if (requestMethod.equals("PUT") && requestURI.contains("/cart")) {
-                    operation = "更新购物车商品数量";
-                } else if (requestMethod.equals("DELETE") && requestURI.contains("/cart")) {
-                    operation = "从购物车删除商品";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/client/orders")) {
-                    operation = "获取客户端订单列表";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/cancel")) {
+                } else if (requestMethod.equals("GET") && requestURI.contains("/payment")) {
+                    operation = "跳转到支付页面";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-uuid")) {
+                    operation = "根据UUID获取订单详情";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/by-user/")) {
+                    operation = "获取指定用户的所有订单";
+                } else if (requestMethod.equals("GET") && requestURI.matches(".*/api/orders/[^/]+$")) {
+                    operation = "根据ID获取订单详情";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/admin/create")) {
+                    operation = "管理员为指定用户创建订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/cancel")) {
                     operation = "取消订单";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/pay")) {
-                    operation = "支付订单";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/client/orders/confirm")) {
-                    operation = "确认订单";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/online-users")) {
-                    operation = "获取在线用户列表";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/force-logout")) {
-                    operation = "强制用户登出";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/orders/dashboard")) {
-                    operation = "获取仪表盘数据";
-                } else if (requestMethod.equals("GET") && requestURI.contains("/orders")) {
-                    operation = "获取订单列表";
-                } else if (requestMethod.equals("POST") && requestURI.contains("/ship")) {
-                    operation = "订单发货";
                 } else if (requestMethod.equals("POST") && requestURI.contains("/pay")) {
-                    operation = "订单支付";
-                } else if (requestMethod.equals("POST")) {
+                    operation = "支付订单";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/confirm")) {
+                    operation = "确认收货";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/ship")) {
+                    operation = "订单发货（管理员）";
+                } else if (requestMethod.equals("DELETE") && requestURI.contains("/batch")) {
+                    operation = "批量删除订单";
+                } else if (requestMethod.equals("POST") && !requestURI.contains("/") || requestURI.endsWith("/api/orders")) {
                     operation = "创建订单";
                 } else if (requestMethod.equals("PUT")) {
                     operation = "更新订单";
                 } else if (requestMethod.equals("DELETE")) {
                     operation = "删除订单";
                 }
+            } else if (requestURI.contains("/api/users")) {
+                if (requestMethod.equals("GET") && requestURI.contains("/page/")) {
+                    operation = "分页获取用户列表";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/check-username")) {
+                    operation = "检查用户名是否可用";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/current")) {
+                    operation = "获取当前用户信息";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/avatar/")) {
+                    operation = "获取用户头像";
+                } else if (requestMethod.equals("GET") && !requestURI.contains("/") || requestURI.endsWith("/api/users")) {
+                    operation = "获取用户列表";
+                } else if (requestMethod.equals("GET")) {
+                    operation = "根据ID获取用户";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/login")) {
+                    operation = "用户登录";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/register")) {
+                    operation = "用户注册";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/logout")) {
+                    operation = "用户登出";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/avatar/upload")) {
+                    operation = "上传用户头像";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/resetPassword")) {
+                    operation = "重置用户密码";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/change-password")) {
+                    operation = "修改密码";
+                } else if (requestMethod.equals("PUT") && requestURI.contains("/profile/update")) {
+                    operation = "更新个人资料";
+                } else if (requestMethod.equals("PUT")) {
+                    operation = "更新用户信息";
+                } else if (requestMethod.equals("DELETE")) {
+                    operation = "删除用户";
+                }
+            } else if (requestURI.equals("/") || requestURI.equals("")) {
+                operation = "访问首页";
             } else {
                 // 默认使用URI最后一段作为操作类型
                 operation = requestURI.substring(requestURI.lastIndexOf("/") + 1);
@@ -361,12 +441,6 @@ public class LogAspect {
     }
     
     /**
-     * 获取方法的文字描述
-     * @param className 类名
-     * @param methodName 方法名
-     * @return 方法描述
-     */
-    /**
      * 定时任务，每10分钟将Redis中的日志同步到MySQL数据库
      */
     @Scheduled(fixedRate = 10 * 60 * 1000) // 每10分钟执行一次
@@ -472,169 +546,271 @@ public class LogAspect {
      * @return 方法描述
      */
     private String getMethodDescription(String className, String methodName) {
-        // 用户控制器
-        if ("UserController".equals(className)) {
-            if ("login".equals(methodName)) return "用户登录";
-            if ("loginPage".equals(methodName)) return "访问登录页面";
-            if ("register".equals(methodName)) return "用户注册";
-            if ("registerPage".equals(methodName)) return "访问注册页面";
-            if ("getUserInfo".equals(methodName)) return "获取用户信息";
-            if ("updateUserInfo".equals(methodName)) return "更新用户信息";
-            if ("changePassword".equals(methodName)) return "管理员重置密码";
-            if ("logout".equals(methodName)) return "用户退出登录";
-            if ("getCurrentUser".equals(methodName)) return "获取当前用户信息";
-            if ("uploadAvatar".equals(methodName)) return "上传用户头像";
-            if ("getUserAvatarData".equals(methodName)) return "获取用户头像数据";
-            if ("getUserAvatar".equals(methodName)) return "获取用户头像";
-            if ("sendVerificationCode".equals(methodName)) return "发送验证码";
-            if ("resetPassword".equals(methodName)) return "重置密码";
-            if ("updateProfile".equals(methodName)) return "更新个人资料";
-            if ("verifyCode".equals(methodName)) return "验证验证码";
-            if ("checkUsername".equals(methodName)) return "检查用户名是否可用";
-            if ("checkEmail".equals(methodName)) return "检查邮箱是否可用";
-            if ("checkPhone".equals(methodName)) return "检查手机号是否可用";
-            if ("updatePassword".equals(methodName)) return "更新密码";
-            if ("updateEmail".equals(methodName)) return "更新邮箱";
-            if ("updatePhone".equals(methodName)) return "更新手机号";
-            if ("updateAddress".equals(methodName)) return "更新地址";
-            if ("getProfile".equals(methodName)) return "获取个人资料";
-            if ("profilePage".equals(methodName)) return "访问个人资料页面";
-        }
-        // 订单控制器
-        else if ("OrderController".equals(className)) {
-            if ("list".equals(methodName)) return "获取订单列表";
-            if ("listPage".equals(methodName)) return "访问订单列表页面";
-            if ("getById".equals(methodName)) return "获取订单详情";
-            if ("create".equals(methodName)) return "创建订单";
-            if ("createPage".equals(methodName)) return "访问创建订单页面";
-            if ("update".equals(methodName)) return "更新订单";
-            if ("updatePage".equals(methodName)) return "访问更新订单页面";
-            if ("delete".equals(methodName)) return "删除订单";
-            if ("search".equals(methodName)) return "搜索订单";
-            if ("export".equals(methodName)) return "导出订单";
-            if ("statistics".equals(methodName)) return "订单统计";
-            if ("getOrdersByUserId".equals(methodName)) return "获取用户订单";
-            if ("getOrdersByStatus".equals(methodName)) return "按状态获取订单";
-            if ("updateStatus".equals(methodName)) return "更新订单状态";
-            if ("cancel".equals(methodName)) return "取消订单";
-            if ("pay".equals(methodName)) return "支付订单";
-            if ("deliver".equals(methodName)) return "发货";
-            if ("receive".equals(methodName)) return "确认收货";
-            if ("comment".equals(methodName)) return "评价订单";
-        }
-        // 客户端订单控制器
-        else if ("ClientOrderController".equals(className)) {
-            if ("list".equals(methodName)) return "获取客户订单列表";
-            if ("getById".equals(methodName)) return "获取客户订单详情";
-            if ("create".equals(methodName)) return "创建客户订单";
-            if ("cancel".equals(methodName)) return "取消客户订单";
-            if ("pay".equals(methodName)) return "支付客户订单";
-            if ("confirm".equals(methodName)) return "确认客户订单";
-            if ("comment".equals(methodName)) return "评价客户订单";
-            if ("getOrdersByStatus".equals(methodName)) return "按状态获取客户订单";
-            if ("getOrderCount".equals(methodName)) return "获取客户订单数量";
-            if ("getRecentOrders".equals(methodName)) return "获取最近客户订单";
-        }
-        // 客户端购物车控制器
-        else if ("ClientCartController".equals(className)) {
-            if ("list".equals(methodName)) return "获取购物车列表";
-            if ("add".equals(methodName)) return "添加商品到购物车";
-            if ("update".equals(methodName)) return "更新购物车商品";
-            if ("delete".equals(methodName)) return "从购物车删除商品";
-            if ("clear".equals(methodName)) return "清空购物车";
-            if ("getCartCount".equals(methodName)) return "获取购物车商品数量";
-            if ("checkout".equals(methodName)) return "购物车结算";
-            if ("getCartTotal".equals(methodName)) return "获取购物车总价";
-        }
-        // 商品控制器
-        else if ("ProductController".equals(className)) {
-            if ("list".equals(methodName)) return "获取商品列表";
-            if ("listPage".equals(methodName)) return "访问商品列表页面";
-            if ("getById".equals(methodName)) return "获取商品详情";
-            if ("detailPage".equals(methodName)) return "访问商品详情页面";
-            if ("create".equals(methodName)) return "创建商品";
-            if ("createPage".equals(methodName)) return "访问创建商品页面";
-            if ("update".equals(methodName)) return "更新商品";
-            if ("updatePage".equals(methodName)) return "访问更新商品页面";
-            if ("delete".equals(methodName)) return "删除商品";
-            if ("search".equals(methodName)) return "搜索商品";
-            if ("updateStock".equals(methodName)) return "更新商品库存";
-            if ("updatePrice".equals(methodName)) return "更新商品价格";
-            if ("uploadImage".equals(methodName)) return "上传商品图片";
-            if ("getProductImage".equals(methodName)) return "获取商品图片";
-            if ("getProductsByCategory".equals(methodName)) return "按分类获取商品";
-            if ("getHotProducts".equals(methodName)) return "获取热门商品";
-            if ("getNewProducts".equals(methodName)) return "获取新品";
-            if ("getRecommendProducts".equals(methodName)) return "获取推荐商品";
-        }
-        // 分类控制器
-        else if ("CategoryController".equals(className)) {
-            if ("list".equals(methodName)) return "获取分类列表";
-            if ("getById".equals(methodName)) return "获取分类详情";
-            if ("create".equals(methodName)) return "创建分类";
-            if ("update".equals(methodName)) return "更新分类";
-            if ("delete".equals(methodName)) return "删除分类";
-            if ("getParentCategories".equals(methodName)) return "获取父级分类";
-            if ("getChildCategories".equals(methodName)) return "获取子级分类";
-            if ("getCategoryTree".equals(methodName)) return "获取分类树";
-            if ("getCategoryByName".equals(methodName)) return "按名称获取分类";
-            if ("uploadCategoryImage".equals(methodName)) return "上传分类图片";
-            if ("getCategoryImage".equals(methodName)) return "获取分类图片";
-        }
-        // 验证码控制器
-        else if ("CaptchaController".equals(className)) {
-            if ("generateCaptcha".equals(methodName)) return "生成验证码";
-            if ("verifyCaptcha".equals(methodName)) return "验证验证码";
-            if ("refreshCaptcha".equals(methodName)) return "刷新验证码";
-            if ("getCaptchaImage".equals(methodName)) return "获取验证码图片";
-        }
-        // 管理员认证控制器
-        else if ("AdminAuthController".equals(className)) {
-            if ("login".equals(methodName)) return "管理员登录";
-            if ("logout".equals(methodName)) return "管理员退出登录";
-            if ("getAdminInfo".equals(methodName)) return "获取管理员信息";
-            if ("updatePassword".equals(methodName)) return "更新管理员密码";
-            if ("resetPassword".equals(methodName)) return "重置管理员密码";
-            if ("getPermissions".equals(methodName)) return "获取管理员权限";
-            if ("getRoles".equals(methodName)) return "获取管理员角色";
-            if ("checkPermission".equals(methodName)) return "检查管理员权限";
-        }
-        // 日志控制器
-        else if ("SysLogController".equals(className)) {
-            if ("list".equals(methodName)) return "获取日志列表";
-            if ("consolePage".equals(methodName)) return "访问日志控制台页面";
-            if ("delete".equals(methodName)) return "删除日志";
-            if ("batchDelete".equals(methodName)) return "批量删除日志";
-            if ("batchDeleteByFilter".equals(methodName)) return "按条件批量删除日志";
-            if ("forceLogout".equals(methodName)) return "强制用户登出";
-            if ("getLogsByUserId".equals(methodName)) return "获取用户日志";
-            if ("getLogsByUsername".equals(methodName)) return "按用户名获取日志";
-            if ("getLogsByOperation".equals(methodName)) return "按操作类型获取日志";
-            if ("getLogsByIp".equals(methodName)) return "按IP地址获取日志";
-            if ("getLogsByDate".equals(methodName)) return "按日期获取日志";
-            if ("getLogsByStatus".equals(methodName)) return "按状态码获取日志";
-            if ("getLogDetail".equals(methodName)) return "获取日志详情";
-            if ("exportLogs".equals(methodName)) return "导出日志";
-        }
-        // 在线用户控制器
-        else if ("OnlineUserController".equals(className)) {
-            if ("getOnlineUsers".equals(methodName)) return "获取在线用户列表";
-            if ("forceLogout".equals(methodName)) return "强制用户下线";
-            if ("getOnlineUserCount".equals(methodName)) return "获取在线用户数量";
-            if ("getOnlineUsersByRole".equals(methodName)) return "按角色获取在线用户";
-            if ("getOnlineUsersByDepartment".equals(methodName)) return "按部门获取在线用户";
-        }
-        // 首页控制器
-        else if ("HomeController".equals(className)) {
-            if ("index".equals(methodName)) return "访问首页";
-            if ("dashboard".equals(methodName)) return "访问仪表盘";
-            if ("welcome".equals(methodName)) return "访问欢迎页";
-            if ("about".equals(methodName)) return "访问关于页面";
-            if ("contact".equals(methodName)) return "访问联系页面";
-            if ("help".equals(methodName)) return "访问帮助页面";
-            if ("error".equals(methodName)) return "访问错误页面";
-            if ("notFound".equals(methodName)) return "访问404页面";
-            if ("accessDenied".equals(methodName)) return "访问403页面";
+        // 根据类名和方法名返回方法描述
+        if ("AdminAuthController".equals(className)) {
+            if ("login".equals(methodName)) {
+                return "管理员登录认证";
+            } else if ("logout".equals(methodName)) {
+                return "管理员退出登录";
+            } else if ("getAdminInfo".equals(methodName)) {
+                return "获取管理员信息";
+            } else if ("updatePassword".equals(methodName)) {
+                return "更新管理员密码";
+            } else if ("resetPassword".equals(methodName)) {
+                return "重置管理员密码";
+            } else if ("getPermissions".equals(methodName)) {
+                return "获取管理员权限";
+            } else if ("getRoles".equals(methodName)) {
+                return "获取管理员角色";
+            } else if ("checkPermission".equals(methodName)) {
+                return "检查管理员权限";
+            }
+        } else if ("CaptchaController".equals(className)) {
+            if ("getCaptcha".equals(methodName)) {
+                return "生成验证码图片";
+            } else if ("getCaptchaBase64".equals(methodName)) {
+                return "获取Base64编码的验证码图片";
+            } else if ("verifyCaptcha".equals(methodName)) {
+                return "验证验证码";
+            } else if ("generateCaptcha".equals(methodName)) {
+                return "生成验证码";
+            } else if ("refreshCaptcha".equals(methodName)) {
+                return "刷新验证码";
+            } else if ("getCaptchaImage".equals(methodName)) {
+                return "获取验证码图片";
+            }
+        } else if ("CategoryController".equals(className)) {
+            if ("getAllCategories".equals(methodName) || "getCategoryList".equals(methodName)) {
+                return "获取所有商品分类";
+            }
+        } else if ("ClientCartController".equals(className)) {
+            if ("getCartList".equals(methodName) || "list".equals(methodName)) {
+                return "获取购物车列表";
+            } else if ("addToCart".equals(methodName) || "add".equals(methodName)) {
+                return "添加商品到购物车";
+            } else if ("updateCartItemQuantity".equals(methodName) || "update".equals(methodName)) {
+                return "更新购物车商品数量";
+            } else if ("updateCartItemSelected".equals(methodName)) {
+                return "更新购物车商品选中状态";
+            } else if ("updateAllCartItemsSelected".equals(methodName)) {
+                return "全选/取消全选购物车商品";
+            } else if ("removeFromCart".equals(methodName) || "delete".equals(methodName)) {
+                return "从购物车删除商品";
+            } else if ("clear".equals(methodName)) {
+                return "清空购物车";
+            } else if ("getCartCount".equals(methodName)) {
+                return "获取购物车商品数量";
+            } else if ("checkout".equals(methodName)) {
+                return "购物车结算";
+            } else if ("getCartTotal".equals(methodName)) {
+                return "获取购物车总价";
+            }
+        } else if ("ClientOrderController".equals(className)) {
+            if ("getClientOrders".equals(methodName) || "list".equals(methodName)) {
+                return "获取客户端订单列表";
+            } else if ("getOrderByUuid".equals(methodName) || "getById".equals(methodName)) {
+                return "获取订单详情";
+            } else if ("cancelOrder".equals(methodName) || "cancel".equals(methodName)) {
+                return "取消订单";
+            } else if ("confirmOrder".equals(methodName) || "confirm".equals(methodName)) {
+                return "确认收货";
+            } else if ("payOrder".equals(methodName) || "pay".equals(methodName)) {
+                return "支付订单";
+            } else if ("commentOrder".equals(methodName) || "comment".equals(methodName)) {
+                return "评价订单";
+            } else if ("getOrdersByStatus".equals(methodName)) {
+                return "按状态获取客户订单";
+            } else if ("getOrderCount".equals(methodName)) {
+                return "获取客户订单数量";
+            } else if ("getRecentOrders".equals(methodName)) {
+                return "获取最近客户订单";
+            } else if ("create".equals(methodName)) {
+                return "创建客户订单";
+            }
+        } else if ("HomeController".equals(className)) {
+            if ("index".equals(methodName)) {
+                return "访问首页";
+            } else if ("dashboard".equals(methodName)) {
+                return "访问仪表盘";
+            } else if ("welcome".equals(methodName)) {
+                return "访问欢迎页";
+            } else if ("about".equals(methodName)) {
+                return "访问关于页面";
+            } else if ("contact".equals(methodName)) {
+                return "访问联系页面";
+            } else if ("help".equals(methodName)) {
+                return "访问帮助页面";
+            } else if ("error".equals(methodName)) {
+                return "访问错误页面";
+            } else if ("notFound".equals(methodName)) {
+                return "访问404页面";
+            } else if ("accessDenied".equals(methodName)) {
+                return "访问403页面";
+            }
+        } else if ("OnlineUserController".equals(className)) {
+            if ("getOnlineUsers".equals(methodName)) {
+                return "获取在线用户列表";
+            } else if ("forceLogout".equals(methodName)) {
+                return "强制用户登出";
+            } else if ("getOnlineUserCount".equals(methodName)) {
+                return "获取在线用户数量";
+            } else if ("getOnlineUsersByRole".equals(methodName)) {
+                return "按角色获取在线用户";
+            } else if ("getOnlineUsersByDepartment".equals(methodName)) {
+                return "按部门获取在线用户";
+            }
+        } else if ("OrderController".equals(className)) {
+            if ("getDashboardData".equals(methodName)) {
+                return "获取仪表盘数据";
+            } else if ("getAllOrders".equals(methodName) || "list".equals(methodName)) {
+                return "获取订单列表";
+            } else if ("getOrderById".equals(methodName) || "getById".equals(methodName)) {
+                return "根据ID获取订单详情";
+            } else if ("getOrderByUuid".equals(methodName)) {
+                return "根据UUID获取订单详情";
+            } else if ("createOrder".equals(methodName) || "create".equals(methodName)) {
+                return "创建订单";
+            } else if ("updateOrder".equals(methodName) || "update".equals(methodName)) {
+                return "更新订单";
+            } else if ("deleteOrder".equals(methodName) || "delete".equals(methodName)) {
+                return "删除订单";
+            } else if ("batchDeleteOrders".equals(methodName)) {
+                return "批量删除订单";
+            } else if ("getOrdersByUserId".equals(methodName)) {
+                return "获取指定用户的所有订单";
+            } else if ("createOrderForUser".equals(methodName)) {
+                return "管理员为指定用户创建订单";
+            } else if ("cancelOrder".equals(methodName) || "cancel".equals(methodName)) {
+                return "取消订单";
+            } else if ("payOrder".equals(methodName) || "pay".equals(methodName)) {
+                return "支付订单";
+            } else if ("confirmOrder".equals(methodName) || "receive".equals(methodName)) {
+                return "确认收货";
+            } else if ("shipOrder".equals(methodName) || "deliver".equals(methodName)) {
+                return "订单发货（管理员）";
+            } else if ("getPaymentPage".equals(methodName)) {
+                return "跳转到支付页面";
+            } else if ("listPage".equals(methodName)) {
+                return "访问订单列表页面";
+            } else if ("createPage".equals(methodName)) {
+                return "访问创建订单页面";
+            } else if ("updatePage".equals(methodName)) {
+                return "访问更新订单页面";
+            } else if ("search".equals(methodName)) {
+                return "搜索订单";
+            } else if ("export".equals(methodName)) {
+                return "导出订单";
+            } else if ("statistics".equals(methodName)) {
+                return "订单统计";
+            } else if ("getOrdersByStatus".equals(methodName)) {
+                return "按状态获取订单";
+            } else if ("updateStatus".equals(methodName)) {
+                return "更新订单状态";
+            } else if ("comment".equals(methodName)) {
+                return "评价订单";
+            }
+        } else if ("ProductController".equals(className)) {
+            if ("getAllProducts".equals(methodName)) {
+                return "获取商品列表";
+            } else if ("getProductById".equals(methodName)) {
+                return "根据ID获取商品";
+            } else if ("getProductByIdInternal".equals(methodName)) {
+                return "根据ID获取商品(内部使用)";
+            } else if ("createProduct".equals(methodName)) {
+                return "添加商品";
+            } else if ("updateProduct".equals(methodName)) {
+                return "更新商品";
+            } else if ("deleteProduct".equals(methodName)) {
+                return "删除商品";
+            } else if ("uploadProductImage".equals(methodName)) {
+                return "上传商品图片";
+            }
+        } else if ("UserController".equals(className)) {
+            if ("getAllUsers".equals(methodName) || "getUsersByPage".equals(methodName)) {
+                return "获取用户列表";
+            } else if ("getUserById".equals(methodName)) {
+                return "根据ID获取用户";
+            } else if ("login".equals(methodName)) {
+                return "用户登录";
+            } else if ("loginPage".equals(methodName)) {
+                return "访问登录页面";
+            } else if ("register".equals(methodName)) {
+                return "用户注册";
+            } else if ("registerPage".equals(methodName)) {
+                return "访问注册页面";
+            } else if ("updateUser".equals(methodName) || "updateUserInfo".equals(methodName)) {
+                return "更新用户信息";
+            } else if ("deleteUser".equals(methodName)) {
+                return "删除用户";
+            } else if ("changePassword".equals(methodName)) {
+                return "修改密码";
+            } else if ("resetPassword".equals(methodName)) {
+                return "重置密码";
+            } else if ("uploadAvatar".equals(methodName)) {
+                return "上传头像";
+            } else if ("logout".equals(methodName)) {
+                return "用户登出";
+            } else if ("getUserInfo".equals(methodName) || "getCurrentUser".equals(methodName)) {
+                return "获取用户信息";
+            } else if ("getUserAvatarData".equals(methodName)) {
+                return "获取用户头像数据";
+            } else if ("getUserAvatar".equals(methodName)) {
+                return "获取用户头像";
+            } else if ("sendVerificationCode".equals(methodName)) {
+                return "发送验证码";
+            } else if ("updateProfile".equals(methodName)) {
+                return "更新个人资料";
+            } else if ("verifyCode".equals(methodName)) {
+                return "验证验证码";
+            } else if ("checkUsername".equals(methodName)) {
+                return "检查用户名是否可用";
+            } else if ("checkEmail".equals(methodName)) {
+                return "检查邮箱是否可用";
+            } else if ("checkPhone".equals(methodName)) {
+                return "检查手机号是否可用";
+            } else if ("updatePassword".equals(methodName)) {
+                return "更新密码";
+            } else if ("updateEmail".equals(methodName)) {
+                return "更新邮箱";
+            } else if ("updatePhone".equals(methodName)) {
+                return "更新手机号";
+            } else if ("updateAddress".equals(methodName)) {
+                return "更新地址";
+            } else if ("getProfile".equals(methodName)) {
+                return "获取个人资料";
+            } else if ("profilePage".equals(methodName)) {
+                return "访问个人资料页面";
+            }
+        } else if ("SysLogController".equals(className)) {
+            if ("list".equals(methodName)) {
+                return "获取日志列表";
+            } else if ("consolePage".equals(methodName)) {
+                return "访问日志控制台页面";
+            } else if ("delete".equals(methodName)) {
+                return "删除日志";
+            } else if ("batchDelete".equals(methodName)) {
+                return "批量删除日志";
+            } else if ("batchDeleteByFilter".equals(methodName)) {
+                return "按条件批量删除日志";
+            } else if ("forceLogout".equals(methodName)) {
+                return "强制用户登出";
+            } else if ("getLogsByUserId".equals(methodName)) {
+                return "获取用户日志";
+            } else if ("getLogsByUsername".equals(methodName)) {
+                return "按用户名获取日志";
+            } else if ("getLogsByOperation".equals(methodName)) {
+                return "按操作类型获取日志";
+            } else if ("getLogsByIp".equals(methodName)) {
+                return "按IP地址获取日志";
+            } else if ("getLogsByDate".equals(methodName)) {
+                return "按日期获取日志";
+            } else if ("getLogsByStatus".equals(methodName)) {
+                return "按状态码获取日志";
+            } else if ("getLogDetail".equals(methodName)) {
+                return "获取日志详情";
+            } else if ("exportLogs".equals(methodName)) {
+                return "导出日志";
+            }
         }
         
         // 通用方法描述
@@ -660,4 +836,7 @@ public class LogAspect {
         // 如果没有匹配到具体描述，返回方法名作为描述
         return methodName;
     }
+
+
+
 }

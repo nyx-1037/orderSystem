@@ -231,7 +231,30 @@
             </div>
         </div>
     </div>
-
+    
+    <!-- 同步日志结果模态框 -->
+    <div class="modal fade" id="syncResultModal" tabindex="-1" role="dialog" aria-labelledby="syncResultModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="syncResultModalLabel">同步日志结果</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <i class="fas fa-check-circle text-success fa-4x"></i>
+                    </div>
+                    <p class="text-center" id="sync-result-message">成功同步 0 条日志记录</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">确定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
@@ -240,5 +263,30 @@
     <script src="/js/admin/main.js"></script>
     <script src="/js/admin/syslog-console.js"></script>
     <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮功能 -->
+    
+    <script>
+    // 确保模态框正确初始化 (在所有JS加载完成后执行)
+    $(document).ready(function() {
+        // 测试模态框是否能正常显示
+        $('#syncResultModal').on('show.bs.modal', function () {
+            console.log('模态框显示事件触发');
+        });
+        
+        $('#syncResultModal').on('shown.bs.modal', function () {
+            console.log('模态框已完全显示');
+        });
+        
+        $('#syncResultModal').on('hide.bs.modal', function () {
+            console.log('模态框隐藏事件触发');
+        });
+        
+        // 添加一个测试按钮，用于直接测试模态框
+        $('<button id="test-modal-btn" class="btn btn-info" style="position: fixed; bottom: 20px; right: 20px;">测试模态框</button>')
+            .appendTo('body')
+            .click(function() {
+                $('#syncResultModal').modal('show');
+            });
+    });
+    </script>
 </body>
 </html>

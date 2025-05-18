@@ -111,26 +111,56 @@ $(document).ready(function() {
             
             // 绑定刷新按钮事件
             $('#refresh-btn').click(function() {
-                // 添加加载动画
-                const $refreshBtn = $(this);
-                const originalHtml = $refreshBtn.html();
-                $refreshBtn.html('<i class="fas fa-sync-alt fa-spin"></i> 刷新中...');
-                $refreshBtn.prop('disabled', true);
+                console.log('刷新按钮被点击');
                 
-                // 先同步日志，然后刷新页面
-                syncLogsToDatabase().then(() => {
-                    loadSyslogs();
-                    // 恢复按钮原始状态
-                    setTimeout(() => {
-                        $refreshBtn.html(originalHtml);
-                        $refreshBtn.prop('disabled', false);
-                    }, 500);
-                }).catch(error => {
-                    // 发生错误时也恢复按钮状态
-                    $refreshBtn.html(originalHtml);
-                    $refreshBtn.prop('disabled', false);
-                    showErrorMessage('同步日志失败: ' + error.message);
-                });
+                // 显示确认对话框
+                if (confirm('确定要同步Redis中的日志到数据库吗？')) {
+                    try {
+                        // 添加加载动画
+                        const $refreshBtn = $(this);
+                        const originalHtml = $refreshBtn.html();
+                        $refreshBtn.html('<i class="fas fa-sync-alt fa-spin"></i> 同步中...');
+                        $refreshBtn.prop('disabled', true);
+                        
+                        console.log('发送同步请求前');
+                        
+                        // 使用自定义的fetchAPI函数
+                        fetchAPI('/api/system-logs/synchronize', {
+                            method: 'POST'
+                        })
+                        .then(response => {
+                            console.log('同步请求成功:', response);
+                            
+                            if (response && response.success) {
+                                // 显示成功消息
+                                $('#success-message').text(response.message).fadeIn();
+                                setTimeout(() => {
+                                    $('#success-message').fadeOut();
+                                }, 3000);
+                                
+                                // 刷新日志列表
+                                loadSyslogs();
+                            } else {
+                                throw new Error(response.message || '同步失败');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('同步日志失败:', error);
+                            showErrorMessage('同步日志失败: ' + error.message);
+                        })
+                        .finally(() => {
+                            console.log('同步请求完成');
+                            // 恢复按钮原始状态
+                            setTimeout(() => {
+                                $refreshBtn.html(originalHtml);
+                                $refreshBtn.prop('disabled', false);
+                            }, 500);
+                        });
+                    } catch (e) {
+                        console.error('刷新按钮事件处理发生错误:', e);
+                        showErrorMessage('发生错误: ' + e.message);
+                    }
+                }
             });
             
             // 绑定分页大小选择器事件
@@ -444,11 +474,12 @@ async function syncLogsToDatabase() {
         });
         
         if (response && response.success) {
-            const message = `${response.message}`;
-            $('#success-message').text(message).fadeIn();
-            setTimeout(() => {
-                $('#success-message').fadeOut();
-            }, 3000);
+            console.log('同步成功，准备显示消息', response);
+            
+            // 直接使用alert显示同步结果
+            // 这是最可靠的方式，不依赖于Bootstrap模态框
+            alert('同步成功: ' + response.message);
+            
             return true;
         } else {
             throw new Error(response.message || '同步失败');
