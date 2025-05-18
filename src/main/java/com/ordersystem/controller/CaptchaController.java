@@ -1,6 +1,8 @@
 package com.ordersystem.controller;
 
 import com.google.code.kaptcha.Producer;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import java.util.Map;
  * 提供验证码生成和验证功能
  */
 @RestController
+@Api(tags = "获取验证码", description = "获取验证码接口")
 @RequestMapping("/api/captcha")
 public class CaptchaController {
 
@@ -36,6 +39,7 @@ public class CaptchaController {
      * @param response HTTP响应
      * @throws IOException IO异常
      */
+    @ApiOperation(value = "生成验证码", notes = "返回生成的验证码图片")
     @GetMapping("/image")
     public void getCaptcha(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // 设置响应类型
@@ -69,6 +73,7 @@ public class CaptchaController {
      * @return Base64编码的验证码图片
      * @throws IOException IO异常
      */
+    @ApiOperation(value = "获取Base64编码的验证码图片", notes = "返回生成的验证码图片的Base64编码")
     @GetMapping("/image/base64")
     public ResponseEntity<?> getCaptchaBase64(HttpServletRequest request) throws IOException {
         // 生成验证码文本
@@ -99,6 +104,7 @@ public class CaptchaController {
      * @param request HTTP请求
      * @return 验证结果
      */
+    @ApiOperation(value = "验证验证码", notes = "验证用户输入的验证码是否正确")
     @PostMapping("/verify")
     public ResponseEntity<?> verifyCaptcha(@RequestParam String captchaCode, HttpServletRequest request) {
         HttpSession session = request.getSession();
