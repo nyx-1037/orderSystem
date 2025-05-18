@@ -321,10 +321,10 @@ public class ClientOrderController {
             // 获取订单信息
             Order order = orderService.getOrderDetailByUuid(uuid);
             
-            if (order == null) {
+            if (order == null || order.getStatus() != 0) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "订单不存在或已被删除");
+                response.put("message", "订单不存在，可能已被支付或取消");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             
@@ -386,7 +386,7 @@ public class ClientOrderController {
             if (order == null || order.getStatus() != 0) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "订单不存在，可能已被删除或已支付");
+                response.put("message", "订单不存在，可能已被支付或取消");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
             

@@ -214,7 +214,8 @@
                 url = `/api/orders/by-uuid?uuid=${orderUuid}`;
             } else {
                 alert('订单参数错误，请返回重试');
-                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
+                // 返回上一页，不需要isAdmin管理员参数控制
+                window.history.back();
                 return;
             }
             
@@ -235,7 +236,8 @@
                 error: function(xhr) {
                     console.error('获取订单信息失败', xhr);
                     alert('获取订单信息失败，请返回重试');
-                    window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
+                    // 返回上一页，不需要isAdmin管理员参数控制
+                    window.history.back();
                 }
             });
         }
@@ -247,16 +249,24 @@
             let data = { paymentMethod: paymentMethod };
             
             if (orderUuid) {
-                url = isAdmin ? `/api/orders/${orderUuid}/pay` : `/api/client/orders/${orderUuid}/pay`;
+                url = isAdmin ? `/api/orders/${orderUuid}/pay` : `/api/client/orders/${orderUuid}/pay`; //即使被篡改，后端也能再次验证
             } else {
                 alert('订单参数错误，请返回重试');
-                window.location.href = isAdmin ? '/pages/admin/order-list.html' : '/pages/client/orders.html';
+                // 返回上一页，不需要isAdmin管理员参数控制
+                window.history.back();
                 return;
             }
             
             // 显示加载状态
             $('#pay-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 处理中...');
-            
+
+            // 增加两秒延迟
+            setTimeout(function() {
+                // 在这里可以放置延迟后需要执行的代码
+                $('#pay-btn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 请稍后...');
+
+            }, 2000);
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -279,12 +289,13 @@
                     // 设置继续购物按钮跳转链接
                     $('#continue-shopping-btn').attr('href', isAdmin ? 
                         '/pages/admin/index.html' : 
-                        '/index.html');
+                        '/pages/client/index.html');
                 },
                 error: function(xhr) {
                     console.error('支付失败', xhr);
                     alert('支付失败：' + (xhr.responseJSON ? xhr.responseJSON.message : '未知错误'));
-                    $('#pay-btn').prop('disabled', false).html('<i class="fas fa-check-circle"></i> 确认支付');
+
+                    window.location.back();
                 }
             });
         }

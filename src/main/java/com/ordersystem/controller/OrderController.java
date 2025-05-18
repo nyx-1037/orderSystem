@@ -620,10 +620,10 @@ public class OrderController {
         // 获取订单信息
         Order order = orderService.getOrderById(orderId);
         
-        if (order == null) {
+        if (order == null || order.getStatus() != 0) {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "订单不存在或已被删除");
+            response.put("message", "订单不存在,可能已被支付或取消");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
         
@@ -680,20 +680,17 @@ public class OrderController {
             if (order == null  || order.getStatus() != 0) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "订单不存在，可能已被删除或已经支付");
+                response.put("message", "订单不存在，可能已被支付或取消");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
-            if(userService.getUserById(userId).getRole() !=  1){
                 // 验证订单所属用户
-                if (!userId.equals(order.getUserId())) {
+                if (userService.getUserById(userId).getRole() != 1) {
                     Map<String, Object> response = new HashMap<>();
                     response.put("success", false);
                     response.put("message", "您无权操作此订单");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
-            }
-
 
 
             // 获取支付方式
