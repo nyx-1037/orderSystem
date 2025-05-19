@@ -259,7 +259,10 @@ public class SysLogController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("手动同步日志失败: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("同步日志失败: " + e.getMessage());
+            HashMap<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("message", "同步日志失败: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResult);
         }
     }
 }

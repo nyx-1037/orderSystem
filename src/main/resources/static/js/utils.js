@@ -110,10 +110,26 @@ async function fetchAPI(url, options = {}) {
         if (!response.ok) {
             // 尝试解析错误响应
             let errorData;
-            try {
-                errorData = await response.json();
-            } catch (e) {
-                errorData = { message: response.statusText };
+            let errorMessage;
+            
+            // 检查Content-Type是否为JSON
+            const contentType = response.headers.get('Content-Type');
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    errorData = await response.json();
+                    errorMessage = errorData.message || errorData;
+                } catch (e) {
+                    console.warn('解析JSON错误响应失败:', e);
+                    errorMessage = response.statusText;
+                }
+            } else {
+                // 非JSON响应，直接获取文本
+                try {
+                    errorMessage = await response.text();
+                } catch (e) {
+                    console.warn('获取错误响应文本失败:', e);
+                    errorMessage = response.statusText;
+                }
             }
             
             // 如果是未授权错误 (401)，显示token过期提示并延迟3秒后重定向
@@ -139,11 +155,27 @@ async function fetchAPI(url, options = {}) {
             }
             
             // 抛出错误
-            throw new Error(errorData.message || `请求失败: ${response.status}`);
+            throw new Error(errorMessage || `请求失败: ${response.status}`);
         }
         
-        // 解析JSON响应
-        const data = await response.json();
+        // 检查Content-Type是否为JSON
+        const contentType = response.headers.get('Content-Type');
+        let data;
+        
+        if (contentType && contentType.includes('application/json')) {
+            // 解析JSON响应
+            data = await response.json();
+        } else {
+            // 非JSON响应，获取文本
+            const text = await response.text();
+            // 尝试将文本解析为JSON
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                // 如果解析失败，返回文本作为message字段
+                data = { message: text, success: true };
+            }
+        }
         
         // 检查业务逻辑状态码 (如果后端API有统一格式)
         // 注意：此检查可能需要根据您的后端API响应结构进行调整

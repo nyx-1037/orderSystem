@@ -8,13 +8,7 @@ let totalPages = 1;
 let pageSize = 10;
 let pageSizeOptions = [5, 10, 20, 50]; // 分页大小选项
 
-// 显示错误消息
-function showErrorMessage(message) {
-    $('#error-message').text(message).fadeIn();
-    setTimeout(() => {
-        $('#error-message').fadeOut();
-    }, 3000);
-}
+// 注意：使用utils.js中的showErrorMessage函数，此处不需要重复定义
 
 // 绑定复选框事件
 function bindCheckboxEvents() {
@@ -74,11 +68,8 @@ async function batchDeleteLogsApi(logIds) {
             body: JSON.stringify(logIds)
         });
         
-        // 显示成功消息
-        $('#success-message').text(response.message).fadeIn();
-        setTimeout(() => {
-            $('#success-message').fadeOut();
-        }, 3000);
+        // 使用utils.js中的通用函数显示成功消息
+        showSuccessMessage(response.message);
         
         // 重新加载日志列表
         loadSyslogs();
@@ -113,53 +104,57 @@ $(document).ready(function() {
             $('#refresh-btn').click(function() {
                 console.log('刷新按钮被点击');
                 
-                // 显示确认对话框
-                if (confirm('确定要同步Redis中的日志到数据库吗？')) {
-                    try {
-                        // 添加加载动画
-                        const $refreshBtn = $(this);
-                        const originalHtml = $refreshBtn.html();
-                        $refreshBtn.html('<i class="fas fa-sync-alt fa-spin"></i> 同步中...');
-                        $refreshBtn.prop('disabled', true);
+                // 直接执行同步操作，移除二次确认
+                try {
+                    // 添加加载动画
+                    const $refreshBtn = $(this);
+                    const originalHtml = $refreshBtn.html();
+                    $refreshBtn.html('<i class="fas fa-sync-alt fa-spin"></i> 同步中...');
+                    $refreshBtn.prop('disabled', true);
+                    
+                    console.log('发送同步请求前');
+                    
+                    // 使用自定义的fetchAPI函数
+                    fetchAPI('/api/system-logs/synchronize', {
+                        method: 'POST'
+                    })
+                    .then(response => {
+                        console.log('同步请求成功:', response);
                         
-                        console.log('发送同步请求前');
+                        // 恢复按钮状态
+                        $refreshBtn.html(originalHtml);
+                        $refreshBtn.prop('disabled', false);
                         
-                        // 使用自定义的fetchAPI函数
-                        fetchAPI('/api/system-logs/synchronize', {
-                            method: 'POST'
-                        })
-                        .then(response => {
-                            console.log('同步请求成功:', response);
+                        if (response && response.success) {
+                            // 先清除可能存在的其他消息
+                            $('#error-message').hide();
+                            $('#success-message').hide();
                             
-                            if (response && response.success) {
-                                // 显示成功消息
-                                $('#success-message').text(response.message).fadeIn();
-                                setTimeout(() => {
-                                    $('#success-message').fadeOut();
-                                }, 3000);
-                                
-                                // 刷新日志列表
-                                loadSyslogs();
-                            } else {
-                                throw new Error(response.message || '同步失败');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('同步日志失败:', error);
-                            showErrorMessage('同步日志失败: ' + error.message);
-                        })
-                        .finally(() => {
-                            console.log('同步请求完成');
-                            // 恢复按钮原始状态
+                            // 使用showSuccessMessage函数显示成功消息
+                            showSuccessMessage(response.message);
+                            
+                            // 延迟加载日志列表，确保消息显示完整
                             setTimeout(() => {
-                                $refreshBtn.html(originalHtml);
-                                $refreshBtn.prop('disabled', false);
-                            }, 500);
-                        });
-                    } catch (e) {
-                        console.error('刷新按钮事件处理发生错误:', e);
-                        showErrorMessage('发生错误: ' + e.message);
-                    }
+                                loadSyslogs();
+                            }, 1000);
+                        } else {
+                            throw new Error(response.message || '同步失败');}
+                    })
+                    .catch(error => {
+                        console.error('同步请求失败:', error);
+                        // 恢复按钮状态
+                        $refreshBtn.html(originalHtml);
+                        $refreshBtn.prop('disabled', false);
+                        // 使用showErrorMessage函数显示错误消息
+                        showErrorMessage('同步日志失败: ' + error.message);
+                    })
+                    .finally(() => {
+                        console.log('同步请求完成');
+                    });
+                } catch (e) {
+                    console.error('执行同步操作时发生错误:', e);
+                    // 使用utils.js中的通用函数显示错误消息
+                    showErrorMessage('操作失败，请查看控制台日志。');
                 }
             });
             
@@ -476,9 +471,12 @@ async function syncLogsToDatabase() {
         if (response && response.success) {
             console.log('同步成功，准备显示消息', response);
             
-            // 直接使用alert显示同步结果
-            // 这是最可靠的方式，不依赖于Bootstrap模态框
-            alert('同步成功: ' + response.message);
+            // 先清除可能存在的其他消息
+            $('#error-message').hide();
+            $('#success-message').hide();
+            
+            // 使用showSuccessMessage函数显示成功消息
+            showSuccessMessage(response.message);
             
             return true;
         } else {

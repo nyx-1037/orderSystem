@@ -241,7 +241,7 @@ function renderUserList(users) {
                 </td>
                 <td>${userId}</td>
                 <td>${user.username}</td>
-                <td>${user.nickname || '-'}</td>
+                <td>${user.realName || '-'}</td>
                 <td><span class="badge ${user.role === 1 ? 'badge-primary' : 'badge-secondary'}">${roleText}</span></td>
                 <td><span class="badge ${statusBadge}">${statusText}</span></td>
                 <td>${formatDate(user.createTime)}</td>

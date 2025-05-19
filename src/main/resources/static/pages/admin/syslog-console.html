@@ -84,16 +84,62 @@
                             <label for="module">操作类型</label>
                             <select class="form-control" id="module">
                                 <option value="">全部</option>
-                                <option value="登录">登录</option>
-                                <option value="注册">注册</option>
-                                <option value="查询订单">查询订单</option>
-                                <option value="新增订单">新增订单</option>
-                                <option value="修改订单">修改订单</option>
+                                <!-- 用户相关操作 -->
+                                <option value="管理员登录">管理员登录</option>
+                                <option value="用户登录">用户登录</option>
+                                <option value="用户注册">用户注册</option>
+                                <option value="用户登出">用户登出</option>
+                                <option value="获取用户列表">获取用户列表</option>
+                                <option value="获取当前用户信息">获取当前用户信息</option>
+                                <option value="更新用户信息">更新用户信息</option>
+                                <option value="删除用户">删除用户</option>
+                                <option value="修改密码">修改密码</option>
+                                <option value="重置用户密码">重置用户密码</option>
+                                <option value="上传用户头像">上传用户头像</option>
+                                <option value="获取用户头像">获取用户头像</option>
+                                
+                                <!-- 订单相关操作 -->
+                                <option value="获取订单列表">获取订单列表</option>
+                                <option value="获取订单详情">获取订单详情</option>
+                                <option value="创建订单">创建订单</option>
+                                <option value="更新订单">更新订单</option>
                                 <option value="删除订单">删除订单</option>
-                                <option value="查询商品">查询商品</option>
-                                <option value="新增商品">新增商品</option>
-                                <option value="修改商品">修改商品</option>
+                                <option value="取消订单">取消订单</option>
+                                <option value="支付订单">支付订单</option>
+                                <option value="确认收货">确认收货</option>
+                                <option value="订单发货（管理员）">订单发货（管理员）</option>
+                                <option value="批量删除订单">批量删除订单</option>
+                                
+                                <!-- 商品相关操作 -->
+                                <option value="获取商品列表">获取商品列表</option>
+                                <option value="根据ID获取商品">根据ID获取商品</option>
+                                <option value="添加商品">添加商品</option>
+                                <option value="更新商品">更新商品</option>
                                 <option value="删除商品">删除商品</option>
+                                <option value="搜索商品">搜索商品</option>
+                                <option value="上传商品图片">上传商品图片</option>
+                                <option value="删除商品图片">删除商品图片</option>
+                                <option value="更新商品库存">更新商品库存</option>
+                                
+                                <!-- 购物车相关操作 -->
+                                <option value="获取购物车列表">获取购物车列表</option>
+                                <option value="添加商品到购物车">添加商品到购物车</option>
+                                <option value="更新购物车商品数量">更新购物车商品数量</option>
+                                <option value="从购物车删除商品">从购物车删除商品</option>
+                                <option value="清空购物车">清空购物车</option>
+                                
+                                <!-- 日志相关操作 -->
+                                <option value="获取日志列表">获取日志列表</option>
+                                <option value="删除日志">删除日志</option>
+                                <option value="批量删除日志">批量删除日志</option>
+                                <option value="同步日志到数据库">同步日志到数据库</option>
+                                
+                                <!-- 其他操作 -->
+                                <option value="获取仪表盘数据">获取仪表盘数据</option>
+                                <option value="获取在线用户列表">获取在线用户列表</option>
+                                <option value="强制用户登出">强制用户登出</option>
+                                <option value="获取验证码图片">获取验证码图片</option>
+                                <option value="验证验证码">验证验证码</option>
                             </select>
                         </div>
                         <div class="form-group col-md-3">
@@ -150,7 +196,7 @@
                                     </div>
                                 </th>
                                 <th width="60">ID</th>
-                                <th width="100">用户名</th>
+                                <th width="100">来源(用户)</th>
                                 <th width="100">操作类型</th>
                                 <th width="80">状态码</th>
                                 <th>请求方法</th>
