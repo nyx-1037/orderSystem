@@ -74,4 +74,10 @@ public interface UserService {
      * @param userId 用户ID
      */
     byte[] getUserAvatar(Integer userId);
+    
+    /**
+     * 获取管理员用户列表
+     * @return 管理员用户列表
+     */
+    List<User> getAdminUsers();
 }

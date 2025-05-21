@@ -1,0 +1,226 @@
+/* 聊天页面样式 */
+
+/* 聊天列表样式 */
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.chat-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.chat-avatar i {
+    font-size: 1.5rem;
+}
+
+.list-group-item.active .chat-avatar {
+    background-color: #fff;
+    color: #0d6efd;
+}
+
+.unread-badge {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #dc3545;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+/* 聊天窗口样式 */
+.chat-card {
+    height: calc(100vh - 180px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    background-color: #f8f9fa;
+}
+
+#messageContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 消息气泡样式 */
+.message {
+    max-width: 80%;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.message-sender {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+    color: #6c757d;
+}
+
+.message-content {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    position: relative;
+    word-break: break-word;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+    align-self: flex-end;
+}
+
+/* 发送的消息 */
+.message-sent {
+    align-self: flex-end;
+}
+
+.message-sent .message-content {
+    background-color: #0d6efd;
+    color: white;
+    border-bottom-right-radius: 0.3rem;
+}
+
+/* 接收的消息 */
+.message-received {
+    align-self: flex-start;
+}
+
+.message-received .message-content {
+    background-color: white;
+    color: #212529;
+    border-bottom-left-radius: 0.3rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 系统消息 */
+.system-message {
+    align-self: center;
+    margin-bottom: 1rem;
+}
+
+.system-message .message-content {
+    background-color: #f1f1f1;
+    color: #6c757d;
+    font-size: 0.9rem;
+    border-radius: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+/* 输入区域样式 */
+#chatInputArea {
+    border-top: 1px solid #dee2e6;
+}
+
+#messageInput {
+    resize: none;
+}
+
+/* 加载更多按钮 */
+#loadMoreBtn {
+    margin-bottom: 1rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 767.98px) {
+    .chat-card {
+        height: calc(100vh - 250px);
+    }
+    
+    .message {
+        max-width: 90%;
+    }
+}
+
+/* 滚动条美化 */
+.chat-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.chat-body::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-body::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 用户列表搜索框 */
+#searchUserInput {
+    border-right: none;
+}
+
+#searchUserBtn {
+    border-left: none;
+    background-color: white;
+}
+
+/* 用户状态指示器 */
+.user-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.user-status.online {
+    background-color: #28a745;
+}
+
+.user-status.offline {
+    background-color: #dc3545;
+}
+
+/* 消息输入框提示 */
+.input-hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* 消息已读状态 */
+.message-status {
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-top: 0.2rem;
+    align-self: flex-end;
+}
+
+.message-status i {
+    margin-right: 2px;
+}
+
+/* 动画效果 */
+.message {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

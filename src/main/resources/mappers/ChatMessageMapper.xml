@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ordersystem.dao.ChatMessageDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.ordersystem.entity.ChatMessage">
+        <id column="message_id" jdbcType="BIGINT" property="messageId" />
+        <result column="sender_id" jdbcType="BIGINT" property="senderId" />
+        <result column="receiver_id" jdbcType="BIGINT" property="receiverId" />
+        <result column="content" jdbcType="VARCHAR" property="content" />
+        <result column="message_type" jdbcType="INTEGER" property="messageType" />
+        <result column="read_status" jdbcType="INTEGER" property="readStatus" />
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    </resultMap>
+    
+    <!-- 带用户信息的结果映射 -->
+    <resultMap id="ChatResultMap" type="com.ordersystem.entity.ChatMessage" extends="BaseResultMap">
+        <result column="sender_name" jdbcType="VARCHAR" property="senderName" />
+        <result column="receiver_name" jdbcType="VARCHAR" property="receiverName" />
+        <result column="sender_avatar" jdbcType="VARCHAR" property="senderAvatar" />
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        message_id, sender_id, receiver_id, content, message_type, read_status, create_time
+    </sql>
+
+    <!-- 插入聊天消息 -->
+    <insert id="insert" parameterType="com.ordersystem.entity.ChatMessage" useGeneratedKeys="true" keyProperty="messageId">
+        INSERT INTO chat_message (
+            sender_id, receiver_id, content, message_type, read_status, create_time
+        ) VALUES (
+            #{senderId,jdbcType=BIGINT}, 
+            #{receiverId,jdbcType=BIGINT}, 
+            #{content,jdbcType=VARCHAR}, 
+            #{messageType,jdbcType=INTEGER}, 
+            #{readStatus,jdbcType=INTEGER}, 
+            #{createTime,jdbcType=TIMESTAMP}
+        )
+    </insert>
+
+    <!-- 根据主键查询聊天消息 -->
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM chat_message
+        WHERE message_id = #{messageId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 查询两个用户之间的聊天记录 -->
+    <select id="selectChatHistory" resultMap="BaseResultMap">
+        SELECT 
+            <include refid="Base_Column_List" />
+        FROM chat_message
+        WHERE (sender_id = #{userId1,jdbcType=BIGINT} AND receiver_id = #{userId2,jdbcType=BIGINT})
+           OR (sender_id = #{userId2,jdbcType=BIGINT} AND receiver_id = #{userId1,jdbcType=BIGINT})
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 统计用户的未读消息数量 -->
+    <select id="countUnreadMessages" parameterType="java.lang.Long" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM chat_message
+        WHERE receiver_id = #{userId,jdbcType=BIGINT}
+          AND read_status = 0
+    </select>
+
+    <!-- 更新消息的读取状态 -->
+    <update id="updateReadStatus">
+        UPDATE chat_message
+        SET read_status = #{readStatus,jdbcType=INTEGER}
+        WHERE message_id = #{messageId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 更新用户的所有未读消息为已读 -->
+    <update id="updateAllReadStatus">
+        UPDATE chat_message
+        SET read_status = #{readStatus,jdbcType=INTEGER}
+        WHERE receiver_id = #{userId,jdbcType=BIGINT}
+          AND read_status = 0
+    </update>
+
+    <!-- 查询用户的最近聊天列表 -->
+    <select id="selectRecentChats" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT t.*
+        FROM (
+            SELECT 
+                cm.*,
+                ROW_NUMBER() OVER (PARTITION BY 
+                    CASE 
+                        WHEN cm.sender_id = #{userId,jdbcType=BIGINT} THEN cm.receiver_id 
+                        ELSE cm.sender_id 
+                    END 
+                ORDER BY cm.create_time DESC) as rn
+            FROM chat_message cm
+            WHERE cm.sender_id = #{userId,jdbcType=BIGINT} OR cm.receiver_id = #{userId,jdbcType=BIGINT}
+        ) t
+        WHERE t.rn = 1
+        ORDER BY t.create_time DESC
+    </select>
+</mapper>

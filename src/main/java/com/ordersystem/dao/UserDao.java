@@ -65,4 +65,11 @@ public interface UserDao {
      */
     @Select("SELECT avatar_data FROM user WHERE user_id = #{userId}")
     byte[] getUserByAvatarData(Integer userId);
+    
+    /**
+     * 获取所有管理员用户
+     * @return 管理员用户列表
+     */
+    @Select("SELECT * FROM user WHERE role = 1 AND status = 1")
+    List<User> getAdminUsers();
 }

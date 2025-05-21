@@ -361,4 +361,69 @@ public class UserServiceImpl implements UserService, CommandLineRunner {
         byte[] avatarData = userDao.getUserByAvatarData(userId);
         return avatarData;
     }
+    
+    @Override
+    public List<User> getAdminUsers() {
+        List<User> adminUsers = null;
+        String key = "adminUsers";
+        
+        try {
+            // 尝试从缓存获取管理员用户列表
+            adminUsers = redisService.get(key, List.class);
+            if (adminUsers != null && !adminUsers.isEmpty()) {
+                logger.debug("从Redis缓存中获取管理员用户数据");
+                return adminUsers;
+            }
+        } catch (Exception e) {
+            logger.error("从Redis获取管理员用户数据失败，将从数据库获取", e);
+            // Redis获取失败，继续从数据库获取
+        }
+        
+        // 从数据库获取管理员用户
+        adminUsers = userDao.getAdminUsers();
+        
+        try {
+            if (adminUsers != null && !adminUsers.isEmpty()) {
+                // 创建不包含敏感信息的用户列表用于缓存
+                List<User> cacheUsers = new ArrayList<>();
+                
+                // 处理每个管理员用户
+                for (User user : adminUsers) {
+                    User cacheUser = new User();
+                    cacheUser.setUserId(user.getUserId());
+                    cacheUser.setUsername(user.getUsername());
+                    cacheUser.setUserUuid(user.getUserUuid());
+                    cacheUser.setRealName(user.getRealName());
+                    cacheUser.setPhone(user.getPhone());
+                    cacheUser.setEmail(user.getEmail());
+                    cacheUser.setAddress(user.getAddress());
+                    cacheUser.setRole(user.getRole());
+                    cacheUser.setStatus(user.getStatus());
+                    cacheUser.setCreateTime(user.getCreateTime());
+                    cacheUser.setUpdateTime(user.getUpdateTime());
+                    // 不缓存密码和头像数据
+                    cacheUser.setPassword(null);
+                    cacheUser.setAvatarData(null);
+                    
+                    cacheUsers.add(cacheUser);
+                }
+                
+                // 缓存管理员用户列表
+                redisService.set(key, cacheUsers, 24 * 60 * 60); // 缓存24小时
+            }
+        } catch (Exception e) {
+            logger.error("将管理员用户数据放入Redis缓存失败", e);
+            // 缓存操作失败不影响业务操作
+        }
+        
+        // 移除敏感信息
+        if (adminUsers != null) {
+            adminUsers.forEach(user -> {
+                user.setPassword(null);
+                // 保留头像数据，因为可能需要在聊天界面显示
+            });
+        }
+        
+        return adminUsers;
+    }
 }
