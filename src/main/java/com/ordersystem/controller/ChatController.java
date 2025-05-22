@@ -57,10 +57,11 @@ public class ChatController {
                 currentUser.getUserId().longValue(), targetUserId, pageNum, pageSize);
 
         // 将消息标记为已读
-        chatMessageService.markAllMessagesAsRead(currentUser.getUserId().longValue());
+        // chatMessageService.markAllMessagesAsRead(currentUser.getUserId().longValue()); // 标记所有消息已读应该在切换聊天对象时进行，而不是获取历史记录时
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
+        // getChatHistory方法已经使用了PageHelper，返回的List实际上是Page对象，包含了分页信息
         response.put("data", chatHistory);
         return ResponseEntity.ok(response);
     }

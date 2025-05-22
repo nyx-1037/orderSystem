@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客服聊天 - 七洛商城后台管理端</title>
-    <link rel="icon" href="/7L-icon.png" type="image/png">
+    <link rel="icon" href="/7L-icon2.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
     <link rel="stylesheet" href="/css/chat.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -20,62 +21,62 @@
                 <div class="position-sticky pt-3">
                     <div class="text-center mb-4">
                         <a href="index.html" class="sidebar-logo">
-                            <img src="/7L-icon.png" alt="七洛商城" class="sidebar-logo-img">
-                            <span class="sidebar-logo-text">七洛商城</span>
+                            <img src="/7L-icon2.png" alt="七洛商城" class="sidebar-logo-img">
+                            <span class="sidebar-logo-text">七洛商城后台管理端</span>
                         </a>
                     </div>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="index.html">
-                                <i class="fas fa-tachometer-alt me-2"></i>控制台
+                                <i class="fas fa-tachometer-alt"></i> 控制台
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="product-list.html">
-                                <i class="fas fa-box me-2"></i>商品管理
+                                <i class="fas fa-box"></i> 商品管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="order-list.html">
-                                <i class="fas fa-receipt me-2"></i>订单管理
+                                <i class="fas fa-shopping-cart"></i> 订单管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="user-list.html">
-                                <i class="fas fa-users me-2"></i>用户管理
+                                <i class="fas fa-users"></i> 用户管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="chat.html">
-                                <i class="fas fa-comments me-2"></i>客服聊天
+                                <i class="fas fa-comments"></i> 客服聊天
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="system-log.html">
-                                <i class="fas fa-file-alt me-2"></i>系统日志
+                                <i class="fas fa-clipboard-list"></i> 系统日志
                             </a>
                         </li>
 
+                    </ul>
+                    <hr class="my-3">
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="profile.html">
+                                <i class="fas fa-id-card"></i> 个人信息
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> 退出登录
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
 
             <!-- 主内容区 -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2"><i class="fas fa-comments me-2"></i>客服聊天</h1>
-                    <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle"></i> <span id="adminUsername">管理员</span>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user"></i> 个人信息</a></li>
-                                <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+
 
                 <div class="row">
                     <!-- 左侧用户列表 -->
@@ -170,6 +171,8 @@
     <!-- 脚本 -->
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
+    <script src="/js/res/all.min.js"></script>
+
     <script src="/js/common.js"></script>
     <script src="/js/admin/chat-admin.js"></script>
 </body>

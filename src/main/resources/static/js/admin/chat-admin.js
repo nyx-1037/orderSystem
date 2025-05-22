@@ -80,31 +80,59 @@ $(document).ready(function() {
  * 初始化管理员信息
  */
 function initAdminInfo() {
-    // 从localStorage获取用户信息
+    // 从localStorage获取用户信息和token
     const userJson = localStorage.getItem('user');
-    if (!userJson) {
-        // 未登录，跳转到登录页
-        window.location.href = './login.html';
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userRole');
+    
+    // 如果没有token或者不是管理员角色，跳转到管理员登录页面
+    if (!token || userRole !== '1') {
+        window.location.href = '/pages/admin/login.html';
         return;
     }
     
-    try {
-        currentAdmin = JSON.parse(userJson);
-        
-        // 检查是否是管理员
-        if (currentAdmin.role !== 1) {
-            alert('您没有权限访问此页面');
-            window.location.href = './login.html';
+    if (userJson) {
+        try {
+            currentAdmin = JSON.parse(userJson);
+            
+            // 检查是否是管理员
+            if (currentAdmin.role !== 1) {
+                alert('您没有权限访问此页面');
+                window.location.href = '/pages/admin/login.html';
+                return;
+            }
+            
+        } catch (e) {
+            console.error('解析用户信息失败', e);
+            // 清除无效的用户信息
+            localStorage.removeItem('user');
+            window.location.href = '/pages/admin/login.html';
             return;
         }
-        
-        // 显示管理员用户名
-        $('#adminUsername').text(currentAdmin.username);
-    } catch (e) {
-        console.error('解析用户信息失败', e);
-        // 清除无效的用户信息
-        localStorage.removeItem('user');
-        window.location.href = '../login.html';
+    } else {
+        // 尝试通过API获取当前用户信息
+        fetchWithAuth('/api/users/current')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('获取用户信息失败: ' + response.status);
+                }
+            })
+            .then(data => {
+                if (data && data.username && data.role === 1) {
+                    currentAdmin = data;
+                    // 保存用户信息到localStorage
+                    localStorage.setItem('user', JSON.stringify(data));
+                } else {
+                    // 未登录或不是管理员，跳转到登录页面
+                    window.location.href = '/pages/admin/login.html';
+                }
+            })
+            .catch(error => {
+                console.error('获取用户信息失败', error);
+                window.location.href = '/pages/admin/login.html';
+            });
     }
 }
 
@@ -229,49 +257,6 @@ function sendMessage() {
 }
 
 /**
- * 发送消息到服务器
- * @param {Object} message 消息对象
- */
-function sendMessageToServer(message) {
-    const token = getToken();
-    
-    $.ajax({
-        url: '/api/chat/send',
-        type: 'POST',
-        contentType: 'application/json',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        data: JSON.stringify(message),
-        success: function(response) {
-            if (response.success) {
-                // 清空输入框
-                $('#messageInput').val('');
-                // 添加消息到聊天窗口
-                appendMessage({
-                    ...message,
-                    senderName: currentAdmin.username,
-                    messageId: new Date().getTime() // 临时ID
-                });
-                // 滚动到底部
-                scrollToBottom();
-            } else {
-                console.error('发送消息失败:', response.message);
-                alert('发送失败: ' + response.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            if (xhr.status === 401) {
-                handleUnauthorized(xhr);
-            } else {
-                console.error('发送消息请求失败:', error);
-                alert('发送失败，请检查网络连接');
-            }
-        }
-    });
-}
-
-/**
  * 在消息容器中添加消息
  * @param {Object} message 消息对象
  */
@@ -308,6 +293,45 @@ function appendMessage(message) {
     
     // 添加到消息容器
     $('#messageContainer').append(messageHtml);
+}
+
+/**
+ * 在消息容器顶部添加消息
+ * @param {Object} message 消息对象
+ */
+function prependMessage(message) {
+    const isSelf = message.senderId === currentAdmin.userId;
+    const messageClass = isSelf ? 'message-sent' : 'message-received';
+    const messageTime = formatTime(message.createTime);
+    
+    // 构建消息HTML
+    let messageHtml = `
+        <div class="message ${messageClass}">
+    `;
+    
+    // 如果不是自己发送的消息，显示发送者名称
+    if (!isSelf && message.senderName) {
+        messageHtml += `<div class="message-sender">${message.senderName}</div>`;
+    }
+    
+    // 消息内容
+    messageHtml += `
+            <div class="message-content">${message.content}</div>
+            <div class="message-time">${messageTime}</div>
+    `;
+    
+    // 如果是自己发送的消息，显示已读状态
+    if (isSelf) {
+        const readStatus = message.readStatus === 1 ? 
+            '<i class="bi bi-check2-all"></i>已读' : 
+            '<i class="bi bi-check2"></i>未读';
+        messageHtml += `<div class="message-status">${readStatus}</div>`;
+    }
+    
+    messageHtml += `</div>`;
+    
+    // 添加到消息容器顶部
+    $('#messageContainer').prepend(messageHtml);
 }
 
 /**
@@ -421,7 +445,7 @@ function loadChatHistory() {
             'Authorization': `Bearer ${currentAdmin.token}`
         },
         success: function(response) {
-            if (response.code === 200) {
+            if (response.success) {
                 const data = response.data;
                 const messages = data.list;
                 
@@ -448,7 +472,8 @@ function loadChatHistory() {
                 // 按时间顺序显示消息
                 const sortedMessages = messages.sort((a, b) => a.createTime - b.createTime);
                 for (const message of sortedMessages) {
-                    appendMessage(message);
+                    // 将新加载的消息添加到顶部，以便实现“加载更多”的效果
+                    prependMessage(message);
                 }
                 
                 // 如果是第一页，滚动到底部，否则保持滚动位置
@@ -512,7 +537,7 @@ function getRecentChatList() {
         url: '/api/chat/recent',
         type: 'GET',
         success: function(response) {
-            if (response.code === 200) {
+            if (response.success) {
                 userList = response.data;
                 updateUserList(userList);
             } else {
@@ -587,8 +612,8 @@ function searchUsers() {
         type: 'GET',
         data: { username: keyword, role: 0 }, // 只搜索普通用户
         success: function(response) {
-            if (response.code === 200) {
-                const users = response.data;
+                if (response.success) {
+                    const users = response.data;
                 // 转换为聊天列表格式
                 const chatUsers = users.map(user => ({
                     otherUserId: user.userId,
@@ -622,8 +647,8 @@ function markMessageRead(messageId) {
         contentType: 'application/json',
         data: JSON.stringify({ messageId: messageId }),
         success: function(response) {
-            if (response.code === 200) {
-                console.log('标记消息已读成功');
+                if (response.success) {
+                    console.log('标记消息已读成功');
             } else {
                 console.error('标记消息已读失败', response.message);
             }
@@ -645,7 +670,7 @@ function markAllRead(otherUserId) {
         url: '/api/chat/read/all',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({ otherUserId: otherUserId }),
+        // 不需要发送otherUserId，后端从session获取用户ID
         success: function(response) {
             if (response.code === 200) {
                 console.log('标记所有消息已读成功');

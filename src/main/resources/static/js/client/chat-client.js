@@ -61,23 +61,51 @@ function initUserInfo() {
     try {
         // 从localStorage获取用户信息和token
         const userJson = localStorage.getItem('user');
-        const token = getToken();
+        const token = localStorage.getItem('token');
         
-        if (!userJson || !token) {
-            window.location.href = './login.html';
+        if (!token) {
+            window.location.href = '/pages/client/login.html';
             return;
         }
         
-        currentUser = JSON.parse(userJson);
-        
-        // 显示用户名
-        $('#username').text(currentUser.username);
+        if (userJson) {
+            currentUser = JSON.parse(userJson);
+            
+            // 显示用户名
+            $('#username').text(currentUser.username);
+        } else {
+            // 尝试通过API获取当前用户信息
+            fetchWithAuth('/api/users/current')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('获取用户信息失败: ' + response.status);
+                    }
+                })
+                .then(data => {
+                    if (data && data.username) {
+                        currentUser = data;
+                        // 保存用户信息到localStorage
+                        localStorage.setItem('user', JSON.stringify(data));
+                        // 显示用户名
+                        $('#username').text(data.username);
+                    } else {
+                        // 未登录，跳转到登录页面
+                        window.location.href = '/pages/client/login.html';
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户信息失败', error);
+                    window.location.href = '/pages/client/login.html';
+                });
+        }
     } catch (e) {
         console.error('解析用户信息失败', e);
         // 清除无效的用户信息
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        window.location.href = './login.html';
+        window.location.href = '/pages/client/login.html';
     }
 }
 

@@ -2,8 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理员登录-七洛商城后台管理端</title>
+    <title>登录-七洛商城后台管理端</title>
     <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
@@ -28,70 +27,40 @@
         }
     </style>
 </head>
-<body class="login-page">
+<body class="bg-light">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="login-card card shadow-lg">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <img src="/7L-icon.png" alt="七洛商城" class="login-logo mb-3">
-                            <h2 class="login-title">七洛商城管理后台</h2>
-                            <p class="text-muted">请登录您的管理员账号</p>
+        <div class="login-container admin-card">
+            <div class="login-header">
+                <h2><i class="fas fa-store"></i> 在线商城后台管理端</h2>
+                <p class="text-muted"><i class="fas fa-user-shield"></i> 管理员登录</p>
+            </div>
+            
+            <div class="alert alert-success" id="success-message" style="display: none;"></div>
+            <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+            
+            <form id="login-form" class="admin-form">
+                <div class="form-group">
+                    <label for="username"><i class="fas fa-user"></i> 用户名</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> 密码</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="captcha"><i class="fas fa-shield-alt"></i> 验证码</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="captcha" name="captcha" required>
+                        <div class="input-group-append">
+                            <img id="captchaImage" src="/api/captcha/image" alt="验证码" style="height: 38px; cursor: pointer;" title="点击刷新验证码">
                         </div>
-                        
-                        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
-                        
-                        <form id="login-form">
-                            <div class="form-group">
-                                <label for="username">用户名</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                    </div>
-                                    <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="password">密码</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                    </div>
-                                    <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="captcha">验证码</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-shield-alt"></i></span>
-                                    </div>
-                                    <input type="text" class="form-control" id="captcha" name="captcha" placeholder="请输入验证码" required>
-                                    <div class="input-group-append">
-                                        <img id="captcha-img" src="/api/captcha" alt="验证码" style="height: 38px; cursor: pointer;" title="点击刷新验证码">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group form-check">
-                                <input type="checkbox" class="form-check-input" id="remember-me" name="rememberMe">
-                                <label class="form-check-label" for="remember-me">记住我</label>
-                                <a href="#" class="float-right">忘记密码?</a>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary btn-block mt-4" id="login-btn">
-                                <i class="fas fa-sign-in-alt mr-2"></i>登录
-                            </button>
-                        </form>
                     </div>
                 </div>
-                
-                <div class="text-center mt-3 text-muted">
-                    <p>&copy; 2023 七洛商城. 保留所有权利.</p>
-                </div>
+                <button type="submit" class="btn btn-primary btn-block admin-btn"><i class="fas fa-sign-in-alt"></i> 登录</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>普通用户？<a href="/pages/client/login.html">前往用户登录</a></p>
             </div>
         </div>
     </div>
