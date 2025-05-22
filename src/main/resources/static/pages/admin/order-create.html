@@ -2,13 +2,15 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>创建订单(管理员) - 七洛商城后台管理端</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建订单-七洛商城后台管理端</title>
     <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
     <style>
         /* 自定义样式 */
         .order-container {
@@ -64,117 +66,151 @@
     </style>
 </head>
 <body>
-    <!-- <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 七洛商城后台管理端</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/pages/admin/order-list.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/product-list.html"><i class="fas fa-box"></i> 商品管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/user-list.html"><i class="fas fa-users"></i> 用户管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/syslog-console.html"><i class="fas fa-clipboard-list"></i> 系统日志</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1030;">
-                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav> -->
+    <!-- 侧边栏切换按钮 (移动端显示) -->
+    <button class="sidebar-toggler" type="button" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <div class="container order-container">
-        <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
-            <i class="fas fa-arrow-left"></i> 返回订单列表
-        </a>
-        <div class="order-header">
-            <h2>创建新订单</h2>
-        </div>
-        
-        <div class="alert alert-success" id="success-message" style="display: none;"></div>
-        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
-        
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-md-8">
-                <h4 class="mb-3">选择商品</h4>
-                
-                <div id="products-container">
-                    <!-- 商品列表将通过JavaScript动态加载 -->
-                    <div class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="sr-only">加载中...</span>
+            <!-- 侧边栏 -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <a href="index.html" class="sidebar-logo">
+                            <img src="/7L-icon.png" alt="七洛商城" class="sidebar-logo-img">
+                            <span class="sidebar-logo-text">七洛商城</span>
+                        </a>
+                    </div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-tachometer-alt"></i> 控制台
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="order-list.html">
+                                <i class="fas fa-shopping-cart"></i> 订单管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="product-list.html">
+                                <i class="fas fa-box"></i> 商品管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user-list.html">
+                                <i class="fas fa-users"></i> 用户管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="chat.html">
+                                <i class="fas fa-comments"></i> 客服聊天
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="syslog-console.html">
+                                <i class="fas fa-clipboard-list"></i> 系统日志
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-plus-circle me-2"></i>创建订单</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="dropdown user-dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+                            </div>
                         </div>
-                        <p>正在加载商品数据...</p>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="cart-summary">
-                    <h4 class="mb-3">订单信息</h4>
-                    <form id="order-form">
-                        <div class="form-group">
-                            <label for="userId">选择用户</label>
-                            <div class="input-group">
-                                <input type="hidden" id="userId" name="userId" required>
-                                <input type="text" class="form-control" id="selected-user-display" placeholder="未选择用户" readonly>
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" type="button" id="select-user-btn" data-toggle="modal" data-target="#userSelectModal">
-                                        <i class="fas fa-user-plus"></i> 选择用户
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="form-text text-muted">选择要为其创建订单的用户</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="receiver">收货人</label>
-                            <input type="text" class="form-control" id="receiver" name="receiver" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="receiverPhone">联系电话</label>
-                            <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="address">收货地址</label>
-                            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="remark">订单备注</label>
-                            <textarea class="form-control" id="remark" name="remark" rows="2"></textarea>
-                        </div>
-                        
-                        <hr class="mb-4">
-                        <div class="d-flex justify-content-between mb-3">
-                            <span>商品总数：</span>
-                            <span id="total-quantity">0</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span>订单总金额：</span>
-                            <span id="total-amount" class="font-weight-bold">¥0.00</span>
-                        </div>
-                        
-                        <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit-btn" disabled>提交订单</button>
-                    </form>
+
+                <!-- 创建订单内容 -->
+                <a href="javascript:history.back()" class="btn btn-outline-secondary mb-3">
+                    <i class="fas fa-arrow-left"></i> 返回订单列表
+                </a>
+                <div class="order-header">
+                    <h2>创建新订单</h2>
                 </div>
-            </div>
+                
+                <div class="alert alert-success" id="success-message" style="display: none;"></div>
+                <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+                
+                <div class="row">
+                    <div class="col-md-8">
+                        <h4 class="mb-3">选择商品</h4>
+                        
+                        <div id="products-container">
+                            <!-- 商品列表将通过JavaScript动态加载 -->
+                            <div class="text-center">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">加载中...</span>
+                                </div>
+                                <p>正在加载商品数据...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="cart-summary">
+                            <h4 class="mb-3">订单信息</h4>
+                            <form id="order-form">
+                                <div class="form-group">
+                                    <label for="userId">选择用户</label>
+                                    <div class="input-group">
+                                        <input type="hidden" id="userId" name="userId" required>
+                                        <input type="text" class="form-control" id="selected-user-display" placeholder="未选择用户" readonly>
+                                        <div class="input-group-append">
+                                            <button class="btn btn-primary" type="button" id="select-user-btn" data-toggle="modal" data-target="#userSelectModal">
+                                                <i class="fas fa-user-plus"></i> 选择用户
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">选择要为其创建订单的用户</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="receiver">收货人</label>
+                                    <input type="text" class="form-control" id="receiver" name="receiver" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="receiverPhone">联系电话</label>
+                                    <input type="tel" class="form-control" id="receiverPhone" name="receiverPhone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="address">收货地址</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="remark">订单备注</label>
+                                    <textarea class="form-control" id="remark" name="remark" rows="2"></textarea>
+                                </div>
+                                
+                                <hr class="mb-4">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span>商品总数：</span>
+                                    <span id="total-quantity">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <span>订单总金额：</span>
+                                    <span id="total-amount" class="font-weight-bold">¥0.00</span>
+                                </div>
+                                
+                                <button class="btn btn-primary btn-lg btn-block" type="submit" id="submit-btn" disabled>提交订单</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
 

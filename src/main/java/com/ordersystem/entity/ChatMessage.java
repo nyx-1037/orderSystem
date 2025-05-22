@@ -18,7 +18,7 @@ public class ChatMessage {
     // 非数据库字段
     private String senderName;   // 发送者名称
     private String receiverName; // 接收者名称
-    private String senderAvatar; // 发送者头像
+    private byte[] senderAvatar; // 发送者头像二进制数据
     
     public ChatMessage() {
     }
@@ -104,11 +104,11 @@ public class ChatMessage {
         this.receiverName = receiverName;
     }
 
-    public String getSenderAvatar() {
+    public byte[] getSenderAvatar() {
         return senderAvatar;
     }
 
-    public void setSenderAvatar(String senderAvatar) {
+    public void setSenderAvatar(byte[] senderAvatar) {
         this.senderAvatar = senderAvatar;
     }
 
@@ -124,7 +124,7 @@ public class ChatMessage {
                 ", createTime=" + createTime +
                 ", senderName='" + senderName + '\'' +
                 ", receiverName='" + receiverName + '\'' +
-                ", senderAvatar='" + senderAvatar + '\'' +
+                ", senderAvatar=" + (senderAvatar != null ? "[BINARY DATA]" : "null") +
                 '}';
     }
 }

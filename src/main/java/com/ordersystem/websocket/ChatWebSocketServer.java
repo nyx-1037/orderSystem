@@ -71,29 +71,35 @@ public class ChatWebSocketServer {
         this.session = session;
         this.userId = userId;
 
-        // 验证用户身份
-        HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
-        if (httpSession != null) {
-            User sessionUser = (User) httpSession.getAttribute("user");
-            if (sessionUser != null && sessionUser.getUserId().equals(userId)) {
-                this.user = sessionUser;
+        // 首先尝试从配置中获取用户信息（可能是通过JWT验证的）
+        User configUser = (User) config.getUserProperties().get("user");
+        if (configUser != null && configUser.getUserId().equals(userId)) {
+            this.user = configUser;
+        } else {
+            // 如果没有通过JWT验证，尝试从HttpSession获取
+            HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+            if (httpSession != null) {
+                User sessionUser = (User) httpSession.getAttribute("user");
+                if (sessionUser != null && sessionUser.getUserId().equals(userId)) {
+                    this.user = sessionUser;
+                } else {
+                    // 用户身份验证失败，关闭连接
+                    try {
+                        session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "身份验证失败"));
+                    } catch (IOException e) {
+                        logger.error("关闭WebSocket连接失败", e);
+                    }
+                    return;
+                }
             } else {
-                // 用户身份验证失败，关闭连接
+                // 获取不到用户信息，关闭连接
                 try {
-                    session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "身份验证失败"));
+                    session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "未登录"));
                 } catch (IOException e) {
                     logger.error("关闭WebSocket连接失败", e);
                 }
                 return;
             }
-        } else {
-            // 获取不到HTTP会话，关闭连接
-            try {
-                session.close(new CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "未登录"));
-            } catch (IOException e) {
-                logger.error("关闭WebSocket连接失败", e);
-            }
-            return;
         }
 
         // 加入连接池

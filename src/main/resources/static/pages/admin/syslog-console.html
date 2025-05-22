@@ -2,242 +2,276 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>系统日志 - 七洛商城后台管理端</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统日志-七洛商城后台管理端</title>
     <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
     <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 七洛商城后台管理端</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/order-list.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/product-list.html"><i class="fas fa-box"></i> 商品管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/user-list.html"><i class="fas fa-users"></i> 用户管理</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/pages/admin/syslog-console.html"><i class="fas fa-clipboard-list"></i> 系统日志</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1030;">
-                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- 侧边栏切换按钮 (移动端显示) -->
+    <button class="sidebar-toggler" type="button" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-clipboard-list"></i> 系统日志</h2>
-            <div>
-                <button id="batch-delete-btn" class="btn btn-danger mr-2" disabled>
-                    <i class="fas fa-trash-alt"></i> 批量删除
-                </button>
-                <button id="refresh-btn" class="btn btn-primary">
-                    <i class="fas fa-sync-alt"></i> 刷新日志
-                </button>
-            </div>
-        </div>
-        
-        <div class="alert alert-success" id="success-message" style="display: none;"></div>
-        <div class="alert alert-danger" id="error-message" style="display: none;"></div>
-        
-        <div class="card mb-4">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">筛选条件</h5>
-            </div>
-            <div class="card-body">
-                <form id="search-form">
-                    <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label for="logType">日志类型</label>
-                            <select class="form-control" id="logType">
-                                <option value="">全部</option>
-                                <option value="INFO">信息</option>
-                                <option value="WARNING">警告</option>
-                                <option value="ERROR">错误</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="module">操作类型</label>
-                            <select class="form-control" id="module">
-                                <option value="">全部</option>
-                                <!-- 用户相关操作 -->
-                                <option value="管理员登录">管理员登录</option>
-                                <option value="用户登录">用户登录</option>
-                                <option value="用户注册">用户注册</option>
-                                <option value="用户登出">用户登出</option>
-                                <option value="获取用户列表">获取用户列表</option>
-                                <option value="获取当前用户信息">获取当前用户信息</option>
-                                <option value="更新用户信息">更新用户信息</option>
-                                <option value="删除用户">删除用户</option>
-                                <option value="修改密码">修改密码</option>
-                                <option value="重置用户密码">重置用户密码</option>
-                                <option value="上传用户头像">上传用户头像</option>
-                                <option value="获取用户头像">获取用户头像</option>
-                                
-                                <!-- 订单相关操作 -->
-                                <option value="获取订单列表">获取订单列表</option>
-                                <option value="获取订单详情">获取订单详情</option>
-                                <option value="创建订单">创建订单</option>
-                                <option value="更新订单">更新订单</option>
-                                <option value="删除订单">删除订单</option>
-                                <option value="取消订单">取消订单</option>
-                                <option value="支付订单">支付订单</option>
-                                <option value="确认收货">确认收货</option>
-                                <option value="订单发货（管理员）">订单发货（管理员）</option>
-                                <option value="批量删除订单">批量删除订单</option>
-                                
-                                <!-- 商品相关操作 -->
-                                <option value="获取商品列表">获取商品列表</option>
-                                <option value="根据ID获取商品">根据ID获取商品</option>
-                                <option value="添加商品">添加商品</option>
-                                <option value="更新商品">更新商品</option>
-                                <option value="删除商品">删除商品</option>
-                                <option value="搜索商品">搜索商品</option>
-                                <option value="上传商品图片">上传商品图片</option>
-                                <option value="删除商品图片">删除商品图片</option>
-                                <option value="更新商品库存">更新商品库存</option>
-                                
-                                <!-- 购物车相关操作 -->
-                                <option value="获取购物车列表">获取购物车列表</option>
-                                <option value="添加商品到购物车">添加商品到购物车</option>
-                                <option value="更新购物车商品数量">更新购物车商品数量</option>
-                                <option value="从购物车删除商品">从购物车删除商品</option>
-                                <option value="清空购物车">清空购物车</option>
-                                
-                                <!-- 日志相关操作 -->
-                                <option value="获取日志列表">获取日志列表</option>
-                                <option value="删除日志">删除日志</option>
-                                <option value="批量删除日志">批量删除日志</option>
-                                <option value="同步日志到数据库">同步日志到数据库</option>
-                                
-                                <!-- 其他操作 -->
-                                <option value="获取仪表盘数据">获取仪表盘数据</option>
-                                <option value="获取在线用户列表">获取在线用户列表</option>
-                                <option value="强制用户登出">强制用户登出</option>
-                                <option value="获取验证码图片">获取验证码图片</option>
-                                <option value="验证验证码">验证验证码</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="username">操作用户</label>
-                            <input type="text" class="form-control" id="username" placeholder="输入用户名">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="statusCode">状态码</label>
-                            <select class="form-control" id="statusCode">
-                                <option value="">全部</option>
-                                <option value="200">200 (成功)</option>
-                                <option value="400">400 (请求错误)</option>
-                                <option value="401">401 (未授权)</option>
-                                <option value="403">403 (禁止访问)</option>
-                                <option value="404">404 (未找到)</option>
-                                <option value="500">500 (服务器错误)</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label for="dateRange">时间范围</label>
-                            <select class="form-control" id="dateRange">
-                                <option value="">全部</option>
-                                <option value="1">今天</option>
-                                <option value="3">最近3天</option>
-                                <option value="7">最近7天</option>
-                                <option value="30">最近30天</option>
-                                <option value="">全部</option>
-                            </select>
-                        </div>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <a href="index.html" class="sidebar-logo">
+                            <img src="/7L-icon.png" alt="七洛商城" class="sidebar-logo-img">
+                            <span class="sidebar-logo-text">七洛商城</span>
+                        </a>
                     </div>
-                    <div class="form-row">
-                        <div class="col-12 text-right">
-                            <button type="button" class="btn btn-secondary" id="reset-btn">重置</button>
-                            <button type="button" class="btn btn-primary ml-2" id="search-btn">搜索</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">日志列表</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th width="40">
-                                    <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="select-all-checkbox">
-                                        <label class="custom-control-label" for="select-all-checkbox"></label>
-                                    </div>
-                                </th>
-                                <th width="60">ID</th>
-                                <th width="100">来源(用户)</th>
-                                <th width="100">操作类型</th>
-                                <th width="80">状态码</th>
-                                <th>请求方法</th>
-                                <th width="180">时间</th>
-                                <th width="80">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="log-list">
-                            <!-- 日志列表将通过JS动态加载 -->
-                        </tbody>
-                    </table>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-tachometer-alt"></i> 控制台
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="order-list.html">
+                                <i class="fas fa-shopping-cart"></i> 订单管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="product-list.html">
+                                <i class="fas fa-box"></i> 商品管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user-list.html">
+                                <i class="fas fa-users"></i> 用户管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="chat.html">
+                                <i class="fas fa-comments"></i> 客服聊天
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="syslog-console.html">
+                                <i class="fas fa-clipboard-list"></i> 系统日志
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-            <div class="card-footer bg-white">
-                <div id="pagination-controls">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <select id="page-size-selector" class="form-control form-control-sm mr-2" style="width: auto;">
-                                <option value="5">5条/页</option>
-                                <option value="10" selected>10条/页</option>
-                                <option value="20">20条/页</option>
-                                <option value="50">50条/页</option>
-                            </select>
-                            <span class="text-muted">共 <span id="total-pages">0</span> 页</span>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-clipboard-list me-2"></i>系统日志</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="dropdown user-dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+                            </div>
                         </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-center mb-0" id="pagination">
-                                <!-- 分页将通过JS动态加载 -->
-                            </ul>
-                        </nav>
-                        <div class="d-flex align-items-center">
-                            <div class="input-group input-group-sm" style="width: 150px;">
-                                <input type="number" class="form-control" id="goto-page-input" min="1" value="1">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="button" id="goto-page-btn">跳转</button>
+                    </div>
+                </div>
+
+                <!-- 系统日志内容 -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-clipboard-list"></i> 系统日志</h2>
+                    <div>
+                        <button id="batch-delete-btn" class="btn btn-danger mr-2" disabled>
+                            <i class="fas fa-trash-alt"></i> 批量删除
+                        </button>
+                        <button id="refresh-btn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt"></i> 刷新日志
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success" id="success-message" style="display: none;"></div>
+                <div class="alert alert-danger" id="error-message" style="display: none;"></div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">筛选条件</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="search-form">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label for="logType">日志类型</label>
+                                    <select class="form-control" id="logType">
+                                        <option value="">全部</option>
+                                        <option value="INFO">信息</option>
+                                        <option value="WARNING">警告</option>
+                                        <option value="ERROR">错误</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="module">操作类型</label>
+                                    <select class="form-control" id="module">
+                                        <option value="">全部</option>
+                                        <!-- 用户相关操作 -->
+                                        <option value="管理员登录">管理员登录</option>
+                                        <option value="用户登录">用户登录</option>
+                                        <option value="用户注册">用户注册</option>
+                                        <option value="用户登出">用户登出</option>
+                                        <option value="获取用户列表">获取用户列表</option>
+                                        <option value="获取当前用户信息">获取当前用户信息</option>
+                                        <option value="更新用户信息">更新用户信息</option>
+                                        <option value="删除用户">删除用户</option>
+                                        <option value="修改密码">修改密码</option>
+                                        <option value="重置用户密码">重置用户密码</option>
+                                        <option value="上传用户头像">上传用户头像</option>
+                                        <option value="获取用户头像">获取用户头像</option>
+                                        
+                                        <!-- 订单相关操作 -->
+                                        <option value="获取订单列表">获取订单列表</option>
+                                        <option value="获取订单详情">获取订单详情</option>
+                                        <option value="创建订单">创建订单</option>
+                                        <option value="更新订单">更新订单</option>
+                                        <option value="删除订单">删除订单</option>
+                                        <option value="取消订单">取消订单</option>
+                                        <option value="支付订单">支付订单</option>
+                                        <option value="确认收货">确认收货</option>
+                                        <option value="订单发货（管理员）">订单发货（管理员）</option>
+                                        <option value="批量删除订单">批量删除订单</option>
+                                        
+                                        <!-- 商品相关操作 -->
+                                        <option value="获取商品列表">获取商品列表</option>
+                                        <option value="根据ID获取商品">根据ID获取商品</option>
+                                        <option value="添加商品">添加商品</option>
+                                        <option value="更新商品">更新商品</option>
+                                        <option value="删除商品">删除商品</option>
+                                        <option value="搜索商品">搜索商品</option>
+                                        <option value="上传商品图片">上传商品图片</option>
+                                        <option value="删除商品图片">删除商品图片</option>
+                                        <option value="更新商品库存">更新商品库存</option>
+                                        
+                                        <!-- 购物车相关操作 -->
+                                        <option value="获取购物车列表">获取购物车列表</option>
+                                        <option value="添加商品到购物车">添加商品到购物车</option>
+                                        <option value="更新购物车商品数量">更新购物车商品数量</option>
+                                        <option value="从购物车删除商品">从购物车删除商品</option>
+                                        <option value="清空购物车">清空购物车</option>
+                                        
+                                        <!-- 日志相关操作 -->
+                                        <option value="获取日志列表">获取日志列表</option>
+                                        <option value="删除日志">删除日志</option>
+                                        <option value="批量删除日志">批量删除日志</option>
+                                        <option value="同步日志到数据库">同步日志到数据库</option>
+                                        
+                                        <!-- 其他操作 -->
+                                        <option value="获取仪表盘数据">获取仪表盘数据</option>
+                                        <option value="获取在线用户列表">获取在线用户列表</option>
+                                        <option value="强制用户登出">强制用户登出</option>
+                                        <option value="获取验证码图片">获取验证码图片</option>
+                                        <option value="验证验证码">验证验证码</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="username">操作用户</label>
+                                    <input type="text" class="form-control" id="username" placeholder="输入用户名">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="statusCode">状态码</label>
+                                    <select class="form-control" id="statusCode">
+                                        <option value="">全部</option>
+                                        <option value="200">200 (成功)</option>
+                                        <option value="400">400 (请求错误)</option>
+                                        <option value="401">401 (未授权)</option>
+                                        <option value="403">403 (禁止访问)</option>
+                                        <option value="404">404 (未找到)</option>
+                                        <option value="500">500 (服务器错误)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label for="dateRange">时间范围</label>
+                                    <select class="form-control" id="dateRange">
+                                        <option value="">全部</option>
+                                        <option value="1">今天</option>
+                                        <option value="3">最近3天</option>
+                                        <option value="7">最近7天</option>
+                                        <option value="30">最近30天</option>
+                                        <option value="">全部</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-12 text-right">
+                                    <button type="button" class="btn btn-secondary" id="reset-btn">重置</button>
+                                    <button type="button" class="btn btn-primary ml-2" id="search-btn">搜索</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">日志列表</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th width="40">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="select-all-checkbox">
+                                                <label class="custom-control-label" for="select-all-checkbox"></label>
+                                            </div>
+                                        </th>
+                                        <th width="60">ID</th>
+                                        <th width="100">来源(用户)</th>
+                                        <th width="100">操作类型</th>
+                                        <th width="80">状态码</th>
+                                        <th>请求方法</th>
+                                        <th width="180">时间</th>
+                                        <th width="80">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="log-list">
+                                    <!-- 日志列表将通过JS动态加载 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <select id="page-size-selector" class="form-control form-control-sm mr-2" style="width: auto;">
+                                    <option value="5">5条/页</option>
+                                    <option value="10" selected>10条/页</option>
+                                    <option value="20">20条/页</option>
+                                    <option value="50">50条/页</option>
+                                </select>
+                                <span class="text-muted">共 <span id="total-pages">0</span> 页</span>
+                            </div>
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center mb-0" id="pagination">
+                                    <!-- 分页将通过JS动态加载 -->
+                                </ul>
+                            </nav>
+                            <div class="d-flex align-items-center">
+                                <div class="input-group input-group-sm" style="width: 150px;">
+                                    <input type="number" class="form-control" id="goto-page-input" min="1" value="1">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-secondary" type="button" id="goto-page-btn">跳转</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 

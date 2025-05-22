@@ -84,7 +84,7 @@ function initAdminInfo() {
     const userJson = localStorage.getItem('user');
     if (!userJson) {
         // 未登录，跳转到登录页
-        window.location.href = '../login.html';
+        window.location.href = './login.html';
         return;
     }
     
@@ -94,7 +94,7 @@ function initAdminInfo() {
         // 检查是否是管理员
         if (currentAdmin.role !== 1) {
             alert('您没有权限访问此页面');
-            window.location.href = '../login.html';
+            window.location.href = './login.html';
             return;
         }
         
@@ -123,8 +123,16 @@ function initWebSocket() {
         webSocket.close();
     }
     
-    // 创建WebSocket连接
-    const wsUrl = `ws://${window.location.host}/websocket/chat/${currentAdmin.userId}`;
+    // 获取JWT令牌
+    const token = getToken();
+    if (!token) {
+        console.error('未找到认证令牌');
+        handleUnauthorized();
+        return;
+    }
+    
+    // 创建WebSocket连接，添加JWT令牌作为查询参数
+    const wsUrl = `ws://${window.location.host}/websocket/chat/${currentAdmin.userId}?token=${token}`;
     webSocket = new WebSocket(wsUrl);
     
     // 连接打开事件
@@ -218,6 +226,49 @@ function sendMessage() {
     } else {
         alert('WebSocket连接已断开，请刷新页面重试');
     }
+}
+
+/**
+ * 发送消息到服务器
+ * @param {Object} message 消息对象
+ */
+function sendMessageToServer(message) {
+    const token = getToken();
+    
+    $.ajax({
+        url: '/api/chat/send',
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        data: JSON.stringify(message),
+        success: function(response) {
+            if (response.success) {
+                // 清空输入框
+                $('#messageInput').val('');
+                // 添加消息到聊天窗口
+                appendMessage({
+                    ...message,
+                    senderName: currentAdmin.username,
+                    messageId: new Date().getTime() // 临时ID
+                });
+                // 滚动到底部
+                scrollToBottom();
+            } else {
+                console.error('发送消息失败:', response.message);
+                alert('发送失败: ' + response.message);
+            }
+        },
+        error: function(xhr, status, error) {
+            if (xhr.status === 401) {
+                handleUnauthorized(xhr);
+            } else {
+                console.error('发送消息请求失败:', error);
+                alert('发送失败，请检查网络连接');
+            }
+        }
+    });
 }
 
 /**
@@ -366,6 +417,9 @@ function loadChatHistory() {
         url: '/api/chat/history',
         type: 'GET',
         data: params,
+        headers: {
+            'Authorization': `Bearer ${currentAdmin.token}`
+        },
         success: function(response) {
             if (response.code === 200) {
                 const data = response.data;
@@ -412,8 +466,14 @@ function loadChatHistory() {
             }
         },
         error: function(xhr, status, error) {
-            console.error('获取聊天记录请求失败', error);
-            appendSystemMessage('获取聊天记录失败，请检查网络连接');
+            if (xhr.status === 401) {
+                // 未授权，跳转到登录页
+                localStorage.removeItem('user');
+                window.location.href = '../login.html';
+            } else {
+                console.error('获取聊天记录请求失败', error);
+                appendSystemMessage('获取聊天记录失败，请检查网络连接');
+            }
         }
     });
 }

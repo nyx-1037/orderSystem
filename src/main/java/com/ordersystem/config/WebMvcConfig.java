@@ -53,13 +53,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
     
     /**
      * 配置静态资源处理
-     * 添加Swagger UI资源映射
+     * 添加Swagger UI资源映射和静态资源映射
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Swagger UI资源映射
         registry.addResourceHandler("swagger-ui.html")
                 .addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        
+        // 静态资源映射，确保静态资源可以正常访问
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
     }
 }

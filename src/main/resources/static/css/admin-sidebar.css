@@ -1,0 +1,116 @@
+/* 管理员左侧导航栏样式 */
+
+/* 侧边栏基本样式 */
+#sidebar {
+    background-color: #343a40;
+    min-height: 100vh;
+    padding-top: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+/* 侧边栏Logo样式 */
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar-logo:hover {
+    color: #fff;
+    opacity: 0.9;
+}
+
+.sidebar-logo-img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+}
+
+.sidebar-logo-text {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* 侧边栏导航项样式 */
+#sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    margin: 0.2rem 0.5rem;
+    transition: all 0.3s;
+}
+
+#sidebar .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar .nav-link.active {
+    color: #fff;
+    background-color: #007bff;
+}
+
+#sidebar .nav-link i {
+    margin-right: 0.5rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* 主内容区样式 */
+.main-content {
+    transition: all 0.3s;
+}
+
+/* 响应式调整 */
+@media (max-width: 767.98px) {
+    #sidebar {
+        margin-left: -100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px !important;
+        height: 100%;
+        z-index: 1050;
+    }
+    
+    #sidebar.show {
+        margin-left: 0;
+    }
+    
+    .main-content {
+        width: 100%;
+    }
+    
+    .sidebar-toggler {
+        display: block !important;
+    }
+}
+
+/* 侧边栏切换按钮 */
+.sidebar-toggler {
+    display: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1060;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.25rem;
+    background-color: #343a40;
+    color: #fff;
+    border: none;
+    border-radius: 0.25rem;
+}
+
+.sidebar-toggler:hover {
+    background-color: #23272b;
+}
+
+/* 用户下拉菜单样式 */
+.user-dropdown {
+    margin-left: auto;
+}

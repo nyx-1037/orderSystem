@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>首页-七洛商城后台管理端</title>
     <link rel="icon" href="/7L-icon.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
+    <link rel="stylesheet" href="/css/admin-sidebar.css">
     <style>
         .dashboard-container {
             padding: 20px;
@@ -59,163 +61,194 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/pages/admin/index.html"><i class="fas fa-store"></i> 七洛商城后台管理端</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/order-list.html"><i class="fas fa-shopping-cart"></i> 订单管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/product-list.html"><i class="fas fa-box"></i> 商品管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/user-list.html"><i class="fas fa-users"></i> 用户管理</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/syslog-console.html"><i class="fas fa-clipboard-list"></i> 系统日志</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/pages/admin/chat.html"><i class="fas fa-chalkboard-teacher"></i> 客服系统</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" style="z-index: 1030;">
-                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- 侧边栏切换按钮 (移动端显示) -->
+    <button class="sidebar-toggler" type="button" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
 
-    <!-- 仪表盘内容 -->
-    <div class="container dashboard-container">
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="text-dark"><i class="fas fa-tachometer-alt"></i> 系统仪表盘</h2>
-                <hr>
-            </div>
-        </div>
-        
-        <!-- 新增统计卡片：近一周、昨日、今日订单量 -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-calendar-week"></i>
-                    </div>
-                    <div class="stat-value" id="weekly-orders">--</div>
-                    <div class="stat-label">近一周订单量</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-calendar-day"></i>
-                    </div>
-                    <div class="stat-value" id="yesterday-orders">--</div>
-                    <div class="stat-label">昨日订单量</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="stat-value" id="today-orders">--</div>
-                    <div class="stat-label">今日订单量</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 统计卡片 -->
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-shopping-cart"></i>
+            <!-- 侧边栏 -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <a href="index.html" class="sidebar-logo">
+                            <img src="/7L-icon.png" alt="七洛商城" class="sidebar-logo-img">
+                            <span class="sidebar-logo-text">七洛商城</span>
+                        </a>
                     </div>
-                    <div class="stat-value" id="total-orders">--</div>
-                    <div class="stat-label">订单总量</div>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">
+                                <i class="fas fa-tachometer-alt"></i> 控制台
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="order-list.html">
+                                <i class="fas fa-shopping-cart"></i> 订单管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="product-list.html">
+                                <i class="fas fa-box"></i> 商品管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user-list.html">
+                                <i class="fas fa-users"></i> 用户管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="chat.html">
+                                <i class="fas fa-comments"></i> 客服聊天
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="syslog-console.html">
+                                <i class="fas fa-clipboard-list"></i> 系统日志
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-calendar-alt"></i>
+            </nav>
+
+            <!-- 主内容区 -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>控制台</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="dropdown user-dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> <span id="current-username">管理员</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-id-card"></i> 个人信息</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-value" id="recent-orders">--</div>
-                    <div class="stat-label">近15天订单量</div>
                 </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <div class="icon">
-                        <i class="fas fa-chart-line"></i>
+
+                <!-- 仪表盘内容 -->
+                <div class="dashboard-container">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h2 class="text-dark"><i class="fas fa-tachometer-alt"></i> 系统仪表盘</h2>
+                            <hr>
+                        </div>
                     </div>
-                    <div class="stat-value" id="avg-daily-orders">--</div>
-                    <div class="stat-label">日均订单量</div>
+                    
+                    <!-- 新增统计卡片：近一周、昨日、今日订单量 -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-calendar-week"></i>
+                                </div>
+                                <div class="stat-value" id="weekly-orders">--</div>
+                                <div class="stat-label">近一周订单量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                                <div class="stat-value" id="yesterday-orders">--</div>
+                                <div class="stat-label">昨日订单量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <div class="stat-value" id="today-orders">--</div>
+                                <div class="stat-label">今日订单量</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 统计卡片 -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="stat-value" id="total-orders">--</div>
+                                <div class="stat-label">订单总量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div class="stat-value" id="recent-orders">--</div>
+                                <div class="stat-label">近15天订单量</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card text-center">
+                                <div class="icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-value" id="avg-daily-orders">--</div>
+                                <div class="stat-label">日均订单量</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 图表 -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="chart-container">
+                                <h4 class="mb-3">近15天订单量趋势</h4>
+                                <div id="orders-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 新增图表 -->
+                    <div class="row mt-4">
+                        <!-- 订单金额统计 -->
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4 class="mb-3">近15天订单金额统计</h4>
+                                <div id="order-amount-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- 订单状态分布 -->
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4 class="mb-3">订单状态分布</h4>
+                                <div id="order-status-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <!-- 商品类别分布 -->
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4 class="mb-3">商品类别销售分布</h4>
+                                <div id="product-category-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                        </div>
+                        <!-- 支付方式分布 -->
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4 class="mb-3">支付方式分布</h4>
+                                <div id="payment-method-chart" style="width: 100%; height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- 图表 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="chart-container">
-                    <h4 class="mb-3">近15天订单量趋势</h4>
-                    <div id="orders-chart" style="width: 100%; height: 300px;"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 新增图表 -->
-        <div class="row mt-4">
-            <!-- 订单金额统计 -->
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h4 class="mb-3">近15天订单金额统计</h4>
-                    <div id="order-amount-chart" style="width: 100%; height: 300px;"></div>
-                </div>
-            </div>
-            <!-- 订单状态分布 -->
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h4 class="mb-3">订单状态分布</h4>
-                    <div id="order-status-chart" style="width: 100%; height: 300px;"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row mt-4">
-            <!-- 商品类别分布 -->
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h4 class="mb-3">商品类别销售分布</h4>
-                    <div id="product-category-chart" style="width: 100%; height: 300px;"></div>
-                </div>
-            </div>
-            <!-- 支付方式分布 -->
-            <div class="col-md-6">
-                <div class="chart-container">
-                    <h4 class="mb-3">支付方式分布</h4>
-                    <div id="payment-method-chart" style="width: 100%; height: 300px;"></div>
-                </div>
-            </div>
+            </main>
         </div>
     </div>
-
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>

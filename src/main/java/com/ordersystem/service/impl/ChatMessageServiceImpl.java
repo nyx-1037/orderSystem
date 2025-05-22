@@ -50,10 +50,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             
             if (sender != null) {
                 message.setSenderName(sender.getUsername());
-                // 将byte[]类型的头像数据转换为Base64字符串
+                // 直接设置头像二进制数据
                 if (sender.getAvatarData() != null) {
-                    String base64Avatar = Base64.getEncoder().encodeToString(sender.getAvatarData());
-                    message.setSenderAvatar(base64Avatar);
+                    message.setSenderAvatar(sender.getAvatarData());
                 }
             }
             
@@ -99,10 +98,9 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                     chat.setReceiverName(otherUser.getUsername());
                 } else {
                     chat.setSenderName(otherUser.getUsername());
-                    // 将byte[]类型的头像数据转换为Base64字符串
+                    // 直接设置头像二进制数据
                     if (otherUser.getAvatarData() != null) {
-                        String base64Avatar = Base64.getEncoder().encodeToString(otherUser.getAvatarData());
-                        chat.setSenderAvatar(base64Avatar);
+                        chat.setSenderAvatar(otherUser.getAvatarData());
                     }
                 }
             }
