@@ -28,9 +28,6 @@ public class ChatWebSocketServer {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatWebSocketServer.class);
 
-    // 用静态变量记录当前在线连接数
-    private static int onlineCount = 0;
-
     // 使用ConcurrentHashMap存储WebSocket会话，key为用户ID
     private static final Map<Long, ChatWebSocketServer> webSocketMap = new ConcurrentHashMap<>();
 
@@ -104,7 +101,6 @@ public class ChatWebSocketServer {
 
         // 加入连接池
         webSocketMap.put(userId, this);
-        addOnlineCount();
         logger.info("用户{}连接成功，当前在线人数为{}", userId, getOnlineCount());
 
         try {
@@ -122,9 +118,12 @@ public class ChatWebSocketServer {
     public void onClose() {
         if (userId != null) {
             // 从连接池中移除
-            webSocketMap.remove(userId);
-            subOnlineCount();
-            logger.info("用户{}断开连接，当前在线人数为{}", userId, getOnlineCount());
+            if (webSocketMap.remove(userId) != null) {
+                 logger.info("用户{}断开连接，当前在线人数为{}", userId, getOnlineCount());
+            } else {
+                // This case might happen if onOpen failed before adding to map, but userId was set.
+                logger.warn("用户{}尝试断开连接（可能未在连接池中或已移除），当前在线人数为{}", userId, getOnlineCount());
+            }
         }
     }
 
@@ -215,20 +214,6 @@ public class ChatWebSocketServer {
      * @return 在线连接数
      */
     public static synchronized int getOnlineCount() {
-        return onlineCount;
-    }
-
-    /**
-     * 增加在线连接数
-     */
-    public static synchronized void addOnlineCount() {
-        ChatWebSocketServer.onlineCount++;
-    }
-
-    /**
-     * 减少在线连接数
-     */
-    public static synchronized void subOnlineCount() {
-        ChatWebSocketServer.onlineCount--;
+        return webSocketMap.size();
     }
 }

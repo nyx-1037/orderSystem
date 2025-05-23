@@ -14,17 +14,28 @@ let adminUsers = []; // 管理员用户列表
 
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 初始化用户信息
-    initUserInfo();
-    
-    // 初始化WebSocket连接
-    initWebSocket();
-    
-    // 获取管理员用户列表
-    getAdminUsers();
-    
-    // 获取最近聊天列表
-    getRecentChatList();
+    // 初始化用户信息，完成后再初始化WebSocket连接
+    initUserInfo()
+        .then(() => {
+            // 确保用户信息已完全加载
+            if (currentUser && currentUser.userId) {
+                // 初始化WebSocket连接
+                return initWebSocket();
+            } else {
+                throw new Error('用户信息未完全加载');
+            }
+        })
+        .then(() => {
+            // 获取管理员用户列表
+            return getAdminUsers();
+        })
+        .then(() => {
+            // 获取最近聊天列表
+            return getRecentChatList();
+        })
+        .catch(error => {
+            console.error('初始化失败:', error);
+        });
     
     // 绑定发送按钮点击事件
     $('#sendBtn').click(sendMessage);
@@ -56,115 +67,170 @@ $(document).ready(function() {
 
 /**
  * 初始化用户信息
+ * @returns {Promise} 返回一个Promise，在用户信息初始化完成后解析
  */
 function initUserInfo() {
-    try {
-        // 从localStorage获取用户信息和token
-        const userJson = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-            window.location.href = '/pages/client/login.html';
-            return;
-        }
-        
-        if (userJson) {
-            currentUser = JSON.parse(userJson);
+    return new Promise((resolve, reject) => {
+        try {
+            // 从localStorage获取用户信息和token
+            const userJson = localStorage.getItem('user');
+            const token = localStorage.getItem('token');
             
-            // 显示用户名
-            $('#username').text(currentUser.username);
-        } else {
-            // 尝试通过API获取当前用户信息
-            fetchWithAuth('/api/users/current')
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('获取用户信息失败: ' + response.status);
-                    }
-                })
-                .then(data => {
-                    if (data && data.username) {
-                        currentUser = data;
-                        // 保存用户信息到localStorage
-                        localStorage.setItem('user', JSON.stringify(data));
-                        // 显示用户名
-                        $('#username').text(data.username);
-                    } else {
-                        // 未登录，跳转到登录页面
+            if (!token) {
+                window.location.href = '/pages/client/login.html';
+                reject('未找到认证令牌');
+                return;
+            }
+            
+            if (userJson) {
+                currentUser = JSON.parse(userJson);
+                
+                // 显示用户名
+                $('#username').text(currentUser.username);
+                resolve(currentUser);
+            } else {
+                // 尝试通过API获取当前用户信息
+                fetchWithAuth('/api/users/current')
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('获取用户信息失败: ' + response.status);
+                        }
+                    })
+                    .then(data => {
+                        if (data && data.username) {
+                            currentUser = data;
+                            // 保存用户信息到localStorage
+                            localStorage.setItem('user', JSON.stringify(data));
+                            // 显示用户名
+                            $('#username').text(data.username);
+                            resolve(currentUser);
+                        } else {
+                            // 未登录，跳转到登录页面
+                            window.location.href = '/pages/client/login.html';
+                            reject('未获取到有效的用户信息');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('获取用户信息失败', error);
                         window.location.href = '/pages/client/login.html';
-                    }
-                })
-                .catch(error => {
-                    console.error('获取用户信息失败', error);
-                    window.location.href = '/pages/client/login.html';
-                });
+                        reject(error);
+                    });
+            }
+        } catch (e) {
+            console.error('解析用户信息失败', e);
+            // 清除无效的用户信息
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = '/pages/client/login.html';
+            reject(e);
         }
-    } catch (e) {
-        console.error('解析用户信息失败', e);
-        // 清除无效的用户信息
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        window.location.href = '/pages/client/login.html';
-    }
+    });
 }
+
 
 /**
  * 初始化WebSocket连接
+ * @returns {Promise} 返回一个Promise，在WebSocket连接建立后解析
  */
 function initWebSocket() {
-    // 检查浏览器是否支持WebSocket
-    if (!window.WebSocket) {
-        alert('您的浏览器不支持WebSocket，请更换浏览器');
-        return;
-    }
-    
-    // 关闭之前的连接
-    if (webSocket != null) {
-        webSocket.close();
-    }
-    
-    // 获取JWT令牌
-    const token = getToken();
-    if (!token) {
-        console.error('未找到认证令牌');
-        handleUnauthorized();
-        return;
-    }
-    
-    // 创建WebSocket连接，添加JWT令牌作为查询参数
-    const wsUrl = `ws://${window.location.host}/websocket/chat/${currentUser.userId}?token=${token}`;
-    webSocket = new WebSocket(wsUrl);
-    
-    // 连接打开事件
-    webSocket.onopen = function() {
-        console.log('WebSocket连接已建立');
-        // 获取未读消息数
-        getUnreadCount();
-    };
-    
-    // 接收消息事件
-    webSocket.onmessage = function(event) {
-        const message = JSON.parse(event.data);
-        console.log('收到消息:', message);
+    return new Promise((resolve, reject) => {
+        // 检查浏览器是否支持WebSocket
+        if (!window.WebSocket) {
+            alert('您的浏览器不支持WebSocket，请更换浏览器');
+            reject(new Error('浏览器不支持WebSocket'));
+            return;
+        }
         
-        // 处理接收到的消息
-        handleReceivedMessage(message);
-    };
-    
-    // 连接关闭事件
-    webSocket.onclose = function() {
-        console.log('WebSocket连接已关闭');
-        // 5秒后尝试重新连接
+        // 关闭之前的连接
+        if (webSocket != null) {
+            webSocket.close();
+        }
+        
+        // 获取JWT令牌
+        const token = getToken();
+        if (!token) {
+            console.error('未找到认证令牌');
+            // 不调用handleUnauthorized，避免清除token
+            console.error('获取聊天记录失败: 未授权访问');
+            appendSystemMessage('未找到认证令牌，请刷新页面重试');
+            reject(new Error('未找到认证令牌'));
+            return;
+        }
+        
+        // 确保currentUser已经初始化
+        if (!currentUser || !currentUser.userId) {
+            console.error('用户信息未初始化，延迟WebSocket连接');
+            // 延迟1秒后重试
+            setTimeout(function() {
+                initWebSocket()
+                    .then(resolve)
+                    .catch(reject);
+            }, 1000);
+            return;
+        }
+        
+        // 创建WebSocket连接，添加JWT令牌作为查询参数
+        const wsUrl = `ws://${window.location.host}/websocket/chat/${currentUser.userId}?token=${token}`;
+        webSocket = new WebSocket(wsUrl);
+        
+        // 连接打开事件
+        webSocket.onopen = function() {
+            console.log('WebSocket连接已建立');
+            // 获取未读消息数
+            getUnreadCount();
+            resolve(); // 解析Promise
+        };
+        
+        // 接收消息事件
+        webSocket.onmessage = function(event) {
+            try {
+                const message = JSON.parse(event.data);
+                console.log('收到消息:', message);
+                
+                // 处理接收到的消息
+                handleReceivedMessage(message);
+            } catch (error) {
+                console.error('处理消息失败:', error);
+            }
+        };
+        
+        // 连接关闭事件
+        webSocket.onclose = function() {
+            console.log('WebSocket连接已关闭');
+            // 显示连接断开提示
+            appendSystemMessage('聊天连接已断开，正在尝试重新连接...');
+            // 5秒后尝试重新连接
+            setTimeout(function() {
+                initWebSocket()
+                    .then(() => {
+                        // 连接成功提示
+                        appendSystemMessage('聊天连接已重新建立');
+                        // 刷新当前聊天
+                        refreshCurrentChat();
+                    })
+                    .catch(error => {
+                        console.error('重新连接失败:', error);
+                        appendSystemMessage('重新连接失败，请刷新页面重试');
+                    });
+            }, 5000);
+        };
+        
+        // 连接错误事件
+        webSocket.onerror = function(error) {
+            console.error('WebSocket连接发生错误', error);
+            appendSystemMessage('聊天连接发生错误，请检查网络连接');
+            reject(error); // 拒绝Promise
+        };
+        
+        // 设置连接超时
         setTimeout(function() {
-            initWebSocket();
-        }, 5000);
-    };
-    
-    // 连接错误事件
-    webSocket.onerror = function(error) {
-        console.error('WebSocket连接发生错误', error);
-    };
+            if (webSocket.readyState !== WebSocket.OPEN) {
+                reject(new Error('WebSocket连接超时'));
+            }
+        }, 10000);
+    });
 }
 
 /**
@@ -450,7 +516,9 @@ function loadChatHistory() {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('获取聊天记录失败: 未授权访问');
+                appendSystemMessage('获取聊天记录失败: 未授权访问，请刷新页面重试');
             } else {
                 console.error('获取聊天记录请求失败', error);
                 appendSystemMessage('获取聊天记录失败，请检查网络连接');
@@ -487,33 +555,41 @@ function refreshCurrentChat() {
 
 /**
  * 获取管理员用户列表
+ * @returns {Promise} 返回一个Promise，在获取管理员列表成功后解析
  */
 function getAdminUsers() {
-    const token = getToken();
-    
-    $.ajax({
-        url: '/api/chat/admins',
-        type: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        success: function(response) {
-            if (response.code === 200) {
-                adminUsers = response.data;
-                
-                // 更新客服选择模态框
-                updateServiceList(adminUsers);
-            } else {
-                console.error('获取管理员列表失败', response.message);
+    return new Promise((resolve, reject) => {
+        const token = getToken();
+        
+        $.ajax({
+            url: '/api/chat/admins',
+            type: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    adminUsers = response.data;
+                    
+                    // 更新客服选择模态框
+                    updateServiceList(adminUsers);
+                    resolve(adminUsers);
+                } else {
+                    console.error('获取管理员列表失败', response.message);
+                    reject(new Error(response.message));
+                }
+            },
+            error: function(xhr, status, error) {
+                if (xhr.status === 401) {
+                    // 不调用handleUnauthorized，避免清除token
+                    console.error('获取管理员列表失败: 未授权访问');
+                    appendSystemMessage('获取管理员列表失败: 未授权访问，请刷新页面重试');
+                } else {
+                    console.error('获取管理员列表请求失败', error);
+                }
+                reject(error);
             }
-        },
-        error: function(xhr, status, error) {
-            if (xhr.status === 401) {
-                handleUnauthorized(xhr);
-            } else {
-                console.error('获取管理员列表请求失败', error);
-            }
-        }
+        });
     });
 }
 
@@ -545,30 +621,38 @@ function updateServiceList(admins) {
 
 /**
  * 获取最近聊天列表
+ * @returns {Promise} 返回一个Promise，在获取最近聊天列表成功后解析
  */
 function getRecentChatList() {
-    const token = getToken();
-    
-    $.ajax({
-        url: '/api/chat/recent',
-        type: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        success: function(response) {
-            if (response.code === 200) {
-                updateChatList(response.data);
-            } else {
-                console.error('获取最近聊天列表失败', response.message);
+    return new Promise((resolve, reject) => {
+        const token = getToken();
+        
+        $.ajax({
+            url: '/api/chat/recent',
+            type: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            success: function(response) {
+                if (response.code === 200) {
+                    updateChatList(response.data);
+                    resolve(response.data);
+                } else {
+                    console.error('获取最近聊天列表失败', response.message);
+                    reject(new Error(response.message));
+                }
+            },
+            error: function(xhr, status, error) {
+                if (xhr.status === 401) {
+                    // 不调用handleUnauthorized，避免清除token
+                    console.error('获取最近聊天列表失败: 未授权访问');
+                    appendSystemMessage('获取最近聊天列表失败: 未授权访问，请刷新页面重试');
+                } else {
+                    console.error('获取最近聊天列表请求失败', error);
+                }
+                reject(error);
             }
-        },
-        error: function(xhr, status, error) {
-            if (xhr.status === 401) {
-                handleUnauthorized(xhr);
-            } else {
-                console.error('获取最近聊天列表请求失败', error);
-            }
-        }
+        });
     });
 }
 
@@ -623,7 +707,7 @@ function updateChatList(chatList) {
 }
 
 /**
- * 获取未读消息数
+ * 获取未读消息数量
  */
 function getUnreadCount() {
     const token = getToken();
@@ -636,16 +720,17 @@ function getUnreadCount() {
         },
         success: function(response) {
             if (response.code === 200) {
-                updateServiceUnreadCount();
+                updateUnreadCount(response.data);
             } else {
-                console.error('获取未读消息数失败', response.message);
+                console.error('获取未读消息数量失败', response.message);
             }
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('获取未读消息数量失败: 未授权访问');
             } else {
-                console.error('获取未读消息数请求失败', error);
+                console.error('获取未读消息数量请求失败', error);
             }
         }
     });
@@ -676,7 +761,9 @@ function updateServiceUnreadCount() {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('获取客服未读消息数失败: 未授权访问');
+                appendSystemMessage('获取客服未读消息数失败: 未授权访问，请刷新页面重试');
             } else {
                 console.error('获取客服未读消息数请求失败', error);
             }
@@ -722,7 +809,9 @@ function updateUnreadCount(senderId) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('获取未读消息数失败: 未授权访问');
+                appendSystemMessage('获取未读消息数失败: 未授权访问，请刷新页面重试');
             } else {
                 console.error('获取未读消息数请求失败', error);
             }
@@ -756,7 +845,9 @@ function markMessageRead(messageId) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('标记消息已读失败: 未授权访问');
+                appendSystemMessage('标记消息已读失败: 未授权访问，请刷新页面重试');
             } else {
                 console.error('标记消息已读请求失败', error);
             }
@@ -799,7 +890,9 @@ function markAllRead(otherUserId) {
         },
         error: function(xhr, status, error) {
             if (xhr.status === 401) {
-                handleUnauthorized(xhr);
+                // 不调用handleUnauthorized，避免清除token
+                console.error('标记所有消息已读失败: 未授权访问');
+                appendSystemMessage('标记所有消息已读失败: 未授权访问，请刷新页面重试');
             } else {
                 console.error('标记所有消息已读请求失败', error);
             }
