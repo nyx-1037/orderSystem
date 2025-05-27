@@ -183,9 +183,8 @@ async function fetchAPI(url, options = {}) {
         //     throw new Error(data.message || '请求处理失败');
         // }
         
-        // 返回数据 (根据后端API调整，可能需要返回整个data或data.data)
-        // 尝试返回 data.data，如果不存在则返回整个 data 对象
-        return data.data !== undefined ? data.data : data;
+        // 返回完整的响应对象，让调用者决定如何处理
+        return data;
     } catch (error) {
         console.error('API请求失败:', error);
         // 不在此处重定向，让调用者处理特定的错误逻辑

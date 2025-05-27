@@ -46,6 +46,8 @@ public class HttpSessionConfigurator extends ServerEndpointConfig.Configurator {
 
     @Override
     public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
+        boolean authenticated = false;
+        
         // 先尝试获取HttpSession
         HttpSession httpSession = (HttpSession) request.getHttpSession();
         if (httpSession != null) {
@@ -54,6 +56,8 @@ public class HttpSessionConfigurator extends ServerEndpointConfig.Configurator {
             User sessionUser = (User) httpSession.getAttribute("user");
             if (sessionUser != null) {
                 sec.getUserProperties().put("user", sessionUser);
+                authenticated = true;
+                logger.info("WebSocket握手成功：通过HttpSession认证用户 {}", sessionUser.getUsername());
                 return;
             }
         }
@@ -63,32 +67,50 @@ public class HttpSessionConfigurator extends ServerEndpointConfig.Configurator {
         if (parameters.containsKey("token")) {
             String token = parameters.get("token").get(0);
             if (token != null && !token.isEmpty()) {
-                // 验证token
-                if (jwtTokenUtil != null && jwtTokenUtil.validateToken(token)) {
-                    // 获取用户ID
-                    Integer userId = jwtTokenUtil.getUserIdFromToken(token);
-                    if (userId != null) {
-                        // 验证Redis中是否存在该Token
-                        String cachedToken = redisService.getToken(userId);
-                        if (cachedToken != null && cachedToken.equals(token)) {
-                            try {
+                logger.info("WebSocket握手：尝试使用JWT token进行认证");
+                
+                try {
+                    // 验证token
+                    if (jwtTokenUtil != null && jwtTokenUtil.validateToken(token)) {
+                        // 获取用户ID
+                        Integer userId = jwtTokenUtil.getUserIdFromToken(token);
+                        if (userId != null) {
+                            // 验证Redis中是否存在该Token
+                            String cachedToken = redisService.getToken(userId);
+                            if (cachedToken != null && cachedToken.equals(token)) {
                                 // 获取用户信息
                                 User user = userService.getUserById(userId.intValue());
                                 if (user != null) {
                                     // 将用户信息存储在ServerEndpointConfig的用户属性中
                                     sec.getUserProperties().put("user", user);
+                                    authenticated = true;
+                                    logger.info("WebSocket握手成功：通过JWT认证用户 {}", user.getUsername());
+                                    return; // 认证成功，直接返回
                                 } else {
-                                    // 用户不存在，记录错误信息
                                     logger.error("WebSocket握手失败：用户ID {} 不存在", userId);
                                 }
-                            } catch (Exception e) {
-                                // 捕获并记录异常
-                                logger.error("WebSocket握手时获取用户信息异常：{}", e.getMessage(), e);
+                            } else {
+                                logger.error("WebSocket握手失败：Token已失效或不匹配，用户ID {}，缓存Token: {}, 请求Token: {}", userId, cachedToken, token);
                             }
+                        } else {
+                            logger.error("WebSocket握手失败：无法从Token中获取用户ID");
                         }
+                    } else {
+                        logger.error("WebSocket握手失败：Token验证失败，Token: {}", token);
                     }
+                } catch (Exception e) {
+                    logger.error("WebSocket握手时JWT认证异常：{}", e.getMessage(), e);
                 }
+            } else {
+                logger.error("WebSocket握手失败：Token参数为空");
             }
+        } else {
+            logger.error("WebSocket握手失败：未提供Token参数");
+        }
+        
+        // 如果认证失败，记录详细信息
+        if (!authenticated) {
+            logger.error("WebSocket握手失败：用户未通过认证");
         }
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,7 @@ public class ChatController {
      * @param targetUserId 目标用户ID
      * @param pageNum      页码
      * @param pageSize     每页记录数
-     * @param session      HTTP会话
+     * @param request      HTTP请求
      * @return 聊天历史记录
      */
     @GetMapping("/history")
@@ -43,10 +44,11 @@ public class ChatController {
             @RequestParam("targetUserId") Long targetUserId,
             @RequestParam(value = "pageNum", defaultValue = "1") int pageNum,
             @RequestParam(value = "pageSize", defaultValue = "20") int pageSize,
-            HttpSession session) {
+            HttpServletRequest request) {
         
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
@@ -54,7 +56,7 @@ public class ChatController {
         }
 
         List<ChatMessage> chatHistory = chatMessageService.getChatHistory(
-                currentUser.getUserId().longValue(), targetUserId, pageNum, pageSize);
+                userId.longValue(), targetUserId, pageNum, pageSize);
 
         // 将消息标记为已读
         // chatMessageService.markAllMessagesAsRead(currentUser.getUserId().longValue()); // 标记所有消息已读应该在切换聊天对象时进行，而不是获取历史记录时
@@ -70,13 +72,14 @@ public class ChatController {
      * 发送消息
      *
      * @param chatMessage 聊天消息
-     * @param session     HTTP会话
+     * @param request     HTTP请求
      * @return 操作结果
      */
     @PostMapping("/send")
-    public ResponseEntity<?> sendMessage(@RequestBody ChatMessage chatMessage, HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+    public ResponseEntity<?> sendMessage(@RequestBody ChatMessage chatMessage, HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
@@ -84,7 +87,7 @@ public class ChatController {
         }
 
         // 设置发送者ID
-        chatMessage.setSenderId(currentUser.getUserId().longValue());
+        chatMessage.setSenderId(userId.longValue());
 
         // 保存消息到数据库
         boolean success = chatMessageService.addChatMessage(chatMessage);
@@ -112,20 +115,21 @@ public class ChatController {
     /**
      * 获取最近聊天列表
      *
-     * @param session HTTP会话
+     * @param request HTTP请求
      * @return 最近聊天列表
      */
     @GetMapping("/recent")
-    public ResponseEntity<?> getRecentChats(HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+    public ResponseEntity<?> getRecentChats(HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
-        List<ChatMessage> recentChats = chatMessageService.getRecentChatList(currentUser.getUserId().longValue());
+        List<ChatMessage> recentChats = chatMessageService.getRecentChatList(userId.longValue());
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -136,20 +140,21 @@ public class ChatController {
     /**
      * 获取未读消息数量
      *
-     * @param session HTTP会话
+     * @param request HTTP请求
      * @return 未读消息数量
      */
     @GetMapping("/unread/count")
-    public ResponseEntity<?> getUnreadMessageCount(HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+    public ResponseEntity<?> getUnreadMessageCount(HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
-        int count = chatMessageService.getUnreadMessageCount(currentUser.getUserId().longValue());
+        int count = chatMessageService.getUnreadMessageCount(userId.longValue());
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
@@ -161,13 +166,14 @@ public class ChatController {
      * 标记消息为已读
      *
      * @param messageId 消息ID
-     * @param session   HTTP会话
+     * @param request   HTTP请求
      * @return 操作结果
      */
     @PostMapping("/read/{messageId}")
-    public ResponseEntity<?> markMessageAsRead(@PathVariable("messageId") Long messageId, HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+    public ResponseEntity<?> markMessageAsRead(@PathVariable("messageId") Long messageId, HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
@@ -191,20 +197,21 @@ public class ChatController {
     /**
      * 标记所有消息为已读
      *
-     * @param session HTTP会话
+     * @param request HTTP请求
      * @return 操作结果
      */
     @PostMapping("/read/all")
-    public ResponseEntity<?> markAllMessagesAsRead(HttpSession session) {
-        User currentUser = (User) session.getAttribute("user");
-        if (currentUser == null) {
+    public ResponseEntity<?> markAllMessagesAsRead(HttpServletRequest request) {
+        // 从请求属性中获取用户ID（由拦截器设置）
+        Integer userId = (Integer) request.getAttribute("userId");
+        if (userId == null) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "未登录");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
 
-        boolean success = chatMessageService.markAllMessagesAsRead(currentUser.getUserId().longValue());
+        boolean success = chatMessageService.markAllMessagesAsRead(userId.longValue());
         
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);

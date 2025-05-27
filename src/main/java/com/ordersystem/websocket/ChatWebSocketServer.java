@@ -70,8 +70,9 @@ public class ChatWebSocketServer {
 
         // 首先尝试从配置中获取用户信息（可能是通过JWT验证的）
         User configUser = (User) config.getUserProperties().get("user");
-        if (configUser != null && configUser.getUserId().equals(userId)) {
+        if (configUser != null && configUser.getUserId().longValue() == userId.longValue()) {
             this.user = configUser;
+            logger.info("WebSocket连接成功：通过JWT认证用户 {} (ID: {})", configUser.getUsername(), userId);
         } else {
             // 如果没有通过JWT验证，尝试从HttpSession获取
             HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
@@ -104,8 +105,9 @@ public class ChatWebSocketServer {
         logger.info("用户{}连接成功，当前在线人数为{}", userId, getOnlineCount());
 
         try {
-            // 发送连接成功消息
-            sendMessage("连接成功");
+            // 发送连接成功消息（JSON格式）
+            String welcomeMessage = "{\"type\":\"system\",\"content\":\"连接成功\",\"timestamp\":" + System.currentTimeMillis() + "}";
+            sendMessage(welcomeMessage);
         } catch (IOException e) {
             logger.error("发送消息失败", e);
         }

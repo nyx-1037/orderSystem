@@ -24,21 +24,15 @@ function getRecentChatList() {
         }
         
         // 尝试使用用户管理接口获取用户列表
-        fetchWithAuth('/api/users?role=0&status=1')
+        fetchAPI('/api/users?role=0&status=1')
         .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else if (response.status === 401) {
-                // 不调用handleUnauthorized，避免清除token
-                console.error('获取用户列表失败: 未授权访问');
-                // 如果用户管理接口失败，尝试使用聊天接口
-                console.warn('用户管理接口获取失败，尝试使用聊天接口');
-                return fetchChatList();
-            } else {
-                // 如果用户管理接口失败，尝试使用聊天接口
-                console.warn('用户管理接口获取失败，尝试使用聊天接口');
-                return fetchChatList();
-            }
+            // fetchAPI已经处理了JSON解析和错误处理
+            return response;
+        })
+        .catch(error => {
+            // 如果用户管理接口失败，尝试使用聊天接口
+            console.warn('用户管理接口获取失败，尝试使用聊天接口:', error);
+            return fetchChatList();
         })
         .then(response => {
             // 处理用户管理接口返回的数据
@@ -74,17 +68,14 @@ function getRecentChatList() {
         
         // 辅助函数：从聊天接口获取用户列表
         function fetchChatList() {
-            return fetchWithAuth('/api/chat/recent')
+            return fetchAPI('/api/chat/recent')
                 .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else if (response.status === 401) {
-                        // 不调用handleUnauthorized，避免清除token
-                        console.error('获取聊天列表失败: 未授权访问');
-                        throw new Error('获取聊天列表失败: 未授权访问，请刷新页面重试');
-                    } else {
-                        throw new Error('获取聊天列表失败: ' + response.status);
-                    }
+                    // fetchAPI已经处理了JSON解析和错误处理
+                    return response;
+                })
+                .catch(error => {
+                    console.error('获取聊天列表失败:', error);
+                    throw new Error('获取聊天列表失败，请刷新页面重试');
                 });
         }
     });
@@ -102,24 +93,29 @@ let userList = []; // 用户列表
 
 // 页面加载完成后执行
 $(document).ready(function() {
-    // 初始化管理员信息，完成后再初始化WebSocket连接
-    initAdminInfo()
-        .then(() => {
-            // 确保管理员信息已完全加载
-            if (currentAdmin && currentAdmin.userId) {
-                // 初始化WebSocket连接
-                return initWebSocket();
-            } else {
-                throw new Error('管理员信息未完全加载');
-            }
-        })
-        .then(() => {
-            // 获取最近聊天列表
-            return getRecentChatList();
-        })
-        .catch(error => {
-            console.error('初始化失败:', error);
-        });
+    // 检查管理员登录状态，使用与其他管理员页面相同的方式
+    checkAdminLoginStatus().then(isLoggedIn => {
+        if (isLoggedIn) {
+            // 初始化管理员信息
+            initAdminInfo()
+                .then(() => {
+                    // 确保管理员信息已完全加载
+                    if (currentAdmin && currentAdmin.userId) {
+                        // 初始化WebSocket连接
+                        return initWebSocket();
+                    } else {
+                        throw new Error('管理员信息未完全加载');
+                    }
+                })
+                .then(() => {
+                    // 获取最近聊天列表
+                    return getRecentChatList();
+                })
+                .catch(error => {
+                    console.error('初始化失败:', error);
+                });
+        }
+    });
     
     // 绑定发送按钮点击事件
     $('#sendBtn').click(sendMessage);
@@ -156,44 +152,27 @@ $(document).ready(function() {
 function initAdminInfo() {
     return new Promise((resolve, reject) => {
         try {
-            // 从localStorage获取管理员信息和token
+            // 从localStorage获取管理员信息
             const adminJson = localStorage.getItem('user');
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                window.location.href = '/pages/admin/login.html';
-                reject('未找到认证令牌');
-                return;
-            }
             
             if (adminJson) {
                 currentAdmin = JSON.parse(adminJson);
                 resolve(currentAdmin);
             } else {
-                // 尝试通过API获取当前管理员信息
-                fetchWithAuth('/api/users/current')
+                // 尝试通过API获取当前管理员信息，使用fetchAPI而不是fetchWithAuth
+                fetchAPI('/api/users/current')
                     .then(response => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('获取管理员信息失败: ' + response.status);
-                        }
-                    })
-                    .then(data => {
-                        if (data && data.username) {
-                            currentAdmin = data;
+                        if (response && response.username) {
+                            currentAdmin = response;
                             // 保存管理员信息到localStorage
-                            localStorage.setItem('user', JSON.stringify(data));
+                            localStorage.setItem('user', JSON.stringify(response));
                             resolve(currentAdmin);
                         } else {
-                            // 未登录，跳转到登录页面
-                            window.location.href = '/pages/admin/login.html';
                             reject('未获取到有效的管理员信息');
                         }
                     })
                     .catch(error => {
                         console.error('获取管理员信息失败', error);
-                        window.location.href = '/pages/admin/login.html';
                         reject(error);
                     });
             }
@@ -258,6 +237,22 @@ function initWebSocket() {
             resolve(); // 解析Promise
         };
         
+        // 设置连接超时
+        const connectionTimeout = setTimeout(() => {
+            if (webSocket.readyState === WebSocket.CONNECTING) {
+                console.error('WebSocket连接超时');
+                webSocket.close();
+                reject(new Error('连接超时'));
+            }
+        }, 10000); // 10秒超时
+        
+        // 连接成功后清除超时
+        const originalOnOpen = webSocket.onopen;
+        webSocket.onopen = function() {
+            clearTimeout(connectionTimeout);
+            originalOnOpen.call(this);
+        };
+        
         // 接收消息事件
         webSocket.onmessage = function(event) {
             try {
@@ -268,23 +263,44 @@ function initWebSocket() {
                 handleReceivedMessage(message);
             } catch (error) {
                 console.error('处理消息失败:', error);
+                // 如果JSON解析失败，可能是纯文本消息，作为系统消息处理
+                if (typeof event.data === 'string') {
+                    showSystemMessage(event.data);
+                }
             }
         };
         
         // 连接关闭事件
-        webSocket.onclose = function() {
-            console.log('WebSocket连接已关闭');
-            // 5秒后尝试重新连接
-            setTimeout(function() {
-                initWebSocket().catch(error => {
-                    console.error('重新连接失败:', error);
-                });
-            }, 5000);
+        webSocket.onclose = function(event) {
+            console.log('WebSocket连接已关闭', event);
+            // 检查关闭原因，如果是认证失败(1008)或其他客户端错误，不重连
+            if (event.code === 1008 || event.code === 1002 || event.code === 1003) {
+                console.error('WebSocket连接因认证或协议错误关闭，请刷新页面重新登录');
+                showSystemMessage('连接已断开，请刷新页面重新登录');
+                return;
+            }
+            
+            // 只有在非正常关闭时才重连
+            if (event.code !== 1000) {
+                showSystemMessage('聊天连接已断开，正在尝试重新连接...');
+                // 5秒后尝试重新连接
+                setTimeout(function() {
+                    initWebSocket()
+                        .then(() => {
+                            showSystemMessage('聊天连接已重新建立');
+                        })
+                        .catch(error => {
+                            console.error('重新连接失败:', error);
+                            showSystemMessage('重新连接失败，请刷新页面重试');
+                        });
+                }, 5000);
+            }
         };
         
         // 连接错误事件
         webSocket.onerror = function(error) {
             console.error('WebSocket连接发生错误', error);
+            showSystemMessage('聊天连接发生错误，请检查网络连接');
             reject(error); // 拒绝Promise
         };
         
@@ -302,13 +318,21 @@ function initWebSocket() {
  * @param {Object} message 消息对象
  */
 function handleReceivedMessage(message) {
+    // 处理系统消息
+    if (message.type === 'system') {
+        showSystemMessage(message.content);
+        return;
+    }
+    
     // 如果是当前聊天对象发送的消息，直接显示
     if (message.senderId === currentReceiverId) {
         appendMessage(message);
         // 滚动到底部
         scrollToBottom();
         // 标记为已读
-        markMessageRead(message.messageId);
+        if (message.messageId) {
+            markMessageRead(message.messageId);
+        }
     }
     
     // 更新用户列表
@@ -415,6 +439,14 @@ function showSystemMessage(content) {
 }
 
 /**
+ * 添加系统消息（别名函数，用于兼容性）
+ * @param {string} content 消息内容
+ */
+function appendSystemMessage(content) {
+    showSystemMessage(content);
+}
+
+/**
  * 滚动到底部
  */
 function scrollToBottom() {
@@ -502,19 +534,9 @@ function loadChatHistory() {
     $('#loadMoreBtn').text('加载中...').prop('disabled', true);
     
     // 获取聊天记录
-    fetchWithAuth(`/api/chat/history?targetUserId=${currentReceiverId}&pageNum=${pageNum}&pageSize=${pageSize}`)
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else if (response.status === 401) {
-                // 不调用handleUnauthorized，避免清除token
-                console.error('获取聊天记录失败: 未授权访问');
-                throw new Error('获取聊天记录失败: 未授权访问，请刷新页面重试');
-            } else {
-                throw new Error('获取聊天记录失败: ' + response.status);
-            }
-        })
+    fetchAPI(`/api/chat/history?targetUserId=${currentReceiverId}&pageNum=${pageNum}&pageSize=${pageSize}`)
         .then(data => {
+            // fetchAPI已经处理了JSON解析和错误处理
             // 恢复加载按钮状态
             $('#loadMoreBtn').text('加载更多').prop('disabled', false);
             
@@ -598,22 +620,15 @@ function markMessageRead(messageId) {
         return;
     }
     
-    fetchWithAuth(`/api/chat/read/${messageId}`, {
+    fetchAPI(`/api/chat/read/${messageId}`, {
         method: 'POST'
     })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('标记消息已读失败: ' + response.status);
-            }
-        })
         .then(data => {
-            if (data.success) {
-                console.log('消息已标记为已读:', messageId);
-            } else {
-                console.error('标记消息已读失败:', data);
-            }
+            // fetchAPI已经处理了JSON解析和错误处理
+            console.log('消息已标记为已读:', messageId);
+        })
+        .catch(error => {
+            console.error('标记消息已读失败:', error);
         })
         .catch(error => {
             console.error('标记消息已读请求失败', error);

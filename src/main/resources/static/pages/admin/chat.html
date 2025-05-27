@@ -6,12 +6,12 @@
     <title>客服聊天 - 七洛商城后台管理端</title>
     <link rel="icon" href="/7L-icon2.png" type="image/png">
     <link rel="stylesheet" href="/css/res/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/res/all.min.css">
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/admin-animations.css">
     <link rel="stylesheet" href="/css/float-buttons.css">
     <link rel="stylesheet" href="/css/admin-sidebar.css">
     <link rel="stylesheet" href="/css/chat.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
 <body>
     <div class="container-fluid">
@@ -28,32 +28,32 @@
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" href="index.html">
-                                <i class="fas fa-tachometer-alt"></i> 控制台
+                                <i class="bi bi-speedometer2"></i> 控制台
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="product-list.html">
-                                <i class="fas fa-box"></i> 商品管理
+                                <i class="bi bi-box"></i> 商品管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="order-list.html">
-                                <i class="fas fa-shopping-cart"></i> 订单管理
+                                <i class="bi bi-cart"></i> 订单管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="user-list.html">
-                                <i class="fas fa-users"></i> 用户管理
+                                <i class="bi bi-people"></i> 用户管理
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link active" href="chat.html">
-                                <i class="fas fa-comments"></i> 客服聊天
+                                <i class="bi bi-chat-dots"></i> 客服聊天
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="system-log.html">
-                                <i class="fas fa-clipboard-list"></i> 系统日志
+                                <i class="bi bi-clipboard-data"></i> 系统日志
                             </a>
                         </li>
 
@@ -62,12 +62,12 @@
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a class="nav-link" href="profile.html">
-                                <i class="fas fa-id-card"></i> 个人信息
+                                <i class="bi bi-person-badge"></i> 个人信息
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> 退出登录
+                                <i class="bi bi-box-arrow-right"></i> 退出登录
                             </a>
                         </li>
                     </ul>
@@ -86,7 +86,7 @@
                                 <h5 class="mb-0">用户列表</h5>
                                 <div>
                                     <button class="btn btn-sm btn-outline-light" id="refreshUserListBtn">
-                                        <i class="fas fa-sync-alt"></i>
+                                        <i class="bi bi-arrow-clockwise"></i>
                                     </button>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@
                                 <div class="input-group p-2">
                                     <input type="text" class="form-control" placeholder="搜索用户..." id="searchUserInput">
                                     <button class="btn btn-outline-secondary" type="button" id="searchUserBtn">
-                                        <i class="fas fa-search"></i>
+                                        <i class="bi bi-search"></i>
                                     </button>
                                 </div>
                                 <div class="list-group list-group-flush" id="userChatList">
@@ -126,10 +126,10 @@
                                 <h5 class="mb-0" id="chatTitle">选择用户开始聊天</h5>
                                 <div>
                                     <button class="btn btn-sm btn-outline-light" id="refreshBtn">
-                                        <i class="fas fa-sync-alt"></i> 刷新
+                                        <i class="bi bi-arrow-clockwise"></i> 刷新
                                     </button>
                                     <button class="btn btn-sm btn-outline-light ms-2" id="markReadBtn">
-                                        <i class="fas fa-check-double"></i> 标记已读
+                                        <i class="bi bi-check-all"></i> 标记已读
                                     </button>
                                 </div>
                             </div>
@@ -138,7 +138,7 @@
                             <div class="card-body chat-body" id="chatContent">
                                 <div class="text-center mb-3">
                                     <button class="btn btn-sm btn-outline-primary" id="loadMoreBtn">
-                                        <i class="fas fa-arrow-up"></i> 加载更多
+                                        <i class="bi bi-arrow-up"></i> 加载更多
                                     </button>
                                 </div>
                                 <div id="messageContainer">
@@ -154,11 +154,11 @@
                                 <div class="input-group">
                                     <textarea class="form-control" id="messageInput" placeholder="请输入消息..." rows="2"></textarea>
                                     <button class="btn btn-primary" id="sendBtn">
-                                        <i class="fas fa-paper-plane"></i> 发送
+                                        <i class="bi bi-send"></i> 发送
                                     </button>
                                 </div>
                                 <div class="mt-2 text-muted small">
-                                    <i class="fas fa-info-circle"></i> 提示：按Enter键发送消息，Shift+Enter换行
+                                    <i class="bi bi-info-circle"></i> 提示：按Enter键发送消息，Shift+Enter换行
                                 </div>
                             </div>
                         </div>
@@ -171,9 +171,10 @@
     <!-- 脚本 -->
     <script src="/js/res/jquery.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
-    <script src="/js/res/all.min.js"></script>
 
     <script src="/js/common.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/admin/main.js"></script>
     <script src="/js/admin/chat-admin.js"></script>
 </body>
 </html>
