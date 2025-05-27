@@ -44,11 +44,13 @@
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <span id="username">用户</span>
+                            <img id="nav-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mr-1" style="width: 25px; height: 25px; object-fit: cover;">
+                            <span id="current-username">用户未登录</span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="profile.html"><i class="fas fa-user mr-2"></i> 个人信息</a>
-                            <a class="dropdown-item" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt mr-2"></i> 退出登录</a>
+                            <a class="dropdown-item" href="/pages/user/profile.html"><i class="fas fa-user-cog"></i> 个人中心</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> 退出登录</a>
                         </div>
                     </li>
                 </ul>
@@ -66,7 +68,7 @@
                         <h5 class="mb-0">聊天列表</h5>
                     </div>
                     <div class="list-group list-group-flush" id="chatList">
-                        <a href="#" class="list-group-item list-group-item-action" data-type="broadcast" onclick="switchChat('broadcast')">
+                        <a href="#" class="list-group-item list-group-item-action" data-type="broadcast" onclick="switchChat('broadcast', null); return false;">
                             <div class="d-flex align-items-center">
                                 <div class="chat-avatar">
                                     <i class="fas fa-broadcast-tower"></i>
@@ -80,7 +82,7 @@
                                 </div>
                             </div>
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action active" data-type="service" onclick="switchChat('service')">
+                        <a href="#" class="list-group-item list-group-item-action active" data-type="service" onclick="switchChat('service', null); return false;">
                             <div class="d-flex align-items-center">
                                 <div class="chat-avatar">
                                     <i class="fas fa-headset"></i>

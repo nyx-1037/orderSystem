@@ -181,6 +181,7 @@ function initAdminInfo() {
             // 清除无效的管理员信息
             localStorage.removeItem('user');
             localStorage.removeItem('token');
+            localStorage.removeItem('currentUser');
             window.location.href = '/pages/admin/login.html';
             reject(e);
         }
@@ -208,9 +209,13 @@ function initWebSocket() {
         // 获取JWT令牌
         const token = getToken();
         if (!token) {
-            console.error('未找到认证令牌');
-            // 不调用handleUnauthorized，避免清除token
-            console.warn('WebSocket初始化失败：未找到认证令牌，请刷新页面重试');
+            console.error('未找到认证令牌，请重新登录');
+            // 清除本地存储的认证信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('currentUser');
+            // 重定向到管理端登录页
+            window.location.href = '/pages/admin/login.html';
             reject(new Error('未找到认证令牌'));
             return;
         }
@@ -275,8 +280,13 @@ function initWebSocket() {
             console.log('WebSocket连接已关闭', event);
             // 检查关闭原因，如果是认证失败(1008)或其他客户端错误，不重连
             if (event.code === 1008 || event.code === 1002 || event.code === 1003) {
-                console.error('WebSocket连接因认证或协议错误关闭，请刷新页面重新登录');
-                showSystemMessage('连接已断开，请刷新页面重新登录');
+                console.error('WebSocket认证失败，请重新登录');
+                // 清除本地存储的认证信息
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('currentUser');
+                // 重定向到管理端登录页
+                window.location.href = '/pages/admin/login.html';
                 return;
             }
             

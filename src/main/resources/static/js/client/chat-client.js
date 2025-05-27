@@ -138,10 +138,13 @@ function initWebSocket() {
         // 获取JWT令牌
         const token = getToken();
         if (!token) {
-            console.error('未找到认证令牌');
-            // 不调用handleUnauthorized，避免清除token
-            console.error('获取聊天记录失败: 未授权访问');
-            appendSystemMessage('未找到认证令牌，请刷新页面重试');
+            console.error('未找到认证令牌，请重新登录');
+            // 清除本地存储的认证信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('currentUser');
+            // 重定向到登录页
+            window.location.href = '/pages/client/login.html';
             reject(new Error('未找到认证令牌'));
             return;
         }
@@ -158,8 +161,10 @@ function initWebSocket() {
             return;
         }
         
-        // 创建WebSocket连接，添加JWT令牌作为查询参数
-        const wsUrl = `ws://${window.location.host}/websocket/chat/${currentUser.userId}?token=${token}`;
+        // 构建WebSocket URL，直接在URL中包含token
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.host;
+        const wsUrl = `${protocol}//${host}/websocket/chat/${currentUser.userId}?token=${encodeURIComponent(token)}`;
         webSocket = new WebSocket(wsUrl);
         
         // 连接打开事件
@@ -183,7 +188,9 @@ function initWebSocket() {
         const originalOnOpen = webSocket.onopen;
         webSocket.onopen = function() {
             clearTimeout(connectionTimeout);
-            originalOnOpen.call(this);
+            if (originalOnOpen) {
+                originalOnOpen.call(this);
+            }
         };
         
         // 接收消息事件
@@ -208,8 +215,13 @@ function initWebSocket() {
             console.log('WebSocket连接已关闭', event);
             // 检查关闭原因，如果是认证失败(1008)或其他客户端错误，不重连
             if (event.code === 1008 || event.code === 1002 || event.code === 1003) {
-                console.error('WebSocket连接因认证或协议错误关闭，请刷新页面重新登录');
-                appendSystemMessage('连接已断开，请刷新页面重新登录');
+                console.error('WebSocket认证失败，请重新登录');
+                // 清除本地存储的认证信息
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('currentUser');
+                // 重定向到登录页
+                window.location.href = '/pages/client/login.html';
                 return;
             }
             
@@ -237,13 +249,6 @@ function initWebSocket() {
             appendSystemMessage('聊天连接发生错误，请检查网络连接');
             reject(error); // 拒绝Promise
         };
-        
-        // 设置连接超时
-        setTimeout(function() {
-            if (webSocket.readyState !== WebSocket.OPEN) {
-                reject(new Error('WebSocket连接超时'));
-            }
-        }, 10000);
     });
 }
 
@@ -313,7 +318,10 @@ function sendMessage() {
         // 如果是广播消息，不在本地显示
         if (currentChatType !== 'broadcast') {
             // 在本地显示消息
-            appendMessage(message);
+            appendMessage({
+                ...message,
+                senderName: currentUser.username || currentUser.realName || '我'
+            });
             // 滚动到底部
             scrollToBottom();
         } else {
@@ -321,7 +329,10 @@ function sendMessage() {
             appendSystemMessage('广播消息已发送');
         }
     } else {
-        alert('WebSocket连接已断开，请刷新页面重试');
+        // 尝试重新连接WebSocket
+        console.log('WebSocket连接已断开，尝试重新连接...');
+        initWebSocket();
+        alert('连接已断开，正在重新连接，请稍后再试');
     }
 }
 
@@ -430,6 +441,10 @@ function switchChat(type, receiverId) {
     } else if (type === 'service') {
         $('[data-type="service"]').addClass('active');
         $('#chatTitle').text('联系客服');
+        // 如果没有指定receiverId，自动选择第一个可用客服
+        if (!receiverId && adminUsers && adminUsers.length > 0) {
+            currentReceiverId = adminUsers[0].userId;
+        }
     } else if (type === 'admin') {
         $(`[data-receiver-id="${receiverId}"]`).addClass('active');
         const admin = adminUsers.find(user => user.userId === receiverId);
@@ -443,9 +458,9 @@ function switchChat(type, receiverId) {
     pageNum = 1;
     hasMoreMessages = true;
     
-    // 如果是广播，显示提示信息
+    // 如果是广播，加载广播消息
     if (type === 'broadcast') {
-        appendSystemMessage('这里显示系统公告和活动信息');
+        loadBroadcastMessages();
         $('#chatInputArea').hide(); // 隐藏输入区域
     } else {
         $('#chatInputArea').show(); // 显示输入区域
@@ -477,14 +492,12 @@ function loadChatHistory() {
     };
     
     // 根据聊天类型设置不同的参数
-    if (currentChatType === 'service') {
+    if (currentChatType === 'service' || currentChatType === 'admin') {
         // 对于客服聊天，需要指定目标用户ID
         if (!currentReceiverId) {
             appendSystemMessage('请先选择客服');
             return;
         }
-        params.targetUserId = currentReceiverId;
-    } else if (currentChatType === 'admin') {
         params.targetUserId = currentReceiverId;
     }
     
@@ -538,7 +551,7 @@ function loadChatHistory() {
             pageNum++;
         } else {
             console.error('获取聊天记录失败', response.message);
-            appendSystemMessage('获取聊天记录失败: ' + response.message);
+            appendSystemMessage('获取聊天记录失败: ' + (response.message || '未知错误'));
         }
     })
     .catch(error => {
@@ -627,14 +640,50 @@ function updateServiceList(admins) {
 function autoSelectService() {
     if (adminUsers && adminUsers.length > 0) {
         const firstAdmin = adminUsers[0];
-        // 自动切换到与第一个客服的聊天
-        switchChat('admin', firstAdmin.userId);
+        // 自动切换到客服聊天模式，并指定第一个客服
+        switchChat('service', firstAdmin.userId);
         console.log('自动选择客服:', firstAdmin.username);
     } else {
         // 如果没有可用客服，切换到客服聊天模式但不指定具体客服
         switchChat('service', null);
         appendSystemMessage('暂无在线客服，请稍后再试');
     }
+}
+
+/**
+ * 加载广播消息
+ */
+function loadBroadcastMessages() {
+    // 使用fetchAPI发送请求获取广播消息
+    fetchAPI('/api/chat/broadcast', {
+        method: 'GET'
+    })
+    .then(response => {
+        // fetchAPI已经处理了JSON解析
+        if (response.success) {
+            const messages = response.data || [];
+            
+            if (messages.length === 0) {
+                appendSystemMessage('暂无系统公告');
+                return;
+            }
+            
+            // 显示广播消息
+            for (const message of messages) {
+                appendMessage({
+                    ...message,
+                    senderName: '系统管理员'
+                });
+            }
+        } else {
+            console.error('获取广播消息失败', response.message);
+            appendSystemMessage('获取系统公告失败: ' + (response.message || '未知错误'));
+        }
+    })
+    .catch(error => {
+        console.error('获取广播消息请求失败', error);
+        appendSystemMessage('获取系统公告失败，请刷新页面重试');
+    });
 }
 
 /**
@@ -833,11 +882,14 @@ function logout() {
     // 关闭WebSocket连接
     if (webSocket) {
         webSocket.close();
+        webSocket = null;
     }
     
-    // 清除本地存储的用户信息
+    // 清除本地存储的用户信息和token
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     
     // 跳转到登录页
-    window.location.href = 'login.html';
+    window.location.href = '/pages/client/login.html';
 }
