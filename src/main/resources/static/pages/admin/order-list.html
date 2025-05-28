@@ -62,6 +62,12 @@
                         </li>
                     </ul>
                     <hr class="my-3">
+                    <div class="user-profile-sidebar text-center mb-3">
+                        <a href="/pages/user/profile.html" class="text-decoration-none">
+                            <img id="sidebar-avatar" src="/images/default-avatar.jpg" alt="用户头像" class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;">
+                            <div id="sidebar-username" class="text-white">管理员</div>
+                        </a>
+                    </div>
                     <ul class="nav flex-column mb-2">
                         <li class="nav-item">
                             <a class="nav-link" href="/pages/user/profile.html">
@@ -232,9 +238,67 @@
     <script src="/js/res/popper.min.js"></script>
     <script src="/js/res/bootstrap.min.js"></script>
     <script src="/js/res/all.min.js"></script>
-    <script src="/js/utils.js"></script> <!-- 引入共享工具函数 -->
+    <script src="/js/utils.js"></script>
     <script src="/js/admin/main.js"></script>
+    <script src="/js/admin-sidebar.js"></script>
     <script src="/js/admin/order-list.js"></script>
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 初始化侧边栏
+            initSidebar();
+            
+            // 加载用户头像和用户名
+            loadUserProfile();
+            
+            // 其他初始化代码...
+        });
+        
+        // 加载用户头像和用户名
+        function loadUserProfile() {
+            // 发送请求获取当前用户信息
+            fetchAPI('/api/users/current')
+                .then(response => {
+                    if (response && response.username) {
+                        // 更新侧边栏用户名
+                        $('#sidebar-username').text(response.username);
+                        
+                        // 更新侧边栏用户头像
+                        if (response.userId) {
+                            const avatarUrl = `/api/users/avatar/${response.userId}`;
+                            const token = localStorage.getItem('token');
+                            
+                            fetch(avatarUrl, {
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                }
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    return response.blob();
+                                } else if (response.status === 404) {
+                                    return Promise.resolve(new Blob([], { type: 'image/jpg' }));
+                                } else {
+                                    throw new Error('Failed to load avatar');
+                                }
+                            })
+                            .then(blob => {
+                                if (blob.size > 0) {
+                                    const objectURL = URL.createObjectURL(blob);
+                                    $('#sidebar-avatar').attr('src', objectURL);
+                                }
+                            })
+                            .catch(error => {
+                                console.warn('加载头像失败，使用默认头像:', error);
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取用户信息失败:', error);
+                });
+        }
+    </script>
     <script src="/js/float-buttons.js"></script> <!-- 引入悬浮按钮功能 -->
 </body>
 </html>
