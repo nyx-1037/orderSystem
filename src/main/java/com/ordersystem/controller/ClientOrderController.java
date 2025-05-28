@@ -58,6 +58,7 @@ public class ClientOrderController {
             @RequestParam(value = "size", defaultValue = "5") Integer size,
             @RequestParam(value = "status", required = false) Integer status,
             @RequestParam(value = "keyword", required = false) String keyword,
+            // 忽略前端传递的userId参数，使用拦截器设置的userId
             HttpServletRequest request) {
         
         // 从请求属性中获取用户ID（由拦截器设置）

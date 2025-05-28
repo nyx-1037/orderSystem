@@ -1,6 +1,7 @@
 package com.ordersystem.dao;
 
 import com.ordersystem.entity.Order;
+import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Map;
 
@@ -99,7 +100,7 @@ public interface OrderDao {
      * @param status 订单状态
      * @return 订单列表
      */
-    List<Order> getOrdersByUserIdAndStatus(Integer userId, Integer status);
+    List<Order> getOrdersByUserIdAndStatus(@Param("userId") Integer userId, @Param("status") Integer status);
     
     /**
      * 根据筛选条件查询订单

@@ -18,6 +18,12 @@ async function checkLoginStatus() {
             console.log('当前登录用户:', response.username);
             console.log('响应数据:', response);
 
+            // 将userId存储到localStorage中
+            if (response.userId) {
+                localStorage.setItem('userId', response.userId);
+                console.log('已保存userId到localStorage:', response.userId);
+            }
+
             // 更新用户头像
             const defaultAvatarPath = '/images/default-avatar.jpg';
             $('#nav-avatar').attr('src', defaultAvatarPath);

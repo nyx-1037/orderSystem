@@ -309,6 +309,22 @@ public class LogAspect {
                 } else if (requestMethod.equals("DELETE")) {
                     operation = "删除用户";
                 }
+            } else if (requestURI.contains("/api/chat")) {
+                if (requestMethod.equals("GET") && requestURI.contains("/history")) {
+                    operation = "获取聊天历史记录";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/send")) {
+                    operation = "发送聊天消息";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/recent")) {
+                    operation = "获取最近聊天列表";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/unread/count")) {
+                    operation = "获取未读消息数量";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/read/") && requestURI.contains("/read/all")) {
+                    operation = "标记所有消息为已读";
+                } else if (requestMethod.equals("POST") && requestURI.contains("/read/")) {
+                    operation = "标记消息为已读";
+                } else if (requestMethod.equals("GET") && requestURI.contains("/customer-service")) {
+                    operation = "获取客服列表";
+                }
             } else if (requestURI.equals("/") || requestURI.equals("")) {
                 operation = "访问首页";
             } else {

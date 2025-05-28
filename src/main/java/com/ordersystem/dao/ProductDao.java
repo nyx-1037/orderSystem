@@ -63,5 +63,6 @@ public interface ProductDao {
      * @param productImage 商品图片二进制数据
      * @return 影响行数
      */
-    int updateProductImage(Integer productId, byte[] productImage);
+    int updateProductImage(@org.apache.ibatis.annotations.Param("productId") Integer productId, 
+                          @org.apache.ibatis.annotations.Param("productImage") byte[] productImage);
 }

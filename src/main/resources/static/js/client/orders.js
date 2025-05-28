@@ -86,6 +86,7 @@ function initPageSizeSelector() {
 }
 
 // 加载订单数据
+// 加载订单数据
 async function loadOrders(page) {
     currentPage = page;
     const searchQuery = $('#search-input').val();
@@ -116,6 +117,8 @@ async function loadOrders(page) {
         if (searchQuery) {
             params.append('keyword', encodeURIComponent(searchQuery));
         }
+        
+        // 不需要添加userId参数，后端会从token中获取
         
         const apiUrl = `/api/client/orders?${params.toString()}`;
         console.log('请求订单列表URL:', apiUrl);
@@ -199,24 +202,21 @@ async function loadOrders(page) {
                 }
             } catch (error) {
                 console.error(`获取订单[${order.orderNo}]详情失败:`, error);
-                return order; // 出错时返回原始订单数据
+                return order;
             }
         }));
         
-        // 渲染订单列表（使用包含详情的订单数据）
+        // 渲染订单列表
         renderOrders(ordersWithDetails);
         
-        // 渲染分页控件
+        // 更新分页控件
         renderPagination();
+        
     } catch (error) {
         console.error('加载订单失败:', error);
-        showErrorMessage('加载订单失败: ' + error.message);
-        
-        // 显示空订单列表
         $('#orders-container').html(`
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                加载订单失败，请稍后重试
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> 加载订单失败: ${error.message || '未知错误'}
             </div>
         `);
     }

@@ -550,16 +550,21 @@ async function saveProduct() {
 // 上传商品图片
 async function uploadProductImage(productId, file) {
     const formData = new FormData();
-    formData.append('file', file); // 使用正确的参数名
+    // 确保参数名为'file'，与后端接口匹配
+    formData.append('file', file);
     
     try {
         const token = localStorage.getItem('token');
+        // 确保请求URL正确
         const response = await fetch(`/api/products/${productId}/image`, {
             method: 'POST',
             body: formData,
+            // 上传文件时不要设置Content-Type，让浏览器自动设置为multipart/form-data
             headers: {
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            // 不要自动设置Content-Type
+            // 不要将formData转换为JSON
         });
         
         if (!response.ok) {
