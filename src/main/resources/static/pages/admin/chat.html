@@ -125,6 +125,21 @@
                                     </a>
                                     <!-- 动态加载的用户列表 -->
                                 </div>
+                                <!-- 分页控件 -->
+                                <div class="card-footer bg-light p-2" id="userListPagination">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" id="userListInfo">共 0 个用户</small>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-secondary" id="prevPageBtn" disabled>
+                                                <i class="fas fa-chevron-left"></i>
+                                            </button>
+                                            <span class="btn btn-outline-secondary disabled" id="pageInfo">1 / 1</span>
+                                            <button type="button" class="btn btn-outline-secondary" id="nextPageBtn" disabled>
+                                                <i class="fas fa-chevron-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -187,7 +202,7 @@
     <script src="/js/utils.js"></script>
     <script src="/js/admin/main.js"></script>
     <script src="/js/admin-sidebar.js"></script>
-    <script src="/js/admin/chat.js"></script>
+    <script src="/js/admin/chat-admin.js"></script>
     <script>
         // 页面加载完成后执行
         $(document).ready(function() {

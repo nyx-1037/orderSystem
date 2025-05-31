@@ -1,13 +1,14 @@
 /**
- * 获取最近聊天列表
- * @returns {Promise} 返回一个Promise，在获取聊天列表完成后解析
+ * 获取用户列表（分页）
+ * @param {number} pageNum 页码
+ * @param {string} keyword 搜索关键词
+ * @returns {Promise} 返回一个Promise，在获取用户列表完成后解析
  */
-function getRecentChatList() {
+function getUserListWithPagination(pageNum = 1, keyword = '') {
     return new Promise((resolve, reject) => {
         // 确保管理员信息已初始化
         if (!currentAdmin || !currentAdmin.userId) {
-            console.error('管理员信息未初始化，无法获取聊天列表');
-            // 显示系统消息
+            console.error('管理员信息未初始化，无法获取用户列表');
             showSystemMessage('获取用户列表失败：管理员信息未初始化');
             reject(new Error('管理员信息未初始化'));
             return;
@@ -17,68 +18,54 @@ function getRecentChatList() {
         const token = getToken();
         if (!token) {
             console.error('未找到认证令牌');
-            // 不调用handleUnauthorized，避免清除token
             showSystemMessage('获取用户列表失败：未找到认证令牌，请刷新页面重试');
             reject(new Error('未找到认证令牌'));
             return;
         }
         
-        // 尝试使用用户管理接口获取用户列表
-        fetchAPI('/api/users?role=0&status=1')
+        // 构建请求URL
+        let url = `/api/users/page/${pageNum}/${userPageSize}?role=0&status=1`;
+        if (keyword) {
+            url += `&username=${encodeURIComponent(keyword)}`;
+        }
+        
+        // 使用分页接口获取用户列表
+        fetchAPI(url)
         .then(response => {
-            // fetchAPI已经处理了JSON解析和错误处理
-            return response;
-        })
-        .catch(error => {
-            // 如果用户管理接口失败，尝试使用聊天接口
-            console.warn('用户管理接口获取失败，尝试使用聊天接口:', error);
-            return fetchChatList();
-        })
-        .then(response => {
-            // 处理用户管理接口返回的数据
-            if (response.list) {
+            if (response && response.list) {
+                // 更新分页信息
                 userList = response.list;
+                userTotalCount = response.total || 0;
+                userTotalPages = response.pages || 1;
+                userPageNum = pageNum;
+                
+                // 更新用户列表显示
                 updateUserList(userList);
-                resolve(userList); // 解析Promise
-                return;
+                updatePaginationInfo();
+                
+                resolve(response);
+            } else {
+                console.error('获取用户列表失败：未知的响应格式', response);
+                showSystemMessage('获取用户列表失败：未知的响应格式');
+                reject(new Error('未知的响应格式'));
             }
-            
-            // 处理聊天接口返回的数据
-            if (response.success && response.data) {
-                userList = response.data;
-                updateUserList(userList);
-                resolve(userList); // 解析Promise
-                return;
-            }
-            
-            // 如果两个接口都没有返回预期的数据格式
-            console.error('获取用户列表失败：未知的响应格式', response);
-            showSystemMessage('获取用户列表失败：未知的响应格式');
-            reject(new Error('未知的响应格式'));
         })
         .catch(error => {
             console.error('获取用户列表请求失败', error);
-            // 如果错误消息不是"未授权访问，请重新登录"，则显示通用错误消息
-            // "未授权访问，请重新登录"意味着handleUnauthorized已经被调用过了
             if (error.message !== '未授权访问，请重新登录') {
                 showSystemMessage('获取用户列表失败: ' + error.message);
             }
             reject(error);
         });
-        
-        // 辅助函数：从聊天接口获取用户列表
-        function fetchChatList() {
-            return fetchAPI('/api/chat/recent')
-                .then(response => {
-                    // fetchAPI已经处理了JSON解析和错误处理
-                    return response;
-                })
-                .catch(error => {
-                    console.error('获取聊天列表失败:', error);
-                    throw new Error('获取聊天列表失败，请刷新页面重试');
-                });
-        }
     });
+}
+
+/**
+ * 获取最近聊天列表（保持向后兼容）
+ * @returns {Promise} 返回一个Promise，在获取聊天列表完成后解析
+ */
+function getRecentChatList() {
+    return getUserListWithPagination(userPageNum, searchKeyword);
 }
 
 // 全局变量
@@ -90,6 +77,13 @@ let pageNum = 1; // 当前页码
 let pageSize = 20; // 每页消息数
 let hasMoreMessages = true; // 是否有更多消息
 let userList = []; // 用户列表
+
+// 用户列表分页相关变量
+let userPageNum = 1; // 用户列表当前页码
+let userPageSize = 10; // 用户列表每页数量
+let userTotalPages = 1; // 用户列表总页数
+let userTotalCount = 0; // 用户总数
+let searchKeyword = ''; // 搜索关键词
 
 // 页面加载完成后执行
 $(document).ready(function() {
@@ -141,7 +135,33 @@ $(document).ready(function() {
     
     // 绑定刷新用户列表按钮点击事件
     $('#refreshUserListBtn').click(function() {
-        getRecentChatList();
+        refreshUserList();
+    });
+    
+    // 绑定搜索按钮点击事件
+    $('#searchUserBtn').click(function() {
+        searchUsers();
+    });
+    
+    // 绑定搜索输入框回车事件
+    $('#searchUserInput').keydown(function(e) {
+        if (e.keyCode === 13) {
+            e.preventDefault();
+            searchUsers();
+        }
+    });
+    
+    // 绑定分页按钮点击事件
+    $('#prevPageBtn').click(function() {
+        if (userPageNum > 1) {
+            getUserListWithPagination(userPageNum - 1, searchKeyword);
+        }
+    });
+    
+    $('#nextPageBtn').click(function() {
+        if (userPageNum < userTotalPages) {
+            getUserListWithPagination(userPageNum + 1, searchKeyword);
+        }
     });
 });
 
@@ -703,4 +723,46 @@ function updateUserList(users) {
     } else if (currentChatType === 'broadcast') {
         $('[data-type="broadcast"]').addClass('active');
     }
+}
+
+/**
+ * 更新分页信息显示
+ */
+function updatePaginationInfo() {
+    // 更新用户总数信息
+    $('#userListInfo').text(`共 ${userTotalCount} 个用户`);
+    
+    // 更新页码信息
+    $('#pageInfo').text(`${userPageNum} / ${userTotalPages}`);
+    
+    // 更新分页按钮状态
+    $('#prevPageBtn').prop('disabled', userPageNum <= 1);
+    $('#nextPageBtn').prop('disabled', userPageNum >= userTotalPages);
+    
+    // 如果只有一页或没有数据，隐藏分页控件
+    if (userTotalPages <= 1) {
+        $('#userListPagination').hide();
+    } else {
+        $('#userListPagination').show();
+    }
+}
+
+/**
+ * 刷新用户列表
+ */
+function refreshUserList() {
+    // 重置到第一页
+    userPageNum = 1;
+    searchKeyword = '';
+    $('#searchUserInput').val('');
+    getUserListWithPagination(userPageNum, searchKeyword);
+}
+
+/**
+ * 搜索用户
+ */
+function searchUsers() {
+    searchKeyword = $('#searchUserInput').val().trim();
+    userPageNum = 1; // 搜索时重置到第一页
+    getUserListWithPagination(userPageNum, searchKeyword);
 }
