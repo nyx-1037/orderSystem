@@ -475,7 +475,7 @@ function switchChat(type, receiverId) {
     
     // 如果切换到特定管理员聊天，标记该管理员的消息为已读
     if (type === 'admin' && receiverId) {
-        markAllRead(receiverId);
+        markAllRead();
     }
 }
 
@@ -823,13 +823,12 @@ function updateUnreadCount(senderId) {
 function markMessageRead(messageId) {
     if (!messageId) return;
     
-    // 使用fetchAPI发送POST请求
-    fetchAPI('/api/chat/read', {
+    // 使用fetchAPI发送POST请求，messageId作为路径参数
+    fetchAPI(`/api/chat/read/${messageId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ messageId: messageId })
+        }
     })
     .then(response => {
         // fetchAPI已经处理了JSON解析和错误处理
@@ -837,29 +836,22 @@ function markMessageRead(messageId) {
     })
     .catch(error => {
         console.error('标记消息已读失败:', error);
-        appendSystemMessage('标记消息已读失败，请刷新页面重试');
+        const errorMsg = error.message || error.toString() || '未知错误';
+        appendSystemMessage(`标记消息已读失败: ${errorMsg}，请刷新页面重试`);
     });
 }
 
 /**
  * 标记所有消息为已读
- * @param {number} otherUserId 对方用户ID，不传则标记所有系统消息为已读
+ * 后端接口会自动标记当前用户的所有未读消息为已读
  */
-function markAllRead(otherUserId) {
-    const params = {};
-    if (otherUserId) {
-        params.otherUserId = otherUserId;
-    } else {
-        params.messageType = 1; // 系统消息
-    }
-    
-    // 使用fetchAPI发送POST请求
+function markAllRead() {
+    // 使用fetchAPI发送POST请求，后端不需要参数
     fetchAPI('/api/chat/read/all', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(params)
+        }
     })
     .then(response => {
         // fetchAPI已经处理了JSON解析和错误处理
@@ -871,7 +863,8 @@ function markAllRead(otherUserId) {
     })
     .catch(error => {
         console.error('标记所有消息已读失败:', error);
-        appendSystemMessage('标记所有消息已读失败，请刷新页面重试');
+        const errorMsg = error.message || error.toString() || '未知错误';
+        appendSystemMessage(`标记所有消息已读失败: ${errorMsg}，请刷新页面重试`);
     });
 }
 
